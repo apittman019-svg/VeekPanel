@@ -45,6 +45,10 @@ passed both jobs for source commit `25ece7627d738463f1b3882b1e3ffdb4ac32663d`,
 including the final upstream Windows HIDAPI C backend. All 17 tests ran on Windows
 and Ubuntu; release builds passed on both. Ubuntu PTY reconnect passed as well.
 The deprecated checkout action was then updated to a pinned v6 revision.
+[Final workflow run 37094930940](https://github.com/apittman019-svg/VeekPanel/actions/runs/37094930940)
+also passed both jobs on commit `8072086d9781281fb92a68f3ade5db6e5f6289e2`, with
+the updated checkout action. The subsequent verification-record commit changes
+documentation only and skips redundant CI.
 A Windows runner is not a Windows 10/11 hardware validation.
 
 `cargo doc --workspace --no-deps --locked` also passed locally. The repository is
