@@ -14,7 +14,9 @@ serialport.workspace = true
 hidapi = { workspace = true, features = ["linux-static-hidraw"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-hidapi = { workspace = true, features = ["windows-native"] }
+# Use upstream HIDAPI's Windows implementation. The optional windows-native
+# implementation in 2.6.7 returns zero for synchronously completed writes.
+hidapi.workspace = true
 
 [lints]
 workspace = true

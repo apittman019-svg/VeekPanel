@@ -43,9 +43,13 @@ resident memory, launch time and event latency before M4 acceptance. The UI must
 never become a dependency of the hardware or audio libraries.
 
 Selected prototype dependencies: Rust standard threads/channels, `hidapi` with
-Windows-native and Linux hidraw backends, `serialport`, `clap`, `ctrlc`, `thiserror`.
+upstream HIDAPI Windows C and Linux hidraw backends, `serialport`, `clap`, `ctrlc`, `thiserror`.
 Resolved versions are in `Cargo.lock`; [dependency license inventory](DEPENDENCIES.md) records declared licenses. Avoid an async runtime until there is a need.
 Rust 1.99.0 is the installed/tested/pinned toolchain, not a claim of an older MSRV.
+The optional `hidapi` 2.6.7 `windows-native` backend was rejected after inspection:
+its synchronous `WriteFile` success branch returns zero, which cannot satisfy our
+checked initialization-write contract. Use the bundled upstream Windows backend
+and compile it with MSVC in Windows CI. Do not weaken short-write validation.
 MIT is selected for original VeekPanel work. Dependency licenses remain their own;
 release packaging must inventory native and transitive licenses too.
 

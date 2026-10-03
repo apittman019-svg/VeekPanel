@@ -17,7 +17,7 @@ device permissions were modified. Native libudev development files already exist
 | `cargo clippy --workspace --all-targets --locked -- -D warnings` | Passed |
 | `cargo test --workspace --locked` | 17 tests passed (10 protocol, 4 session, 3 CLI) |
 | `cargo build --workspace --release --locked` | Passed on Nobara |
-| `cargo check --workspace --all-targets --locked --target x86_64-pc-windows-msvc` | Passed cross-target type check on Nobara; not Windows execution |
+| Early Windows-native HID backend cross-target type check | Passed, then superseded: dependency inspection found synchronous writes report zero. Final implementation uses upstream HIDAPI Windows C; native Windows CI is required. |
 | Malformed/truncated/oversized replay CLI inputs | Rejected with nonzero exit, bounded parsing |
 | Nonexistent explicit serial port, 4-second live run | Reported failed opens, retried and exited normally at deadline |
 | Original offline fixture | Correct independent knob and button labels; explicitly offline |
