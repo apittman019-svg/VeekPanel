@@ -1,0 +1,6 @@
+# Known PCPanel HID models only. Active local user ACL; never world-writable.
+# Install as /etc/udev/rules.d/70-veekpanel.rules (see docs/LINUX_SETUP.md).
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="eb52", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="a3c4", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="a3c5", TAG+="uaccess"
+# Original/Maple serial identity is not verified. Do not grant all CH340 adapters access.

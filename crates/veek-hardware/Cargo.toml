@@ -1,0 +1,20 @@
+[package]
+name = "veek-hardware"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "PCPanel protocol decoders and mockable hardware transport"
+
+[dependencies]
+thiserror.workspace = true
+serialport.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+hidapi = { workspace = true, features = ["linux-static-hidraw"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+hidapi = { workspace = true, features = ["windows-native"] }
+
+[lints]
+workspace = true

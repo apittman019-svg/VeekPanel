@@ -1,0 +1,27 @@
+name: Hardware prototype CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux HID and serial build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev pkg-config
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - run: cargo build --workspace --release --locked
+      - name: Serial PTY integration (synthetic)
+        if: runner.os == 'Linux'
+        run: python3 tests/serial_pty.py target/release/veek-probe

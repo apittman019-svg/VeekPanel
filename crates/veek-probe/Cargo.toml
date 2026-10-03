@@ -1,0 +1,16 @@
+[package]
+name = "veek-probe"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Milestone 1 PCPanel hardware diagnostic utility"
+
+[dependencies]
+veek-hardware = { path = "../veek-hardware" }
+clap = { version = "4.5", features = ["derive"] }
+ctrlc = "3.4"
+hidapi.workspace = true
+
+[lints]
+workspace = true
