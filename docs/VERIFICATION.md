@@ -40,8 +40,15 @@ reports followed by valid ones, no serial writes and decoder reset on new sessio
 
 The workflow in `.github/workflows/ci.yml` runs formatting, lint, tests and release
 builds on Windows and Ubuntu; Ubuntu also runs the synthetic serial integration.
-The observed remote result will be recorded after publication. Workflow presence
-alone is not a pass. A Windows runner is not a Windows 10/11 hardware validation.
+[Run 37094820268](https://github.com/apittman019-svg/VeekPanel/actions/runs/37094820268)
+passed both jobs for source commit `25ece7627d738463f1b3882b1e3ffdb4ac32663d`,
+including the final upstream Windows HIDAPI C backend. All 17 tests ran on Windows
+and Ubuntu; release builds passed on both. Ubuntu PTY reconnect passed as well.
+The deprecated checkout action was then updated to a pinned v6 revision.
+A Windows runner is not a Windows 10/11 hardware validation.
+
+`cargo doc --workspace --no-deps --locked` also passed locally. The repository is
+public at [apittman019-svg/VeekPanel](https://github.com/apittman019-svg/VeekPanel).
 
 ## Remaining limitations
 
