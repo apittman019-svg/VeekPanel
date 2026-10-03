@@ -23,6 +23,10 @@ User clarifications that override ambiguous wording in the original brief:
   their authenticated account. No credentials or private diagnostics go into Git.
 - Real hardware is with the friend, who will download and test when convenient.
   Do not assume local access. Synthetic replay/PTY tests must be labeled as such.
+  The experimental diagnostic kit is published as GitHub prerelease
+  `m1-probe-2026-10-03` (source `f65350a4d1b25261410caddfc44504d1f64b44dd`).
+  Next hardware work is collecting and reviewing the friend's evidence, then
+  correcting the adapter if needed; publishing the kit did not complete M1.
 
 ## Product requirements to preserve
 
@@ -128,7 +132,7 @@ python3 tests/serial_pty.py target/release/veek-probe
 python3 tests/capture_pty.py target/release/veek-probe
 ```
 
-Last command is Linux-only synthetic integration. Windows CI tests actual Windows
+Both Python commands are Linux-only synthetic integrations. Windows CI tests actual Windows
 build/runtime without physical USB. Do not run speculative commands against unrelated
 hardware. Do not install host permissions or disable SELinux to get tests passing.
 Document what ran, OS/toolchain, actual results, and unresolved checks in

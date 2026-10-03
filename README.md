@@ -22,8 +22,8 @@ The Milestone 1 acceptance gate remains open until physical controls are checked
 
 ## Friend testing / downloadable diagnostic kit
 
-The [GitHub releases page](https://github.com/apittman019-svg/VeekPanel/releases)
-provides experimental M1 diagnostic builds when published. These are console test
+The [M1 diagnostic release](https://github.com/apittman019-svg/VeekPanel/releases/tag/m1-probe-2026-10-03)
+provides experimental Windows and Linux downloads. These are console test
 utilities, not the finished application or installers. For Windows, extract the
 whole ZIP and double-click `START-HERE.cmd`; no Rust installation is needed. It
 runs `veek-probe test-original`, compares device listings before/after connection,

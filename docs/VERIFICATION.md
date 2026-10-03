@@ -67,7 +67,26 @@ Local Nobara checks passed: formatting, strict Clippy, 21 Rust tests, release bu
 the existing serial PTY test, and a new synthetic capture/guide integration. That
 integration preserves invalid bytes, replays captured data, records Ctrl+C and
 disconnect, and produces the observation worksheet. Linux dependency-notice generation
-passed. Windows build/test and kit results for this continuation are recorded after CI.
+passed.
+
+[Continuation CI run 37141431162](https://github.com/apittman019-svg/VeekPanel/actions/runs/37141431162)
+passed Windows and Ubuntu jobs for source commit
+`f65350a4d1b25261410caddfc44504d1f64b44dd`: all 21 Rust tests, formatting,
+strict Clippy, release builds, license collection and kit packaging. Ubuntu also
+passed both synthetic PTY integration scripts. The 21 tests comprise 10 protocol,
+4 session, 3 capture and 4 CLI tests.
+
+Downloaded the final CI archives and checked archive integrity, required kit files,
+exact `BUILD_COMMIT.txt`, dependency notices and included unmodified MPL source.
+The packaged Linux executable ran on Nobara and passed both PTY scripts there.
+Inspected the Windows PE imports after enabling static CRT linkage: no external
+VCRUNTIME/MSVCP dependency remained. This inspection does not replace running the
+kit on a friend's clean Windows machine or testing physical USB.
+
+Published the verified archives and SHA-256 checksums as the unsigned experimental
+[M1 diagnostic prerelease](https://github.com/apittman019-svg/VeekPanel/releases/tag/m1-probe-2026-10-03).
+The release targets the source commit above; subsequent handoff edits are documentation
+only. No hardware acceptance is inferred from publishing these downloads.
 
 ## Remaining limitations (unchanged physical gate)
 
