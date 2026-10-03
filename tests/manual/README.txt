@@ -22,6 +22,7 @@ No Rust installation is needed. Use an ordinary Windows account, not Administrat
 serial.bin = raw received bytes, including data the parser does not recognize.
 chunks.tsv = receive timings and hexadecimal chunks (host reads, not USB packets).
 metadata.txt = settings, byte counts and stop reason; hardware stays unverified.
+BUILD_COMMIT.txt in the kit identifies the source revision; include it in your results.
 If capture stops on an error before RESULTS.txt is created, copy the supplied
 RESULTS.txt template into that capture folder and record the error.
 

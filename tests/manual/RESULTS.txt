@@ -1,6 +1,7 @@
 VeekPanel Original PCPanel test — observations, NOT an automatic pass
 
 Date:
+Diagnostic kit release/link or BUILD_COMMIT.txt value:
 Windows edition/build or Nobara version:
 Device model as printed on the physical unit:
 Stock firmware / modified / unknown:
