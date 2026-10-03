@@ -1,8 +1,8 @@
 # Implementation plan and gates
 
 Only research/repository setup and M1 are authorized in this task. Later milestone
-descriptions are a continuation plan, not permission to begin them. The user owning
-an Original and having no hardware available means the physical M1 gate is pending.
+descriptions are a continuation plan, not permission to begin them. The target Original belonging
+to a friend and being unavailable locally means the physical M1 gate is pending.
 
 | Milestone | Work | Evidence needed to accept |
 | --- | --- | --- |
@@ -20,6 +20,9 @@ an Original and having no hardware available means the physical M1 gate is pendi
 1. Read `AGENTS.md`, `docs/VERIFICATION.md` and `docs/HARDWARE_PROTOCOL.md`.
 2. Obtain access to the stock Original. Compare enumeration before/after connecting;
    record VID/PID/product/interface/driver with personal identifiers redacted.
+   The device belongs to the user's friend. Use the M1 downloadable diagnostic kit
+   for his trial when convenient; local access must not be assumed. The bounded
+   capture command and guided test are ready for evidence collection.
 3. Run serial diagnostics on its explicit port, without arbitrary writes or firmware
    modifications. Verify grammar, polarity, indices, extrema and startup traffic.
 4. Correct only the adapter when evidence differs. Add provenance-tagged fixtures

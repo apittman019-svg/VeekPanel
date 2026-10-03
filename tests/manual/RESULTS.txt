@@ -1,0 +1,25 @@
+VeekPanel Original PCPanel test — observations, NOT an automatic pass
+
+Date:
+Windows edition/build or Nobara version:
+Device model as printed on the physical unit:
+Stock firmware / modified / unknown:
+Was any other PCPanel software running?
+Did a new COM/serial port appear on connection?
+
+Describe the physical order of all four knobs (left to right, etc.):
+For each knob, record rotation direction, minimum/maximum, and press/release behavior:
+Knob 1:
+Knob 2:
+Knob 3:
+Knob 4:
+
+Observed problems, missing events, unexpected resets, or errors:
+Did you test unplug/replug or sleep/resume? Describe exactly; otherwise write NOT TESTED:
+
+You may record USB VID/PID and product name from Device Manager, but omit the unique
+serial number and personal paths. Do not call an opened port, successful replay,
+or empty error log proof of correct physical controls.
+
+The generated metadata intentionally stays unverified. Review raw files before
+sharing; no upload is automatic. Do not send credentials or unrelated device data.

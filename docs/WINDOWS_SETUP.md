@@ -4,6 +4,12 @@ Target Windows 10 and 11. M1 is a developer console utility, not an installer or
 finished desktop application. GitHub CI builds/tests on a Windows runner; actual
 Windows 10/11 hardware compatibility is a separate acceptance gate.
 
+For friend testing without Rust, use the experimental Windows diagnostic ZIP from
+the repository releases page. Extract it fully, read README.txt, then double-click
+START-HERE.cmd. This launches the guided `test-original` command. Its raw capture
+and observation checklist prepare a physical trial; no support is presumed. The
+kit includes dependency notices and unmodified MPL dependency source. It is unsigned.
+
 ## Build and run
 
 Install [Rust](https://www.rust-lang.org/tools/install) with the MSVC toolchain and
@@ -23,7 +29,7 @@ Known RGB/Mini/Pro IDs use Windows HID; do not replace their HID driver with Win
 or libusb. No administrator runtime is required. `--no-init` disables the HID
 state-request write for diagnostics. Ctrl+C stops; `--duration 10` bounds a test.
 
-## Original/Maple (the owner's hardware)
+## Original/Maple (the friend's hardware)
 
 The Original is experimental serial support, not one of the HID models. Use Device
 Manager and `list` before/after plugging in to identify its actual COM port:

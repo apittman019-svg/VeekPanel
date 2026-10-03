@@ -44,6 +44,15 @@ fn pro_replay_maps_sliders_separately() {
 fn invalid_arguments_and_missing_files_fail() {
     for args in [
         vec!["watch", "--duration", "0"],
+        vec![
+            "capture",
+            "--serial",
+            "COM3",
+            "--output",
+            "unused",
+            "--max-bytes",
+            "0",
+        ],
         vec!["replay", "--model", "unknown", "x"],
         vec!["replay", "--model", "original", "no-such-file"],
     ] {
@@ -54,4 +63,20 @@ fn invalid_arguments_and_missing_files_fail() {
             .status
             .success());
     }
+}
+
+#[test]
+fn guided_test_stops_on_closed_input_before_opening_hardware() {
+    let output = Command::new(env!("CARGO_BIN_EXE_veek-probe"))
+        .arg("test-original")
+        .stdin(std::process::Stdio::null())
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(String::from_utf8(output.stderr)
+        .unwrap()
+        .contains("Input closed"));
+    assert!(!String::from_utf8(output.stdout)
+        .unwrap()
+        .contains("CAPTURE_OPENED"));
 }

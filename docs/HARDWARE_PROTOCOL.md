@@ -2,7 +2,7 @@
 
 Status: public implementation evidence, **not physically verified here**.
 See [research provenance](RESEARCH.md) for pinned source revisions and licenses.
-The user owns the Original, with four knobs that each also push as a button.
+The user's friend owns the Original, with four knobs that each also push as a button.
 
 ## Model matrix
 
@@ -102,7 +102,7 @@ adding LED support in a separately authorized milestone.
 
 ## Evidence still required
 
-Run [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md) first on the user's stock
+Run [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md) first on the friend's stock
 Original on Windows and Nobara. Confirm endpoints, rotation direction, every press
 and release, framing and reconnect. Preserve redacted captures and add independent
 fixtures. Then test each claimed HID model. Unknown revisions, suspend/resume and

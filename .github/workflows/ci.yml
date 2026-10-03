@@ -27,3 +27,38 @@ jobs:
       - name: Serial PTY integration (synthetic)
         if: runner.os == 'Linux'
         run: python3 tests/serial_pty.py target/release/veek-probe
+      - name: Capture PTY integration (synthetic)
+        if: runner.os == 'Linux'
+        run: python3 tests/capture_pty.py target/release/veek-probe
+      - name: Stage Windows diagnostic kit
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path diagnostic-kit
+          Copy-Item target/release/veek-probe.exe diagnostic-kit/
+          Copy-Item tests/manual/START-HERE.cmd,tests/manual/README.txt,tests/manual/RESULTS.txt,LICENSE diagnostic-kit/
+          ./diagnostic-kit/veek-probe.exe --help
+          ./diagnostic-kit/veek-probe.exe capture --help
+      - name: Stage Linux diagnostic kit
+        if: runner.os == 'Linux'
+        run: |
+          mkdir diagnostic-kit
+          cp target/release/veek-probe tests/manual/README.txt tests/manual/RESULTS.txt LICENSE diagnostic-kit/
+      - name: Bundle dependency license notices
+        run: python tests/manual/license_inventory.py diagnostic-kit/THIRD_PARTY
+      - name: Archive Windows diagnostic kit
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path diagnostic-kit/* -DestinationPath veekpanel-m1-Windows-x64.zip
+      - name: Archive Linux diagnostic kit
+        if: runner.os == 'Linux'
+        run: tar -czf veekpanel-m1-Linux-x64.tar.gz -C diagnostic-kit .
+      - name: Upload diagnostic archives (not installers)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: veekpanel-m1-${{ runner.os }}-x64
+          path: |
+            veekpanel-m1-*.zip
+            veekpanel-m1-*.tar.gz
+          if-no-files-found: error
+          retention-days: 30

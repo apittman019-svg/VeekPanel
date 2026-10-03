@@ -1,3 +1,5 @@
+mod capture;
+
 use clap::{Parser, Subcommand, ValueEnum};
 use std::{
     collections::{HashMap, HashSet},
@@ -10,7 +12,7 @@ use std::{
         mpsc, Arc,
     },
     thread,
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use veek_hardware::{
     protocol::{parse_hid, OriginalDecoder, SerialMessage},
@@ -32,6 +34,22 @@ struct Cli {
 enum Command {
     /// Enumerate recognized HID devices and serial candidates without opening ports.
     List,
+    /// Guided Original test: compare ports, select explicitly, collect 60 seconds of raw evidence.
+    TestOriginal,
+    /// Save raw Original serial bytes for investigation; never validates hardware identity.
+    Capture {
+        /// Explicit port only. No discovery probes, initialization writes or automatic reconnect.
+        #[arg(long)]
+        serial: String,
+        /// New directory beneath an existing parent; existing evidence is never overwritten.
+        #[arg(long)]
+        output: PathBuf,
+        #[arg(long, default_value_t = 30, value_parser = clap::value_parser!(u64).range(1..=300))]
+        duration: u64,
+        /// Raw byte cap, excluding the bounded hex/metadata representation.
+        #[arg(long, default_value_t = 1_048_576, value_parser = clap::value_parser!(u32).range(1..=16_777_216))]
+        max_bytes: u32,
+    },
     /// Read real controls; automatically discover/reconnect known HID devices.
     Watch {
         /// Explicit Original/Maple port (COM3 or /dev/serial/by-id/...). No generic serial probing.
@@ -91,6 +109,13 @@ fn main() {
 fn run() -> Result<(), Box<dyn Error>> {
     match Cli::parse().command {
         Command::List => list(),
+        Command::TestOriginal => test_original(),
+        Command::Capture {
+            serial,
+            output,
+            duration,
+            max_bytes,
+        } => capture_serial(serial, output, duration, max_bytes as usize),
         Command::Watch {
             serial,
             raw,
@@ -99,6 +124,114 @@ fn run() -> Result<(), Box<dyn Error>> {
         } => watch(serial, raw, !no_init, duration),
         Command::Replay { model, file } => replay(model.into(), file),
     }
+}
+
+fn prompt(message: &str) -> Result<String, Box<dyn Error>> {
+    print!("{message}");
+    io::stdout().flush()?;
+    let mut answer = String::new();
+    let n = io::stdin().lock().take(1025).read_line(&mut answer)?;
+    if n == 0 {
+        return Err("Input closed; no device was selected".into());
+    }
+    if n > 1024 {
+        return Err("Input exceeds 1024 bytes".into());
+    }
+    Ok(answer.trim().to_owned())
+}
+
+fn test_original() -> Result<(), Box<dyn Error>> {
+    println!("Original PCPanel evidence collection — hardware behavior is UNVERIFIED.\nClose other PCPanel software. Run as your ordinary user. No audio changes or protocol writes.");
+    prompt("Unplug the PCPanel, then press Enter to list the baseline ports: ")?;
+    list()?;
+    prompt("Connect the PCPanel, wait for the OS to recognize it, then press Enter: ")?;
+    list()?;
+    let port =
+        prompt("Enter its newly appeared serial port exactly (for example COM3); empty cancels: ")?;
+    if port.is_empty() {
+        return Err("Canceled; no device was opened".into());
+    }
+    println!("The chosen port is not verified as a PCPanel. Opening it may reset some boards.\nDuring the 60-second capture: slowly turn each of the four knobs fully both ways,\nthen press and release each knob separately. Note which physical knob you used.\nRecord any mismatch in RESULTS.txt afterward.");
+    if !prompt("Press Enter to start, or type anything to cancel: ")?.is_empty() {
+        return Err("Canceled; no device was opened".into());
+    }
+    let parent = PathBuf::from("captures");
+    std::fs::create_dir_all(&parent)?;
+    let stamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
+    let output = parent.join(format!("original-{stamp}-{}", std::process::id()));
+    println!("Evidence directory: {:?}", output);
+    capture_serial(port, output.clone(), 60, 1_048_576)?;
+    std::fs::write(
+        output.join("RESULTS.txt"),
+        include_str!("../../../tests/manual/RESULTS.txt"),
+    )?;
+    println!("Captured raw transport data. The following replay is OFFLINE and cannot confirm physical correctness:");
+    if let Err(error) = replay(Model::Original, output.join("serial.bin")) {
+        println!("Replay reported: {error}. Raw evidence is preserved; partial lines or a different stock protocol need investigation.");
+    }
+    println!("Fill in RESULTS.txt and review the folder before sharing. Hardware validation remains pending human review.");
+    Ok(())
+}
+
+fn capture_serial(
+    port: String,
+    output: PathBuf,
+    duration: u64,
+    max_bytes: usize,
+) -> Result<(), Box<dyn Error>> {
+    let running = Arc::new(AtomicBool::new(true));
+    let signal = running.clone();
+    ctrlc::set_handler(move || signal.store(false, Ordering::Relaxed))?;
+    // Create evidence first so a failed device open is recorded, too. No HID devices are opened.
+    let mut capture = capture::Capture::create(&output, max_bytes)?;
+    let start = Instant::now();
+    let descriptor = transport::DeviceDescriptor::selected_original(port);
+    let mut device = match transport::open(&descriptor) {
+        Ok(device) => device,
+        Err(error) => {
+            capture.finish("open_error", start.elapsed())?;
+            return Err(error.into());
+        }
+    };
+    let mut out = io::stdout().lock();
+    let mut reason = "duration";
+    let result = (|| -> Result<(), Box<dyn Error>> {
+        writeln!(out, "CAPTURE_OPENED_UNVERIFIED: serial at 9600 8N1; saving received bytes, not certifying PCPanel identity.\nNo protocol writes. Opening serial may reset some boards. Ctrl+C stops.")?;
+        out.flush()?;
+        let mut bytes = [0; 256];
+        while running.load(Ordering::Relaxed) && start.elapsed() < Duration::from_secs(duration) {
+            let n = match device.read(&mut bytes) {
+                Ok(n) if n <= bytes.len() => n,
+                Ok(n) => {
+                    reason = "read_error";
+                    return Err(transport::HardwareError::InvalidRead(n).into());
+                }
+                Err(error) => {
+                    reason = "read_error";
+                    return Err(error.into());
+                }
+            };
+            if !capture.record(&bytes[..n], start.elapsed())? {
+                reason = "byte_limit";
+                break;
+            }
+        }
+        if !running.load(Ordering::Relaxed) {
+            reason = "interrupted";
+        }
+        Ok(())
+    })();
+    if result.is_err() && reason != "read_error" {
+        reason = "output_error";
+    }
+    capture.finish(reason, start.elapsed())?;
+    result?;
+    writeln!(
+        out,
+        "Capture stopped ({reason}). Hardware validation remains unverified. Evidence: {:?}",
+        output
+    )?;
+    Ok(())
 }
 
 fn list() -> Result<(), Box<dyn Error>> {

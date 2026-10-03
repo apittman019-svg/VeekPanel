@@ -2,7 +2,7 @@
 
 Initial implementation: 2026-10-03 UTC / 2026-10-02 America/New_York.
 Current milestone status: **M1 prototype implemented; physical acceptance pending.**
-No physical PCPanel was available; the owner confirmed their model is the Original
+No physical PCPanel was available; the user confirmed the target is a friend's Original
 with four pushable knobs. M2–M7 are not started.
 
 ## Local environment and completed checks
@@ -54,7 +54,22 @@ A Windows runner is not a Windows 10/11 hardware validation.
 `cargo doc --workspace --no-deps --locked` also passed locally. The repository is
 public at [apittman019-svg/VeekPanel](https://github.com/apittman019-svg/VeekPanel).
 
-## Remaining limitations
+## M1 continuation — friend testing support (2026-10-03)
+
+The user clarified that the Original belongs to a friend, who will test a download
+when convenient. No hardware was connected or physically validated in this continuation.
+Added bounded raw serial capture (new directory, byte/time limits, no protocol writes,
+no reconnect mixing), explicit unverified metadata, and a guided console test with
+a physical-observation worksheet. CI stages downloadable Windows/Linux diagnostic
+kits with dependency notices; these are M1 test utilities, not M6 installers.
+
+Local Nobara checks passed: formatting, strict Clippy, 21 Rust tests, release build,
+the existing serial PTY test, and a new synthetic capture/guide integration. That
+integration preserves invalid bytes, replays captured data, records Ctrl+C and
+disconnect, and produces the observation worksheet. Linux dependency-notice generation
+passed. Windows build/test and kit results for this continuation are recorded after CI.
+
+## Remaining limitations (unchanged physical gate)
 
 - Stock Original VID/PID, USB bridge, serial grammar, button polarity, heartbeat,
   physical ordering and range are not verified. Adapter derives from a compatible

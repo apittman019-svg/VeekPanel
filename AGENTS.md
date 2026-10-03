@@ -14,14 +14,15 @@ no hardware available in this session. Never mark an untested milestone complete
 
 User clarifications that override ambiguous wording in the original brief:
 
-- The owned device is the **Original PCPanel**. Each of its four knobs is also a
+- The target device belongs to the user's friend: an **Original PCPanel**. Each of its four knobs is also a
   push button. Model it as four analog inputs and four independent button inputs.
 - This is mainly a **Windows 10/11 application**. It must also work on **Nobara**;
   Nobara is the first Linux validation target. Broader Linux compatibility remains
   planned, with PipeWire as the native direction.
 - The user authorized publishing a **public `VeekPanel` GitHub repository** under
   their authenticated account. No credentials or private diagnostics go into Git.
-- Real hardware was unavailable; synthetic replay/PTY tests must be labeled as such.
+- Real hardware is with the friend, who will download and test when convenient.
+  Do not assume local access. Synthetic replay/PTY tests must be labeled as such.
 
 ## Product requirements to preserve
 
@@ -76,6 +77,11 @@ User clarifications that override ambiguous wording in the original brief:
 - Rust workspace, pinned toolchain and lockfile; original VeekPanel code is MIT.
 - `crates/veek-hardware`: pure protocol/model layer and mockable HID/serial session.
 - `crates/veek-probe`: local CLI for list/watch/offline replay; scoped M1 orchestration.
+  `capture` saves bounded raw serial evidence; `test-original` guides the friend
+  through explicit port selection and a 60-second capture. Neither certifies hardware.
+  `tests/manual` contains the diagnostic-kit launcher, checklist and notice generator.
+  Prebuilt diagnostic utilities are M1 test deliverables, not M6 installers/releases
+  of a functional audio application. Keep them visibly experimental.
 - Future Core Audio and PipeWire crates, core/config crates, Tauri 2 + Svelte UI.
   These are architecture decisions, not currently implemented features.
 - HID IDs: RGB `04d8:eb52`, Mini `0483:a3c4`, Pro `0483:a3c5`.
@@ -119,6 +125,7 @@ cargo build --workspace --release --locked
 cargo run -p veek-probe -- list
 cargo run -p veek-probe -- watch --duration 5
 python3 tests/serial_pty.py target/release/veek-probe
+python3 tests/capture_pty.py target/release/veek-probe
 ```
 
 Last command is Linux-only synthetic integration. Windows CI tests actual Windows

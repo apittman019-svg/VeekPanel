@@ -23,7 +23,7 @@ available and community maintenance exists; this research did not independently
 establish the vendor's support status. Treat discontinuation as project motivation,
 not a verified lifecycle announcement.
 
-The current user owns an Original with four pressable knobs. Its connection IDs,
+The user is building this for a friend who owns an Original with four pressable knobs. Its connection IDs,
 firmware framing and button polarity cannot be established from the absent physical
 unit. In particular, do not assert that a CH340/Arduino USB ID uniquely identifies it.
 See [protocol evidence and uncertainties](HARDWARE_PROTOCOL.md).

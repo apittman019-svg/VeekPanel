@@ -1,7 +1,7 @@
 # Physical hardware acceptance checklist
 
 **No rows are passed yet.** Software/PTY tests are recorded in `VERIFICATION.md`.
-First priority is the user's stock Original, on Windows and Nobara. Do not flash
+First priority is the friend's stock Original, on Windows and Nobara. Do not flash
 firmware, install guessed drivers, or send undocumented commands to obtain a pass.
 
 ## Record the test environment
@@ -12,7 +12,23 @@ firmware, install guessed drivers, or send undocumented commands to obtain a pas
   `bcdDevice` and serial-present/absent. Redact the serial value and personal paths.
 - Driver/transport and node/COM path; competing PCPanel apps closed.
 - Command used and raw returned lengths/bytes; fixture provenance is physical,
-  synthetic, or source-derived. Never change that label to imply stronger evidence.
+synthetic, or source-derived. Never change that label to imply stronger evidence.
+
+For the friend's first Windows test, use the downloadable diagnostic ZIP and
+`START-HERE.cmd` (or `veek-probe test-original`). The console compares before/after
+device lists, requires explicit port selection, captures 60 seconds, and supplies
+`RESULTS.txt`. Fill this in with actual physical observations. No automatic upload
+or hardware-validation decision is made. Source/binary provenance and the tester's
+observations must accompany any captures promoted to regression fixtures.
+
+Manual collection: `veek-probe capture --serial ACTUAL_PORT --output captures/new-test
+--duration 60`. Create the parent first; the new-test directory must not exist.
+`serial.bin` preserves exact received bytes including malformed input. `chunks.tsv`
+describes host read boundaries, not necessarily USB packets. Metadata omits port
+paths/USB serials and stays unverified. Capture ends on disconnect without retry;
+keep each connection in a separate directory. Check stop_reason and the last status
+field: byte_limit/read_error/output_error are not complete observation sessions,
+and in_progress without a final status means the process did not finalize evidence.
 
 ## Original acceptance table
 
