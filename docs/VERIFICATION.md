@@ -17,11 +17,18 @@ device permissions were modified. Native libudev development files already exist
 | `cargo clippy --workspace --all-targets --locked -- -D warnings` | Passed |
 | `cargo test --workspace --locked` | 17 tests passed (10 protocol, 4 session, 3 CLI) |
 | `cargo build --workspace --release --locked` | Passed on Nobara |
+| `cargo check --workspace --all-targets --locked --target x86_64-pc-windows-msvc` | Passed cross-target type check on Nobara; not Windows execution |
+| Malformed/truncated/oversized replay CLI inputs | Rejected with nonzero exit, bounded parsing |
+| Nonexistent explicit serial port, 4-second live run | Reported failed opens, retried and exited normally at deadline |
 | Original offline fixture | Correct independent knob and button labels; explicitly offline |
 | Pro offline fixture | Correct knob/button and separate slider labels |
 | Linux PTY integration | Passed actual serialport I/O with synthetic fragmented input, press/release, disconnect/reopen, parser reset and Ctrl+C |
 | Live `list` | Ran successfully; 0 recognized PCPanel HID interfaces, serial candidates kept unverified |
 | Live `watch --duration 5` with no panel | Waited and exited normally, no fabricated connection/control events |
+| `udevadm verify packaging/linux/70-veekpanel.rules` | Passed syntax/semantic validation; rules not installed |
+| Local Markdown links and `git diff --check` | Passed |
+| Dependency metadata/license inventory | Recorded in `DEPENDENCIES.md` |
+| No-device release process, 10-second sample | 10.10s elapsed, 0.04s user CPU + 0.06s system CPU, 3424 KiB max RSS; illustrative CLI sample only, not GUI/hardware performance |
 
 Protocol tests include exact VID/PID matching, all accepted raw analog values and
 indices, button polarity, Pro slider bounds, malformed/truncated/oversized HID,

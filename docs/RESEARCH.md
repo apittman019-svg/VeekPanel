@@ -44,7 +44,7 @@ never become a dependency of the hardware or audio libraries.
 
 Selected prototype dependencies: Rust standard threads/channels, `hidapi` with
 Windows-native and Linux hidraw backends, `serialport`, `clap`, `ctrlc`, `thiserror`.
-Resolved versions are in `Cargo.lock`. Avoid an async runtime until there is a need.
+Resolved versions are in `Cargo.lock`; [dependency license inventory](DEPENDENCIES.md) records declared licenses. Avoid an async runtime until there is a need.
 Rust 1.99.0 is the installed/tested/pinned toolchain, not a claim of an older MSRV.
 MIT is selected for original VeekPanel work. Dependency licenses remain their own;
 release packaging must inventory native and transitive licenses too.
