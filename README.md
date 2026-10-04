@@ -38,6 +38,10 @@ always says hardware validation is unverified. Builds are currently unsigned.
 
 ## M2 native audio diagnostics
 
+Download the [experimental M2 audio kit](https://github.com/apittman019-svg/VeekPanel/releases/tag/m2-audio-2026-10-04).
+On Windows, extract the ZIP and run `LIST-AUDIO.cmd` for a read-only listing;
+see the included README for explicit volume/mute commands.
+
 The separate `veek-audio-probe` lists outputs, inputs and live app sessions/streams,
 observes changes, and explicitly sets volume/mute. It also supports a temporary
 single-knob/button test with volume pickup. M1's `veek-probe` remains read/capture only.

@@ -84,8 +84,8 @@ User clarifications that override ambiguous wording in the original brief:
   `capture` saves bounded raw serial evidence; `test-original` guides the friend
   through explicit port selection and a 60-second capture. Neither certifies hardware.
   `tests/manual` contains the diagnostic-kit launcher, checklist and notice generator.
-  Prebuilt diagnostic utilities are M1 test deliverables, not M6 installers/releases
-  of a functional audio application. Keep them visibly experimental.
+  Prebuilt diagnostic utilities are M1/M2 test deliverables, not M6 installers or
+  releases of the finished desktop application. Keep them visibly experimental.
 - `crates/veek-audio`: shared target/change contract, generation checks, readback,
   balance/pickup/button diagnostic logic and mock tests.
 - `crates/veek-audio-windows`: native Core Audio on an MTA owner thread. FFI unsafe
@@ -94,6 +94,11 @@ User clarifications that override ambiguous wording in the original brief:
 - `crates/veek-audio-probe`: M2 list/watch/set and explicit temporary one-knob/button
   bind. No saved profiles/mappings. Read `docs/AUDIO_VALIDATION.md` before changing it.
   Watch reconnects read-only; bind stops on loss and requires explicit rearming.
+  Published prerelease `m2-audio-2026-10-04` uses source
+  `237421c12bd453adc4994af0bb94e6c734c76098`. Windows/Ubuntu CI passed 30 tests;
+  packaged Linux native integration passed on Nobara. Windows CI only enumerated
+  an empty endpoint list: interactive Windows writes and all physical PCPanel
+  checks remain pending. Do not equate the release with milestone acceptance.
 - Future core/config crates and Tauri 2 + Svelte UI remain unimplemented.
 - HID IDs: RGB `04d8:eb52`, Mini `0483:a3c4`, Pro `0483:a3c5`.
 - Original serial is **experimental**: 9600 8N1; `v<0..3>x<0..100>` and
@@ -141,8 +146,8 @@ python3 tests/audio/pipewire_integration.py target/release/veek-audio-probe
 ```
 
 All Python integration commands above are Linux-only. Audio integration uses a
-private PipeWire server; never substitute the user's live server for mutation tests. Windows CI tests actual Windows
-build/runtime without physical USB. Do not run speculative commands against unrelated
+private PipeWire server; never substitute the user's live server for mutation tests.
+Windows CI tests actual Windows build/runtime without physical USB. Do not run speculative commands against unrelated
 hardware. Do not install host permissions or disable SELinux to get tests passing.
 Document what ran, OS/toolchain, actual results, and unresolved checks in
 `docs/VERIFICATION.md`; use `docs/HARDWARE_VALIDATION.md` for future physical trials.

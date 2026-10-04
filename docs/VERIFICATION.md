@@ -132,7 +132,7 @@ into `/tmp/veekpanel-pw-sdk`; local builds used its pkg-config path and the inst
 native runtime. No host packages, permissions or desktop audio configuration were
 changed. Standard build prerequisites are documented in LINUX_SETUP.md. Dependency
 notice generation passed, including an exact-source MIT notice missing from the
-cookie-factory registry archive. CI and final artifact checks will be recorded below.
+cookie-factory registry archive. Final CI and artifact evidence follows.
 
 The release-build integration passed on Nobara for both playback and recording
 clients, as did both existing M1 PTY integrations. `cargo doc` and diff checks passed.
@@ -145,3 +145,30 @@ and native Core Audio initialization/enumeration with an empty endpoint list on 
 hosted runner. It did not test Windows volume writes or real devices. Ubuntu exposed
 an older pw-cat without `--raw`; the isolated test now uses portable WAV fixtures.
 That corrected fixture passed on Nobara before resubmission to CI.
+
+### Final M2 CI and published artifacts (2026-10-04)
+
+[Run 37175760562](https://github.com/apittman019-svg/VeekPanel/actions/runs/37175760562)
+passed both Windows and Ubuntu jobs for source
+`237421c12bd453adc4994af0bb94e6c734c76098`. Each ran formatting, strict Clippy,
+30 Rust tests, release builds and dependency notice/archive generation. Ubuntu
+passed both M1 PTY tests and the corrected native PipeWire integration. Windows
+passed native Core Audio startup/enumeration; its hosted runner had no endpoints,
+so neither volume/mute writes nor audible hardware were validated there.
+
+Downloaded both final M2 archives. Checked archive integrity, required files, exact
+BUILD_COMMIT identity, dependency notices and included unmodified MPL source.
+The Ubuntu-built Linux executable passed the complete isolated native audio test
+on Nobara, including playback/recording clients and synthetic Original PTY binding.
+The Windows PE import table has no external VCRUNTIME/MSVCP dependency; only OS
+DLLs are imported. This is static inspection, not clean-Windows acceptance.
+
+Published the unsigned experimental [M2 audio diagnostic release](https://github.com/apittman019-svg/VeekPanel/releases/tag/m2-audio-2026-10-04)
+with both archives and SHA256SUMS.txt. GitHub's asset sizes/digests match every local
+file; the release is public, non-draft and explicitly a prerelease targeting the
+verified source commit. The subsequent handoff commit changes documentation only.
+
+Next M2 acceptance work is interactive Windows volume/mute/session lifecycle tests,
+physical Nobara audio route tests, and the friend's Original protocol/knob/button
+trial. Read AUDIO_VALIDATION.md for the full matrix. M1 and M2 physical acceptance
+remain open; no M3–M7 features were implemented or authorized in this continuation.
