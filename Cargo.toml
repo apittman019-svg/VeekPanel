@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/veek-hardware", "crates/veek-probe"]
+members = ["crates/veek-hardware", "crates/veek-probe", "crates/veek-audio", "crates/veek-audio-linux", "crates/veek-audio-windows", "crates/veek-audio-probe"]
 resolver = "2"
 
 [workspace.package]

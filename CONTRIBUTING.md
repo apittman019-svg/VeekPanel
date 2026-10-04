@@ -13,7 +13,10 @@ cargo test --workspace --locked
 cargo build --workspace --release --locked
 ```
 
-On Linux also run `python3 tests/serial_pty.py target/release/veek-probe`.
+On Linux also run `tests/serial_pty.py`, `tests/capture_pty.py` with the hardware
+binary, and `tests/audio/pipewire_integration.py` with the audio binary. Run Python
+scripts with `python3`. Native audio integration must use its isolated test daemon;
+never point automated mutation tests at a user's desktop audio server.
 Tests must be hardware-free by default. Record physical results separately using
 `docs/HARDWARE_VALIDATION.md`; preserve useful redacted raw captures and provenance.
 

@@ -1,0 +1,8 @@
+cookie-factory 0.3.3 declares MIT but its crates.io archive omits LICENSES/.
+The unmodified MIT license here was retrieved from the exact source commit in
+that archive's .cargo_vcs_info.json:
+d36b805dbd7dd65f2df947235c5bcc573afe2c76
+https://github.com/rust-bakery/cookie-factory/blob/d36b805dbd7dd65f2df947235c5bcc573afe2c76/LICENSES/MIT.txt
+Package authors: Geoffroy Couprie and Pierre Chifflier (Cargo.toml).
+Registry source: https://crates.io/api/v1/crates/cookie-factory/0.3.3/download
+No dependency source was modified.

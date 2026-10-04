@@ -1,8 +1,9 @@
 # Implementation plan and gates
 
-Only research/repository setup and M1 are authorized in this task. Later milestone
-descriptions are a continuation plan, not permission to begin them. The target Original belonging
-to a friend and being unavailable locally means the physical M1 gate is pending.
+The user authorized M2 after the M1 diagnostic release. M1 physical acceptance
+remains pending because the Original belongs to a friend and is unavailable locally.
+M3–M7 remain a continuation plan, not authorization. See AUDIO_VALIDATION.md for
+implemented M2 diagnostics and the remaining platform/physical gates.
 
 | Milestone | Work | Evidence needed to accept |
 | --- | --- | --- |
@@ -15,7 +16,7 @@ to a friend and being unavailable locally means the physical M1 gate is pending.
 | 6 — Packaging | Windows installer/portable; Flatpak and AppImage; native RPM/DEB path; permission guidance; update/signing strategy | Clean Windows 10/11 and Nobara install → connect → assign → use without terminal. USB access under actual sandbox, normal launcher, upgrade/uninstall; broader Linux distro smoke tests. |
 | 7 — Polish | Animations, guided errors, diagnostics redaction, accessibility, performance and UX refinements | Measured responsiveness/idle resources, user workflow trials, tested privacy filtering, regression/compatibility matrix. |
 
-## Next session, still M1
+## Parallel pending physical work: M1
 
 1. Read `AGENTS.md`, `docs/VERIFICATION.md` and `docs/HARDWARE_PROTOCOL.md`.
 2. Obtain access to the stock Original. Compare enumeration before/after connecting;
@@ -30,8 +31,8 @@ to a friend and being unavailable locally means the physical M1 gate is pending.
    generic serial bridge is a PCPanel.
 5. Validate Windows and Nobara unplug/replug, port renumbering, suspend/resume and
    permission recovery. Update the acceptance matrix honestly.
-6. Stop at the gate. Begin M2 only when the user authorizes that work; the original
-   broad brief does not override this task's explicit milestone boundary.
+6. Keep M1 acceptance pending until observed. M2 software work is now authorized,
+   but neither its physical acceptance nor M3 authorization follows automatically.
 
 ## Known M1 limitations to carry forward
 

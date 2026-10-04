@@ -1,8 +1,8 @@
-# Nobara and Linux setup — M1 developer utility
+# Nobara and Linux setup — M1/M2 developer utilities
 
 Nobara is the first Linux target. The prototype has been built and run on Nobara
 44 KDE as an ordinary user. Physical PCPanel verification is still pending.
-These terminal steps are for M1 development; the final desktop product must guide
+These terminal steps are for M1/M2 development; the final desktop product must guide
 setup without requiring terminal commands.
 
 ## Build
@@ -12,15 +12,21 @@ The repository's `rust-toolchain.toml` selects the tested version automatically.
 On Nobara/Fedora, the native build prerequisites are:
 
 ```sh
-sudo dnf install gcc pkgconf-pkg-config systemd-devel
+sudo dnf install gcc pkgconf-pkg-config systemd-devel pipewire-devel clang-devel
 cargo build --workspace --locked
 cargo run -p veek-probe -- list
 ```
 
-Ubuntu/Mint equivalents are `build-essential pkg-config libudev-dev`; Arch uses
-`base-devel pkgconf systemd`. These broader distributions are not physically
-validated by this session. No PipeWire/WebKit development libraries are needed
-for M1. Audio and UI are not implemented.
+Ubuntu/Mint equivalents are `build-essential pkg-config libudev-dev libpipewire-0.3-dev libclang-dev`;
+Arch uses `base-devel pkgconf systemd pipewire clang`. These broader distributions
+are not physically validated by this session. PipeWire development headers and
+libclang are needed for the M2 workspace build. To build only M1 without them use
+`cargo build -p veek-probe --locked`. WebKit/Node/Tauri are not needed yet.
+
+M2 runtime needs native libpipewire and the ordinary user-session server. Test tools
+need `pipewire`, `pw-cat`, `pw-cli`, `pw-dump` and `pw-metadata` (Ubuntu `pipewire-bin`).
+The audio integration script creates its own private server and never restarts the
+desktop's service. See [audio diagnostics](AUDIO_VALIDATION.md).
 
 ## Known HID models (RGB/Mini/Pro)
 

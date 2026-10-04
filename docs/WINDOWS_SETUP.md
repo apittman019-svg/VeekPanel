@@ -1,6 +1,6 @@
 # Windows setup — primary platform
 
-Target Windows 10 and 11. M1 is a developer console utility, not an installer or
+Target Windows 10 and 11. M1/M2 are developer console utilities, not an installer or
 finished desktop application. GitHub CI builds/tests on a Windows runner; actual
 Windows 10/11 hardware compatibility is a separate acceptance gate.
 
@@ -14,7 +14,7 @@ kit includes dependency notices and unmodified MPL dependency source. It is unsi
 
 Install [Rust](https://www.rust-lang.org/tools/install) with the MSVC toolchain and
 Visual Studio Build Tools' Desktop development with C++ workload/Windows SDK.
-The repository pins the Rust version. WebView2/Node/Tauri are not needed for M1.
+The repository pins the Rust version. WebView2/Node/Tauri are not needed for M1/M2.
 
 From PowerShell in the repository:
 
@@ -65,3 +65,11 @@ cargo test --workspace --locked
 Replay is explicitly offline. The Linux pseudo-terminal test is not applicable on
 Windows. No audio changes, tray operation, startup registration or installer are
 part of M1. Follow the milestone plan before adding any of them.
+
+## M2 native audio
+
+`veek-audio-probe.exe list` enumerates active endpoints and live sessions using
+Core Audio. `watch --duration 30` observes native changes. Explicit set/bind commands
+change audio; see [audio diagnostics and manual acceptance](AUDIO_VALIDATION.md).
+The M2 kit's LIST-AUDIO.cmd is read-only. It is separate from M1's START-HERE.cmd.
+CI uses static CRT linkage for portable experimental binaries; they are unsigned.

@@ -1,0 +1,13 @@
+[package]
+name = "veek-audio-linux"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+veek-audio = { path = "../veek-audio" }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+pipewire = "0.10.1"
+serde_json = "1"

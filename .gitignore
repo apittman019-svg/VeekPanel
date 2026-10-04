@@ -4,3 +4,6 @@
 .env
 captures/
 /diagnostic-kit/
+/audio-kit/
+/veekpanel-m2-*.zip
+/veekpanel-m2-*.tar.gz

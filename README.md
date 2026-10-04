@@ -1,8 +1,9 @@
 # VeekPanel
 
 A Windows-first, open-source PCPanel controller project with first-class Nobara/Linux support.
-**Current scope: research and Milestone 1 hardware prototype only.** No audio control,
-desktop UI, profiles, tray service or installer is implemented yet.
+**Current scope: M1 hardware diagnostics and M2 native audio diagnostics.**
+Windows Core Audio and native PipeWire backends are implemented. Physical PCPanel
+acceptance remains pending. Desktop UI, profiles, tray and installers come later.
 
 The target is a friend's **Original PCPanel**, whose four knobs also act as four independent
 push buttons. Its experimental serial adapter is included; stock-hardware validation
@@ -34,6 +35,22 @@ The friend owns the device and will test when convenient; no physical pass is cl
 Raw captures include unrecognized bytes. A replay/parser error is useful evidence,
 not a reason to flash firmware. Nothing is uploaded automatically. Captured metadata
 always says hardware validation is unverified. Builds are currently unsigned.
+
+## M2 native audio diagnostics
+
+The separate `veek-audio-probe` lists outputs, inputs and live app sessions/streams,
+observes changes, and explicitly sets volume/mute. It also supports a temporary
+single-knob/button test with volume pickup. M1's `veek-probe` remains read/capture only.
+
+```sh
+cargo run -p veek-audio-probe -- list
+cargo run -p veek-audio-probe -- watch --duration 30
+# Changes the current default output volume:
+cargo run -p veek-audio-probe -- set --target default-output --volume 25
+```
+
+See [audio usage, architecture and acceptance](docs/AUDIO_VALIDATION.md) before
+hardware binding. These are experimental console utilities; a finished GUI is M4.
 
 ## Run the developer utility
 

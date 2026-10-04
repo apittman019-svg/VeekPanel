@@ -35,7 +35,15 @@ for package in sorted(metadata["packages"], key=lambda p: (p["name"], p["version
     inventory.append(f"Source: https://crates.io/api/v1/crates/{package['name']}/{package['version']}/download")
     notices = [f for f in source.rglob("*") if f.is_file() and f.name.lower().startswith(("license", "copying", "notice"))]
     if not notices:
-        raise RuntimeError(f"No license/notice file found for {name}; inspect before distributing")
+        # Exact-version license omitted from the published cookie-factory archive.
+        # The checked-in upstream text and provenance are reviewed, never guessed.
+        supplement = pathlib.Path(__file__).resolve().parents[2] / "packaging" / "third-party" / name
+        if supplement.is_dir():
+            shutil.copytree(supplement, target, dirs_exist_ok=True)
+            inventory.append("License source: bundled PROVENANCE.txt")
+            notices = []
+        else:
+            raise RuntimeError(f"No license/notice file found for {name}; inspect before distributing")
     for notice in notices:
         output = target / notice.relative_to(source)
         output.parent.mkdir(parents=True, exist_ok=True)

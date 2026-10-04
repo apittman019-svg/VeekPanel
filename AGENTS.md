@@ -7,9 +7,9 @@ hardware. The complete original brief is in `docs/PROJECT_REQUIREMENTS.md`.
 Read this file, `docs/VERIFICATION.md`, `docs/HARDWARE_PROTOCOL.md` and
 `docs/MILESTONES.md` before continuing. Update them when evidence or scope changes.
 
-**Current authorization: research, architecture/stack, protocol investigation,
-repository setup, and Milestone 1 hardware prototype ONLY. Do not implement M2–M7
-without a new user request.** Physical M1 acceptance is not complete: the user had
+**Current authorization: M1 work plus Milestone 2 native audio backends/control.**
+The user authorized the next step after the M1 diagnostic release. Do not implement
+M3–M7 without a new request. Physical M1 acceptance is not complete: the user had
 no hardware available in this session. Never mark an untested milestone complete.
 
 User clarifications that override ambiguous wording in the original brief:
@@ -86,8 +86,15 @@ User clarifications that override ambiguous wording in the original brief:
   `tests/manual` contains the diagnostic-kit launcher, checklist and notice generator.
   Prebuilt diagnostic utilities are M1 test deliverables, not M6 installers/releases
   of a functional audio application. Keep them visibly experimental.
-- Future Core Audio and PipeWire crates, core/config crates, Tauri 2 + Svelte UI.
-  These are architecture decisions, not currently implemented features.
+- `crates/veek-audio`: shared target/change contract, generation checks, readback,
+  balance/pickup/button diagnostic logic and mock tests.
+- `crates/veek-audio-windows`: native Core Audio on an MTA owner thread. FFI unsafe
+  is confined here with ownership/lifetime comments; shared code forbids unsafe.
+- `crates/veek-audio-linux`: native PipeWire with registry/node/metadata subscriptions.
+- `crates/veek-audio-probe`: M2 list/watch/set and explicit temporary one-knob/button
+  bind. No saved profiles/mappings. Read `docs/AUDIO_VALIDATION.md` before changing it.
+  Watch reconnects read-only; bind stops on loss and requires explicit rearming.
+- Future core/config crates and Tauri 2 + Svelte UI remain unimplemented.
 - HID IDs: RGB `04d8:eb52`, Mini `0483:a3c4`, Pro `0483:a3c5`.
 - Original serial is **experimental**: 9600 8N1; `v<0..3>x<0..100>` and
   `b<0..3> <0|1>` lines; inferred active-low presses; periodic `pong`. Source is
@@ -103,10 +110,10 @@ User clarifications that override ambiguous wording in the original brief:
 
 ## Implementation plan
 
-1. **M1 (current):** investigate → pure decoders → descriptors/transport → list/watch
+1. **M1 (physical acceptance pending):** investigate → pure decoders → descriptors/transport → list/watch
    utility → mock/PTY tests → real Original validation on Windows/Nobara → positive
    automatic identity → per-model compatibility evidence. Physical gate pending.
-2. **M2 (not started):** audio contract/backends; physical knob → master then app;
+2. **M2 (current):** audio contract/backends; physical knob → master then app;
    subscriptions, input/output mute, service recovery and mock backend.
 3. **M3 (not started):** stable identity, mapping engine, groups, profiles, versioned
    persistent config/migrations and reboot/reconnect semantics.
@@ -130,9 +137,11 @@ cargo run -p veek-probe -- list
 cargo run -p veek-probe -- watch --duration 5
 python3 tests/serial_pty.py target/release/veek-probe
 python3 tests/capture_pty.py target/release/veek-probe
+python3 tests/audio/pipewire_integration.py target/release/veek-audio-probe
 ```
 
-Both Python commands are Linux-only synthetic integrations. Windows CI tests actual Windows
+All Python integration commands above are Linux-only. Audio integration uses a
+private PipeWire server; never substitute the user's live server for mutation tests. Windows CI tests actual Windows
 build/runtime without physical USB. Do not run speculative commands against unrelated
 hardware. Do not install host permissions or disable SELinux to get tests passing.
 Document what ran, OS/toolchain, actual results, and unresolved checks in

@@ -1,4 +1,4 @@
-name: Hardware prototype CI
+name: Hardware and audio prototype CI
 on:
   push:
   pull_request:
@@ -17,9 +17,9 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - name: Linux HID and serial build dependencies
+      - name: Linux hardware and native audio build/test dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev pkg-config libpipewire-0.3-dev libclang-dev pipewire-bin
       - name: Install pinned Rust
         run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
       - run: cargo fmt --all --check
@@ -32,6 +32,20 @@ jobs:
       - name: Capture PTY integration (synthetic)
         if: runner.os == 'Linux'
         run: python3 tests/capture_pty.py target/release/veek-probe
+      - name: Native PipeWire integration (isolated server, synthetic audio/hardware)
+        if: runner.os == 'Linux'
+        run: python3 tests/audio/pipewire_integration.py target/release/veek-audio-probe
+      - name: Windows audio read-only smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-Service AudioEndpointBuilder -StartupType Manual
+          Set-Service Audiosrv -StartupType Manual
+          Start-Service AudioEndpointBuilder
+          Start-Service Audiosrv
+          ./target/release/veek-audio-probe.exe --help
+          ./target/release/veek-audio-probe.exe list
+          if ($LASTEXITCODE -ne 0) { throw 'Core Audio enumeration failed' }
       - name: Stage Windows diagnostic kit
         if: runner.os == 'Windows'
         shell: pwsh
@@ -64,5 +78,30 @@ jobs:
           path: |
             veekpanel-m1-*.zip
             veekpanel-m1-*.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+      - name: Stage Windows M2 audio kit
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path audio-kit
+          Copy-Item target/release/veek-audio-probe.exe audio-kit/
+          Copy-Item tests/audio/README.txt,tests/audio/LIST-AUDIO.cmd,LICENSE,diagnostic-kit/BUILD_COMMIT.txt audio-kit/
+          Copy-Item -Recurse diagnostic-kit/THIRD_PARTY audio-kit/
+          Compress-Archive -Path audio-kit/* -DestinationPath veekpanel-m2-Windows-x64.zip
+      - name: Stage Linux M2 audio kit
+        if: runner.os == 'Linux'
+        run: |
+          mkdir audio-kit
+          cp target/release/veek-audio-probe tests/audio/README.txt LICENSE diagnostic-kit/BUILD_COMMIT.txt audio-kit/
+          cp -r diagnostic-kit/THIRD_PARTY audio-kit/
+          tar -czf veekpanel-m2-Linux-x64.tar.gz -C audio-kit .
+      - name: Upload experimental M2 audio archives
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: veekpanel-m2-${{ runner.os }}-x64
+          path: |
+            veekpanel-m2-*.zip
+            veekpanel-m2-*.tar.gz
           if-no-files-found: error
           retention-days: 30

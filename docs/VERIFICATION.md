@@ -1,9 +1,9 @@
 # Verification record
 
 Initial implementation: 2026-10-03 UTC / 2026-10-02 America/New_York.
-Current milestone status: **M1 prototype implemented; physical acceptance pending.**
+Current milestone status: **M1 physical acceptance pending; M2 audio diagnostics implemented.**
 No physical PCPanel was available; the user confirmed the target is a friend's Original
-with four pushable knobs. M2–M7 are not started.
+with four pushable knobs. M2 was subsequently authorized; M3–M7 are not started.
 
 ## Local environment and completed checks
 
@@ -103,6 +103,39 @@ only. No hardware acceptance is inferred from publishing these downloads.
 - No real permission-denied PCPanel, duplicate-interface or multi-panel checks.
   Rules are provided, not installed; normal-user access with actual hardware remains
   pending. No blanket serial rule is supplied without verified identifiers.
-- No audio backend, configuration persistence, groups/profiles, GUI, tray or package.
+- M2 now provides native audio diagnostics (see below). No configuration persistence,
+  groups/profiles, GUI, tray or full application package.
 
 Next physical work must follow `HARDWARE_VALIDATION.md`, starting with the Original.
+
+## M2 native audio continuation (2026-10-03)
+
+The user authorized the next step after the M1 diagnostic release. Scope is now
+native audio diagnostics plus the temporary one-knob/button path; original physical
+M1 evidence is still pending. See [AUDIO_VALIDATION.md](AUDIO_VALIDATION.md).
+
+Implemented Windows Core Audio and native PipeWire adapters, a shared contract with
+mock tests, and a separate JSON diagnostic CLI. M1's hardware utility remains audio-free.
+Local Nobara checks passed: formatting, strict Clippy, 30 Rust tests, workspace
+release builds; Windows Core Audio cross-target type/lint checks also passed.
+
+Read-only enumeration against the actual Nobara user server found four outputs,
+two inputs and the current default output/input with their volume/mute values.
+No user audio was mutated. Mutation tests used a private PipeWire daemon with
+synthetic output/input objects and actual pw-cat playback/capture clients. They
+exercise native volume/mute, default metadata, channel balance, external state,
+stream lifecycle, restart/stale-ID rejection and synthetic PTY knob/button binding.
+No physical PCPanel or audible hardware route was tested.
+
+Build headers were extracted from the matching Nobara pipewire-devel 1.6.8 RPM
+into `/tmp/veekpanel-pw-sdk`; local builds used its pkg-config path and the installed
+native runtime. No host packages, permissions or desktop audio configuration were
+changed. Standard build prerequisites are documented in LINUX_SETUP.md. Dependency
+notice generation passed, including an exact-source MIT notice missing from the
+cookie-factory registry archive. CI and final artifact checks will be recorded below.
+
+The release-build integration passed on Nobara for both playback and recording
+clients, as did both existing M1 PTY integrations. `cargo doc` and diff checks passed.
+A 3-second read-only M2 watch on the live server used 0.00s user/0.00s system CPU
+(at the timer's precision), 6888 KiB maximum RSS; this is a short diagnostic sample,
+not a latency/production performance guarantee.

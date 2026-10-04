@@ -8,9 +8,11 @@ hardware and native OS audio. It must work without a terminal or elevated runtim
 The M1 CLI is a developer diagnostic, not the finished end-user experience.
 
 **Implemented:** protocol types/parsers, model-specific validation, HID/serial I/O,
-cancelable reading, bounded event delivery, reconnect retry, local CLI diagnostics.
-**Planned only:** every audio, mapping, configuration, profile, UI, tray and installer
-component below. No success stubs or dummy audio endpoints exist.
+cancelable reading, bounded event delivery, reconnect retry, local CLI diagnostics;
+native Windows Core Audio and PipeWire backends with M2 audio diagnostics.
+**Planned only:** persistent mapping, configuration, profiles, UI, tray and installers.
+Production diagnostics never substitute mock audio endpoints. Isolated tests create
+explicitly synthetic endpoints on their own PipeWire server.
 
 ```mermaid
 flowchart TD
@@ -35,9 +37,9 @@ Rust workspace conventions replace empty top-level component directories:
 | --- | --- | --- |
 | `crates/veek-hardware` | Model capabilities, pure decoders, transport handles, physical events | M1, exists |
 | `crates/veek-probe` | Local diagnostic CLI, discovery/retry and worker orchestration | M1, exists |
-| Future `crates/veek-audio` | Target IDs, capability flags, command/event contract | M2 |
-| Future `crates/veek-audio-windows` | COM/Core Audio only | M2 |
-| Future `crates/veek-audio-linux` | PipeWire/WirePlumber interaction only | M2 |
+| `crates/veek-audio` | Target IDs, capability flags, command/event contract | M2, exists |
+| `crates/veek-audio-windows` | COM/Core Audio only | M2, exists |
+| `crates/veek-audio-linux` | PipeWire/WirePlumber interaction only | M2, exists |
 | Future `crates/veek-core` | Identity matching, engine, groups and profile switching | M3 |
 | Future `crates/veek-config` | Validated schema, atomic saves, backups, migrations, import/export | M3 |
 | Future `app` and `ui` | Tauri composition/tray and TypeScript/Svelte views | M4/M5 |
@@ -74,7 +76,16 @@ Keep state events ordered per device and include connection generations so stale
 commands cannot affect a replacement handle. Idle heartbeat or USB silence alone
 must not be interpreted as a control action. Silent reset recovery remains to test.
 
-## Planned audio contract
+## Implemented M2 audio contract
+
+The implementation and exact limitations are documented in [AUDIO_VALIDATION.md](AUDIO_VALIDATION.md).
+`veek-audio-probe` runs native objects on a dedicated worker with list/watch/set/bind
+commands. Readback reports whether each write was observed. Watch recovers with a
+new generation; temporary bindings fail closed and must be explicitly rearmed.
+Pickup and release-before-press handling prevent startup state from acting on audio.
+Persistent binding, group and reconnect policy remains M3/M5.
+
+### Production direction to preserve
 
 Backends provide snapshots and subscriptions for outputs, inputs and application
 streams/sessions. Commands include set normalized gain, set mute and capability-
