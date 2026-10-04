@@ -1,0 +1,23 @@
+VeekPanel Mini test - physical observations (not an automatic pass)
+
+Fill in these short answers; UNKNOWN and NOT TESTED are valid.
+Windows version / Nobara version:
+Model/revision printed on the unit (reported by owner: Mini 1.0):
+Stock/modified/unknown firmware:
+Other PCPanel apps fully closed? YES / NO / UNKNOWN:
+
+While following the prompts, did these physical knobs give matching events?
+Leftmost knob: displayed KNOB number __; full travel worked __; press AND release worked __
+Second knob:   displayed KNOB number __; full travel worked __; press AND release worked __
+Third knob:    displayed KNOB number __; full travel worked __; press AND release worked __
+Rightmost:     displayed KNOB number __; full travel worked __; press AND release worked __
+
+Did clockwise movement increase the raw value?
+Any missing/stuck/repeated/unexpected events?
+Did you unplug/replug and run the test again? Result:
+Did you test after sleep/resume? Result, or NOT TESTED:
+Anything else:
+
+SUMMARY.txt contains automatic observations, not your answers above. No audio
+volume changes are expected. Review all files and zip the entire capture folder.
+No files upload automatically. Do not include personal serial numbers or paths.

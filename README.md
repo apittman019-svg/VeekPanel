@@ -5,9 +5,9 @@ A Windows-first, open-source PCPanel controller project with first-class Nobara/
 Windows Core Audio and native PipeWire backends are implemented. Physical PCPanel
 acceptance remains pending. Desktop UI, profiles, tray and installers come later.
 
-The target is a friend's **Original PCPanel**, whose four knobs also act as four independent
-push buttons. Its experimental serial adapter is included; stock-hardware validation
-is still pending. There was no physical PCPanel available during this implementation.
+The target is a friend's **PCPanel Mini 1.0**, corrected from the earlier Original
+identification. Its four knobs also act as four independent push buttons. Use the
+Mini HID path; physical compatibility remains pending reviewed test evidence.
 
 ## Hardware status
 
@@ -26,11 +26,20 @@ The Milestone 1 acceptance gate remains open until physical controls are checked
 The [M1 diagnostic release](https://github.com/apittman019-svg/VeekPanel/releases/tag/m1-probe-2026-10-03)
 provides experimental Windows and Linux downloads. These are console test
 utilities, not the finished application or installers. For Windows, extract the
-whole ZIP and double-click `START-HERE.cmd`; no Rust installation is needed. It
-runs `veek-probe test-original`, compares device listings before/after connection,
-asks for an explicit serial port, and collects 60 seconds of raw input. Follow the
-included README and fill in `RESULTS.txt` before returning the capture folder.
-The friend owns the device and will test when convenient; no physical pass is claimed.
+whole ZIP and double-click **`TEST-MINI.cmd`** for the friend's **Mini 1.0**.
+Close other PCPanel apps first. The test auto-detects the Mini HID interface, gives
+90 seconds of knob/button prompts, and saves raw reports, decoded events, a summary
+and a short `RESULTS.txt` checklist in `captures/mini-...`. Fill in the checklist,
+review the files and zip that folder for return. No audio changes are expected.
+
+The original `m1-probe-2026-10-03` archive predates this launcher. Use the
+[Mini test release](https://github.com/apittman019-svg/VeekPanel/releases/tag/m1-mini-2026-10-04)
+for `TEST-MINI.cmd`. `START-HERE.cmd` remains **Original/Maple-only**.
+
+Manual Mini command: `veek-probe test-mini` (Linux: `./veek-probe test-mini`).
+No COM selection or Device Manager is needed. Ambiguous Mini interfaces cause an
+explicit error; no arbitrary device is opened. Empty captures are clearly flagged.
+Reports and startup snapshots alone cannot certify physical controls.
 
 Raw captures include unrecognized bytes. A replay/parser error is useful evidence,
 not a reason to flash firmware. Nothing is uploaded automatically. Captured metadata

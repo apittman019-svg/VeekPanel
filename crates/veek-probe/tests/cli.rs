@@ -44,6 +44,8 @@ fn pro_replay_maps_sliders_separately() {
 fn invalid_arguments_and_missing_files_fail() {
     for args in [
         vec!["watch", "--duration", "0"],
+        vec!["test-mini", "--duration", "0"],
+        vec!["test-mini", "--wait", "0"],
         vec![
             "capture",
             "--serial",
@@ -79,4 +81,57 @@ fn guided_test_stops_on_closed_input_before_opening_hardware() {
     assert!(!String::from_utf8(output.stdout)
         .unwrap()
         .contains("CAPTURE_OPENED"));
+}
+
+#[test]
+fn mini_missing_exact_path_saves_clear_empty_evidence_without_opening_hardware() {
+    let directory = std::env::temp_dir().join(format!(
+        "veek-mini-cli-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let output = Command::new(env!("CARGO_BIN_EXE_veek-probe"))
+        .args([
+            "test-mini",
+            "--wait",
+            "1",
+            "--duration",
+            "1",
+            "--hid-path",
+            "veek-test-nonexistent-hid-path",
+            "--output",
+        ])
+        .arg(&directory)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let summary = std::fs::read_to_string(directory.join("SUMMARY.txt")).unwrap();
+    assert!(summary.contains("NO INPUT RECEIVED"));
+    let metadata = std::fs::read_to_string(directory.join("metadata.txt")).unwrap();
+    assert!(metadata.contains("hardware_validation=unverified"));
+    assert!(metadata.contains("status=finished"));
+    assert!(!metadata.contains("veek-test-nonexistent-hid-path"));
+    assert!(directory.join("RESULTS.txt").exists());
+    std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn mini_replay_covers_four_knobs_and_independent_button_edges() {
+    let output = Command::new(env!("CARGO_BIN_EXE_veek-probe"))
+        .args(["replay", "--model", "mini"])
+        .arg(fixture("mini.hex"))
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let text = String::from_utf8(output.stdout).unwrap();
+    assert!(text.contains("OFFLINE REPLAY"));
+    for i in 1..=4 {
+        assert!(text.contains(&format!("KNOB_{i} = 0 (raw=0/255)")));
+        assert!(text.contains(&format!("KNOB_{i} = 100 (raw=255/255)")));
+        assert!(text.contains(&format!("KNOB_{i}_PRESS = TRUE")));
+        assert!(text.contains(&format!("KNOB_{i}_PRESS = FALSE")));
+    }
 }

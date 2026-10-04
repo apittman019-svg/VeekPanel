@@ -7,15 +7,23 @@ hardware. The complete original brief is in `docs/PROJECT_REQUIREMENTS.md`.
 Read this file, `docs/VERIFICATION.md`, `docs/HARDWARE_PROTOCOL.md` and
 `docs/MILESTONES.md` before continuing. Update them when evidence or scope changes.
 
-**Current authorization: M1 work plus Milestone 2 native audio backends/control.**
-The user authorized the next step after the M1 diagnostic release. Do not implement
-M3–M7 without a new request. Physical M1 acceptance is not complete: the user had
-no hardware available in this session. Never mark an untested milestone complete.
+**Current authorization: continue all development that does not require physical
+PCPanel hardware, including native audio, M3 mappings/configuration, background
+architecture and the actual backend-connected M4 desktop GUI.** The superseding
+request is preserved in `docs/CONTINUATION_REQUEST.md`. Do not use pending hardware
+validation as a reason to stop software work. Nobara is the current development
+machine; Windows remains a first-class product target. M1 physical validation is
+BLOCKED/PENDING, not passed. Never guess or claim untested hardware compatibility.
 
 User clarifications that override ambiguous wording in the original brief:
 
-- The target device belongs to the user's friend: an **Original PCPanel**. Each of its four knobs is also a
-  push button. Model it as four analog inputs and four independent button inputs.
+- Corrected by the user on 2026-10-04: the friend's device is a **PCPanel Mini 1.0**,
+  not the Original/Maple previously reported. It has four analog knobs and four
+  independent push buttons. Use the Mini HID adapter (reference VID:PID `0483:a3c4`),
+  not the Original serial guide. Revision-specific behavior still requires evidence.
+  The user reports that they figured out the hardware; clarify the observed results
+  before treating that as a complete physical acceptance test. The supplied serial
+  capture contains zero bytes and cannot validate Mini behavior.
 - This is mainly a **Windows 10/11 application**. It must also work on **Nobara**;
   Nobara is the first Linux validation target. Broader Linux compatibility remains
   planned, with PipeWire as the native direction.
@@ -83,7 +91,10 @@ User clarifications that override ambiguous wording in the original brief:
 - `crates/veek-probe`: local CLI for list/watch/offline replay; scoped M1 orchestration.
   `capture` saves bounded raw serial evidence; `test-original` guides the friend
   through explicit port selection and a 60-second capture. Neither certifies hardware.
-  `tests/manual` contains the diagnostic-kit launcher, checklist and notice generator.
+  `test-mini` auto-detects only Mini HID, gives timed prompts and saves bounded raw
+  reports/events plus a summary and checklist. `TEST-MINI.cmd` launches it; the
+  Original-only `START-HERE.cmd` must not be used for the friend's Mini 1.0.
+  `tests/manual` contains the diagnostic-kit launchers, checklists and notice generator.
   Prebuilt diagnostic utilities are M1/M2 test deliverables, not M6 installers or
   releases of the finished desktop application. Keep them visibly experimental.
 - `crates/veek-audio`: shared target/change contract, generation checks, readback,
@@ -116,7 +127,7 @@ User clarifications that override ambiguous wording in the original brief:
 ## Implementation plan
 
 1. **M1 (physical acceptance pending):** investigate → pure decoders → descriptors/transport → list/watch
-   utility → mock/PTY tests → real Original validation on Windows/Nobara → positive
+   utility → mock/PTY tests → real Mini 1.0 validation on Windows/Nobara → positive
    automatic identity → per-model compatibility evidence. Physical gate pending.
 2. **M2 (current):** audio contract/backends; physical knob → master then app;
    subscriptions, input/output mute, service recovery and mock backend.
@@ -146,7 +157,9 @@ python3 tests/audio/pipewire_integration.py target/release/veek-audio-probe
 ```
 
 All Python integration commands above are Linux-only. Audio integration uses a
-private PipeWire server; never substitute the user's live server for mutation tests.
+private PipeWire server for routine unattended mutation tests. The latest request
+also authorizes explicit live Nobara audio integration: document selected targets,
+limit changes, and restore prior state; do not restart the user's desktop services.
 Windows CI tests actual Windows build/runtime without physical USB. Do not run speculative commands against unrelated
 hardware. Do not install host permissions or disable SELinux to get tests passing.
 Document what ran, OS/toolchain, actual results, and unresolved checks in

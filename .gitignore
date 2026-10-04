@@ -7,3 +7,6 @@ captures/
 /audio-kit/
 /veekpanel-m2-*.zip
 /veekpanel-m2-*.tar.gz
+
+# Private user-supplied hardware evidence
+/thing.zip

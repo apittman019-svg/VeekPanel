@@ -1,4 +1,5 @@
 mod capture;
+mod mini;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use std::{
@@ -36,6 +37,22 @@ enum Command {
     List,
     /// Guided Original test: compare ports, select explicitly, collect 60 seconds of raw evidence.
     TestOriginal,
+    /// Mini-only HID test: auto-detect, guide all four knobs/buttons, save bounded evidence.
+    TestMini {
+        #[arg(long, default_value_t = 90, value_parser = clap::value_parser!(u64).range(1..=300))]
+        duration: u64,
+        #[arg(long, default_value_t = 30, value_parser = clap::value_parser!(u64).range(1..=120))]
+        wait: u64,
+        /// New capture directory; parent must exist. Default: captures/mini-unique-id.
+        #[arg(long)]
+        output: Option<PathBuf>,
+        /// Only needed if more than one matching Mini HID interface is present.
+        #[arg(long)]
+        hid_path: Option<String>,
+        /// Diagnostic comparison without the documented HID state request.
+        #[arg(long)]
+        no_init: bool,
+    },
     /// Save raw Original serial bytes for investigation; never validates hardware identity.
     Capture {
         /// Explicit port only. No discovery probes, initialization writes or automatic reconnect.
@@ -110,6 +127,13 @@ fn run() -> Result<(), Box<dyn Error>> {
     match Cli::parse().command {
         Command::List => list(),
         Command::TestOriginal => test_original(),
+        Command::TestMini {
+            duration,
+            wait,
+            output,
+            hid_path,
+            no_init,
+        } => mini::run(duration, wait, output, hid_path, !no_init),
         Command::Capture {
             serial,
             output,

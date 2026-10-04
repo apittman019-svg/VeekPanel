@@ -1,7 +1,8 @@
 # Physical hardware acceptance checklist
 
 **No rows are passed yet.** Software/PTY tests are recorded in `VERIFICATION.md`.
-First priority is the friend's stock Original, on Windows and Nobara. Do not flash
+First priority is the friend's Mini 1.0, corrected by the user on 2026-10-04,
+on Windows and Nobara. Do not flash
 firmware, install guessed drivers, or send undocumented commands to obtain a pass.
 
 ## Record the test environment
@@ -14,12 +15,36 @@ firmware, install guessed drivers, or send undocumented commands to obtain a pas
 - Command used and raw returned lengths/bytes; fixture provenance is physical,
 synthetic, or source-derived. Never change that label to imply stronger evidence.
 
-For the friend's first Windows test, use the downloadable diagnostic ZIP and
-`START-HERE.cmd` (or `veek-probe test-original`). The console compares before/after
-device lists, requires explicit port selection, captures 60 seconds, and supplies
-`RESULTS.txt`. Fill this in with actual physical observations. No automatic upload
-or hardware-validation decision is made. Source/binary provenance and the tester's
-observations must accompany any captures promoted to regression fixtures.
+## Mini 1.0: current friend trial
+
+Use the Mini kit's `TEST-MINI.cmd` or `veek-probe test-mini`, with competing
+PCPanel software closed. See [README](../README.md#friend-testing--downloadable-diagnostic-kit).
+The test automatically detects a single Mini HID interface and preserves raw
+reports, timestamps, decoded events/errors and a summary in a new capture folder.
+No serial port selection is involved. `START-HERE.cmd` is Original-only.
+Default discovery is bounded to 30 seconds and recording to 90 seconds/1 MiB raw.
+Use `--no-init` only for an explicit state-request comparison. Disconnect ends the
+recording: repeat for separate reconnect and sleep/resume trials. A finished
+capture is not a pass; physical observations belong in its RESULTS.txt.
+
+Record the actual VID/PID, model/revision label, all four analog endpoints and
+indices, each button's press/release, and behavior after unplug/replug. Then check
+sleep/resume, permissions and sustained input on each target OS. Initial state
+reports alone do not demonstrate physical movement. The Mini reference range is
+0–255; observe it rather than marking it passed from the implementation.
+
+All Mini physical checks remain pending reviewed evidence. The user reports the
+hardware issue is understood, but has not yet supplied Mini HID events or specific
+acceptance results. The earlier returned Original serial capture has zero bytes,
+was interrupted after approximately 25 seconds, and has an unfilled worksheet.
+It is inconclusive and cannot establish either a Mini failure or success.
+
+## Original-only serial collection (retained for other units)
+
+For an actual Original/Maple, `START-HERE.cmd` runs `veek-probe test-original`,
+compares before/after device lists, requires explicit port selection, captures
+60 seconds and supplies `RESULTS.txt`. No automatic upload or validation decision
+is made. Physical observations and source/binary provenance must accompany captures.
 
 Manual collection: `veek-probe capture --serial ACTUAL_PORT --output captures/new-test
 --duration 60`. Create the parent first; the new-test directory must not exist.
@@ -62,5 +87,5 @@ duplicate serial numbers, and multiple HID interfaces. Confirm no unrelated devi
 are opened. Test `--no-init` without assuming it works on every firmware.
 
 When recording a pass, attach evidence and the tested model/firmware/OS. Do not
-generalize one model's success to the family. Gate audio work on actual physical
-input correctness and a separately authorized M2 task.
+generalize one model's success to the family. Physical acceptance remains pending;
+the continuation request authorizes independent audio/core/UI development meanwhile.

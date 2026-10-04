@@ -1,14 +1,15 @@
 # Implementation plan and gates
 
-The user authorized M2 after the M1 diagnostic release. M1 physical acceptance
-remains pending because the Original belongs to a friend and is unavailable locally.
-M3–M7 remain a continuation plan, not authorization. See AUDIO_VALIDATION.md for
-implemented M2 diagnostics and the remaining platform/physical gates.
+The continuation request authorizes audio, mappings/configuration, background
+architecture and the backend-connected GUI without waiting for hardware. See
+CONTINUATION_REQUEST.md. M1 physical acceptance remains pending. On 2026-10-04 the
+user corrected the friend's target to **Mini 1.0**, not Original/Maple. Model
+identification alone does not establish validated control events.
 
 | Milestone | Work | Evidence needed to accept |
 | --- | --- | --- |
 | Research/setup | Protocol/source/license investigation; Rust stack; Windows/Nobara architecture; risks; repository and CI | Traceable sources, buildable scoped prototype, current AGENTS.md |
-| 1 — Hardware | Model/HID allowlist; Original serial adapter; control parser; diagnostic utility; errors and reconnect; mock and physical tests | Stock Original identified and every rotation/press/release matches physical action on Windows and Nobara; endpoint ranges captured, reconnect and sleep checks documented. Other advertised models tested individually. |
+| 1 — Hardware | Model/HID allowlist; Original serial adapter; control parser; diagnostic utility; errors and reconnect; mock and physical tests | Stock Mini 1.0 identified and every rotation/press/release matches physical action on Windows and Nobara; endpoint ranges captured, reconnect and sleep checks documented. Other advertised models tested individually. |
 | 2 — Audio | Native audio contract, Windows Core Audio, Nobara PipeWire; mock backend; endpoint/session discovery and subscriptions | Physical knob → master and app volume on both systems; mic/output mute; external updates; disappearing devices/apps and restarted service recovery. No UI required. |
 | 3 — Core | Stable app identity, mappings, groups, versioned config/migrations, profile switching, durable reconnect policy | Automated config/migration/matching/group/profile tests; app relaunch/dual-boot mappings; atomic save/recovery; button/rotation independent; absent targets safe. |
 | 4 — UI | Tauri/Svelte desktop, device dashboard, onboarding, drag/drop, live feedback, settings and diagnostics | Every active element wired to real backend; no fake apps/devices; keyboard/accessibility, dark/light/scaling; no I/O blocking UI; performance baselines. |
@@ -19,20 +20,20 @@ implemented M2 diagnostics and the remaining platform/physical gates.
 ## Parallel pending physical work: M1
 
 1. Read `AGENTS.md`, `docs/VERIFICATION.md` and `docs/HARDWARE_PROTOCOL.md`.
-2. Obtain access to the stock Original. Compare enumeration before/after connecting;
+2. Obtain evidence from the friend's Mini 1.0. Compare enumeration before/after connecting;
    record VID/PID/product/interface/driver with personal identifiers redacted.
    The device belongs to the user's friend. Use the M1 downloadable diagnostic kit
-   for his trial when convenient; local access must not be assumed. The bounded
-   capture command and guided test are ready for evidence collection.
-3. Run serial diagnostics on its explicit port, without arbitrary writes or firmware
-   modifications. Verify grammar, polarity, indices, extrema and startup traffic.
+   for his trial when convenient; local access must not be assumed. The released Original serial launcher is inappropriate for this unit;
+   use the Mini kit's `TEST-MINI.cmd` / `test-mini` for Mini HID evidence.
+3. Run the Mini HID diagnostics without arbitrary writes or firmware modifications.
+   Verify report framing, polarity, indices, extrema and startup traffic.
 4. Correct only the adapter when evidence differs. Add provenance-tagged fixtures
    and regression tests. Solve positive automatic identity without claiming every
    generic serial bridge is a PCPanel.
 5. Validate Windows and Nobara unplug/replug, port renumbering, suspend/resume and
    permission recovery. Update the acceptance matrix honestly.
-6. Keep M1 acceptance pending until observed. M2 software work is now authorized,
-   but neither its physical acceptance nor M3 authorization follows automatically.
+6. Keep M1 acceptance pending until observed. Continue separately authorized
+   software development using explicitly labeled synthetic hardware tests.
 
 ## Known M1 limitations to carry forward
 

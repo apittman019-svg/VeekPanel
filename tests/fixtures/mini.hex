@@ -1,0 +1,17 @@
+# SYNTHETIC Mini packets from the protocol specification; no physical validation.
+01 00 00
+01 00 ff
+02 00 01
+02 00 00
+01 01 00
+01 01 ff
+02 01 01
+02 01 00
+01 02 00
+01 02 ff
+02 02 01
+02 02 00
+01 03 00
+01 03 ff
+02 03 01
+02 03 00

@@ -52,15 +52,16 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path diagnostic-kit
           Copy-Item target/release/veek-probe.exe diagnostic-kit/
-          Copy-Item tests/manual/START-HERE.cmd,tests/manual/README.txt,tests/manual/RESULTS.txt,LICENSE diagnostic-kit/
+          Copy-Item tests/manual/START-HERE.cmd,tests/manual/TEST-MINI.cmd,tests/manual/README.txt,tests/manual/RESULTS.txt,tests/manual/MINI-RESULTS.txt,LICENSE diagnostic-kit/
           Set-Content diagnostic-kit/BUILD_COMMIT.txt $env:GITHUB_SHA
           ./diagnostic-kit/veek-probe.exe --help
           ./diagnostic-kit/veek-probe.exe capture --help
+          ./diagnostic-kit/veek-probe.exe test-mini --help
       - name: Stage Linux diagnostic kit
         if: runner.os == 'Linux'
         run: |
           mkdir diagnostic-kit
-          cp target/release/veek-probe tests/manual/README.txt tests/manual/RESULTS.txt LICENSE diagnostic-kit/
+          cp target/release/veek-probe tests/manual/README.txt tests/manual/RESULTS.txt tests/manual/MINI-RESULTS.txt LICENSE diagnostic-kit/
           echo "$GITHUB_SHA" > diagnostic-kit/BUILD_COMMIT.txt
       - name: Bundle dependency license notices
         run: python tests/manual/license_inventory.py diagnostic-kit/THIRD_PARTY

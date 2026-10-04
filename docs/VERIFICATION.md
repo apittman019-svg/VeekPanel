@@ -2,8 +2,9 @@
 
 Initial implementation: 2026-10-03 UTC / 2026-10-02 America/New_York.
 Current milestone status: **M1 physical acceptance pending; M2 audio diagnostics implemented.**
-No physical PCPanel was available; the user confirmed the target is a friend's Original
-with four pushable knobs. M2 was subsequently authorized; M3–M7 are not started.
+No physical PCPanel is available locally. The user corrected the friend's target
+to **Mini 1.0** on 2026-10-04. Historical entries below retain the Original
+assumption in effect at the time. See CONTINUATION_REQUEST.md for expanded scope.
 
 ## Local environment and completed checks
 
@@ -172,3 +173,34 @@ Next M2 acceptance work is interactive Windows volume/mute/session lifecycle tes
 physical Nobara audio route tests, and the friend's Original protocol/knob/button
 trial. Read AUDIO_VALIDATION.md for the full matrix. M1 and M2 physical acceptance
 remain open; no M3–M7 features were implemented or authorized in this continuation.
+
+## Device-model correction and returned evidence (2026-10-04)
+
+The user corrected the device identification from Original to **Mini 1.0** and
+reported that they had figured out the hardware issue. No specific Mini HID control
+results have been supplied yet; this is not recorded as physical acceptance.
+
+The returned private `thing.zip` contains an Original-assumption serial capture:
+zero bytes in `serial.bin`, only the header in `chunks.tsv`, final stop reason
+`interrupted`, elapsed 24,892 ms, and an unfilled RESULTS worksheet. No code from
+the archive was executed. This cannot establish a Mini protocol failure or pass.
+The published START-HERE launcher selects the Original serial workflow; the Mini
+should use the already implemented HID discovery/watch path. Documentation now
+makes that distinction explicit. The private ZIP is excluded from Git.
+
+## Mini-specific diagnostic kit implementation (2026-10-04)
+
+Added `veek-probe test-mini` and Windows `TEST-MINI.cmd`. The command only selects
+Mini HID VID:PID 0483:a3c4; unknown IDs, other models and ambiguous interfaces are
+not opened. It gives timed physical-control prompts, preserves bounded reports
+(including malformed input), decoded events and times, and writes an explicitly
+unverified summary plus the physical worksheet. No COM selection is needed.
+No-input captures are clearly flagged. Each run uses a new directory; disconnect
+ends the capture for a separate reconnect trial. No audio, LED or firmware actions.
+
+Local Nobara checks: package formatting, strict Clippy, release build and all
+26 hardware/probe tests passed. New tests cover Mini-only selection/ambiguity,
+malformed raw report preservation, empty/capped captures, all four knobs/buttons
+via synthetic offline replay, and an exact nonexistent HID path that produces
+finished no-input evidence without opening hardware. These are software tests,
+not proof that the friend's physical Mini 1.0 works.
