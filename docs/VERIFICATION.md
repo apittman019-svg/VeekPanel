@@ -139,3 +139,9 @@ clients, as did both existing M1 PTY integrations. `cargo doc` and diff checks p
 A 3-second read-only M2 watch on the live server used 0.00s user/0.00s system CPU
 (at the timer's precision), 6888 KiB maximum RSS; this is a short diagnostic sample,
 not a latency/production performance guarantee.
+
+Initial M2 CI run 37175555119 passed Windows build/lint/30 tests, archive generation,
+and native Core Audio initialization/enumeration with an empty endpoint list on the
+hosted runner. It did not test Windows volume writes or real devices. Ubuntu exposed
+an older pw-cat without `--raw`; the isolated test now uses portable WAV fixtures.
+That corrected fixture passed on Nobara before resubmission to CI.

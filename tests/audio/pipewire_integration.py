@@ -15,6 +15,7 @@ import sys
 import tempfile
 import threading
 import time
+import wave
 
 binary = pathlib.Path(sys.argv[1]).resolve()
 config = pathlib.Path(__file__).with_name('pipewire.conf').resolve()
@@ -126,8 +127,15 @@ with tempfile.TemporaryDirectory(prefix='veek-audio-test-') as folder:
             first = await_event(events, lambda e: 'targets' in e)
             native('pw-cli', 'set-param', node, 'Props', '{ mute: true }')
             await_event(events, lambda e: any(t['id'] == output and t['muted'] for t in e.get('targets', [])))
-            with open('/dev/zero', 'rb') as zeros:
-                app = subprocess.Popen(['pw-cat', '--playback', '--raw', '--rate', '48000', '--channels', '2', '--format', 'f32', '--target', '0', '-'], env=env, stdin=zeros, stdout=log, stderr=log)
+            # A WAV fixture works on both Ubuntu's older pw-cat and current Nobara.
+            # Newer --raw/standard-input behavior differs across those versions.
+            wav = runtime/'silence.wav'
+            with wave.open(str(wav), 'wb') as fixture:
+                fixture.setnchannels(2)
+                fixture.setsampwidth(2)
+                fixture.setframerate(48000)
+                fixture.writeframes(bytes(48000 * 2 * 2))
+            app = subprocess.Popen(['pw-cat', '--playback', '--target', '0', str(wav)], env=env, stdout=log, stderr=log)
             appearance = await_event(events, lambda e: any(t['kind'] == 'playback' for t in e.get('targets', [])))
             playback = next(t for t in appearance['targets'] if t['kind'] == 'playback')
             assert playback['identity'].get('application.name'), playback
@@ -138,7 +146,7 @@ with tempfile.TemporaryDirectory(prefix='veek-audio-test-') as folder:
             cli('set', '--target', playback['id'], '--volume', '25', ok=False)
 
             # A real capture client is a separate recording target, not an output.
-            app = subprocess.Popen(['pw-cat', '--record', '--raw', '--rate', '48000', '--channels', '2', '--format', 'f32', '--target', '0', '-'], env=env, stdout=log, stderr=log)
+            app = subprocess.Popen(['pw-cat', '--record', '--rate', '48000', '--channels', '2', '--format', 's16', '--target', '0', str(runtime/'capture.wav')], env=env, stdout=log, stderr=log)
             recording_event = await_event(events, lambda e: any(t['kind'] == 'recording' for t in e.get('targets', [])))
             recording = next(t for t in recording_event['targets'] if t['kind'] == 'recording')
             assert cli('set', '--target', recording['id'], '--volume', '40')['confirmed']
