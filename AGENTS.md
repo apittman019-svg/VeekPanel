@@ -33,6 +33,10 @@ User clarifications that override ambiguous wording in the original brief:
   Do not assume local access. Synthetic replay/PTY tests must be labeled as such.
   The experimental diagnostic kit is published as GitHub prerelease
   `m1-probe-2026-10-03` (source `f65350a4d1b25261410caddfc44504d1f64b44dd`).
+  Mini-specific prerelease `m1-mini-2026-10-04` supersedes the Original launcher
+  for this friend. Source: `e703b4cf70eaa03c5168b5f16a4ffc72d6249e8a`; Windows
+  users run `TEST-MINI.cmd`. Both Windows/Ubuntu CI passed 35 tests. No physical
+  Mini control events have been validated here.
   Next hardware work is collecting and reviewing the friend's evidence, then
   correcting the adapter if needed; publishing the kit did not complete M1.
 

@@ -204,3 +204,24 @@ malformed raw report preservation, empty/capped captures, all four knobs/buttons
 via synthetic offline replay, and an exact nonexistent HID path that produces
 finished no-input evidence without opening hardware. These are software tests,
 not proof that the friend's physical Mini 1.0 works.
+
+
+[Mini CI run 37212010661](https://github.com/apittman019-svg/VeekPanel/actions/runs/37212010661)
+passed Windows and Ubuntu for `e703b4cf70eaa03c5168b5f16a4ffc72d6249e8a`:
+formatting, strict Clippy, all 35 workspace tests, release builds, dependency
+notices and packaging. Ubuntu passed both synthetic serial integrations and the
+isolated PipeWire suite. The local serial/capture regression integrations also passed.
+
+Downloaded both CI archives. Verified Windows ZIP integrity, TEST-MINI.cmd command,
+checklist, included notices and exact BUILD_COMMIT. Windows PE imports only OS DLLs;
+no external VCRUNTIME/MSVCP dependency was observed. This is not a clean-machine
+physical test. Ran the downloaded Linux binary's Mini help and forced-nonexistent
+HID path on Nobara: it returned a nonzero exit with finalized no-input evidence,
+without opening a device. No physical Mini was attached.
+
+Published [Mini diagnostic prerelease](https://github.com/apittman019-svg/VeekPanel/releases/tag/m1-mini-2026-10-04)
+with Windows ZIP, Linux archive and SHA256SUMS. The public, non-draft prerelease
+points to the verified source. GitHub asset sizes and SHA256 digests match local
+files. Physical Mini 1.0 acceptance remains pending the friend's returned HID
+capture and observations; the earlier empty serial ZIP does not count as evidence
+of Mini behavior. This follow-up commit only records verification and skips CI.
