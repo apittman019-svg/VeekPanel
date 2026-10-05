@@ -20,6 +20,11 @@ An explicitly labeled development panel uses simulated hardware with real audio.
 See [build/run instructions and current limitations](docs/CORE_AND_DESKTOP.md).
 It is a development preview, not a finished installer or daily-driver release.
 
+![Native VeekPanel desktop preview](docs/images/desktop-preview-dark.png)
+
+Captured from the native app using explicitly simulated Mini input and a private
+PipeWire test server. [Light appearance](docs/images/desktop-preview-light.png).
+
 ## Hardware status
 
 | Model | Discovery / transport | Status |

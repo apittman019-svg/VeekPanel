@@ -321,3 +321,26 @@ shared across profiles; profile-specific overrides and richer identity editing
 remain M3 work. This initial usable foundation does not mean all M3/M4 requirements
 or M5 reliability have been accepted. Windows/Linux CI results are recorded below
 once available; a Windows build alone is not interactive audio validation.
+
+
+[Initial desktop CI run 37324159698](https://github.com/apittman019-svg/VeekPanel/actions/runs/37324159698)
+for `f398f0f8d634a51c70a93c9ab37350b499a2fb70` passed Windows and Ubuntu core
+checks (48 portable / 49 Linux tests), release diagnostic packaging and integrations.
+Windows desktop formatting, frontend checks, strict native lint and build passed.
+Ubuntu desktop also built, but its GUI harness initially failed before launching
+the app: tauri-driver requires an absolute WebKitWebDriver path. The harness now
+resolves the installed executable through PATH and fails immediately if missing;
+the default-path invocation subsequently passed locally. The user's requested
+removal of the brand tagline is included in `7668113`, with refreshed native
+screenshots in docs/images. No new physical-device claims are made.
+
+
+[Final CI run 37324994766](https://github.com/apittman019-svg/VeekPanel/actions/runs/37324994766)
+**passed all four jobs** for `7668113eb3056acd81bf0c14a6c686c4bca4f64f`:
+Windows/Ubuntu core formatting, strict lint, tests, release builds and diagnostic
+packaging; Linux serial/native audio/persistent-runtime integrations; and both
+native desktop builds with frontend type checking. Ubuntu's actual Tauri GUI
+integration also passed after the driver-path correction. Windows ran 48 portable
+tests; Linux ran those plus its PipeWire lifecycle test (49). Windows interactive
+GUI/audio and physical Mini-to-audio are still untested. The subsequent handoff
+commit contains only documentation and screenshots and skips redundant CI.

@@ -189,3 +189,19 @@ Windows CI tests actual Windows build/runtime without physical USB. Do not run s
 hardware. Do not install host permissions or disable SELinux to get tests passing.
 Document what ran, OS/toolchain, actual results, and unresolved checks in
 `docs/VERIFICATION.md`; use `docs/HARDWARE_VALIDATION.md` for future physical trials.
+
+
+## Current software handoff (2026-10-05)
+
+The M3 runtime and native M4 preview are implemented, not merely planned. Local
+Nobara verification passed 49 tests plus actual native GUI/private-PipeWire
+integration, including simulated Mini volume/mic mute, application relaunch matching,
+relative groups, saved profiles and audio-service recovery. See the newest entries
+in docs/VERIFICATION.md for exact source/CI evidence before repeating checks.
+
+Next software increments: profile-specific group/device-preference overrides
+(currently shared), clearer pickup/action feedback and accessible assignment UX,
+then background lifecycle and distribution. The user permits directly Apple-like
+visuals but wants the product name without a slogan underneath. Keep physical
+Mini lifecycle/Nobara/knob-to-audio and interactive Windows audio acceptance open;
+do not restart basic Windows Mini input research.
