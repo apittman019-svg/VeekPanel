@@ -1,0 +1,25 @@
+[package]
+name = "veekpanel"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace]
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde_json = "1"
+veek-runtime = { path = "../crates/veek-runtime" }
+veek-core = { path = "../crates/veek-core" }
+veek-config = { path = "../crates/veek-config" }
+
+[profile.release]
+lto = "thin"
+strip = true

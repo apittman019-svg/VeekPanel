@@ -2,8 +2,8 @@
 
 The user authorized the next milestone after the M1 diagnostic release. M2 adds
 native audio controls and a temporary hardware-to-audio diagnostic, following the
-original outline. M1 physical acceptance remains pending. M3–M7 are not authorized
-by this step. There is no desktop GUI, saved mapping or audio mock in the shipped CLI.
+original outline. M1 physical acceptance remains pending. The subsequent continuation request authorizes independent mapping/configuration
+and desktop work; see CORE_AND_DESKTOP.md. There is no desktop GUI, saved mapping or audio mock in the shipped CLI.
 
 ## Run
 
@@ -31,8 +31,10 @@ configuration keys. Commands leave successful volume/mute changes in place on ex
 
 ## Temporary control test
 
-First finish the Original's raw protocol trial using the M1 kit. Use the actual
-port, and choose a low-risk disposable application/session for initial audio tests:
+Basic Mini input has passed on the friend's Windows 11 unit. Use its exact HID
+path from `veek-probe list` with `bind --hid-path PATH`, and choose a disposable
+application/session for initial audio trials. The serial examples below are only
+for an actual Original/Maple:
 
 ```sh
 veek-audio-probe bind --serial COM3 --target default-output --knob 1 --duration 60
@@ -114,10 +116,10 @@ observations, and failures rather than assuming any row passed.
 | Trial | Windows 10/11 | Nobara |
 | --- | --- | --- |
 | Real endpoint/input enumeration | Pending interactive machine | Read-only host enumeration passed |
-| Output volume, microphone/input mute, app volume/mute | Pending interactive machine | Isolated native server passed; physical routes pending |
-| External mixer/default changes and app close/reopen | Pending interactive machine | Isolated native server passed; desktop app trial pending |
+| Output volume, microphone/input mute, app volume/mute | Pending interactive machine | Host default volume and secondary output/input mute restored; native test app volume/mute passed; audible/route behavior pending |
+| External mixer/default changes and app close/reopen | Pending interactive machine | Isolated external/default changes passed; live test app lifecycle passed |
 | Audio service restart with no stale writes | Pending | Isolated daemon passed; desktop session restart pending |
-| Physical Original knob → master then app, button → mute | Pending | Pending |
+| Physical Mini knob → master then app, button → mute | Pending | Pending |
 | Suspend/resume, Bluetooth/USB audio disappearance | Pending | Pending |
 | Latency, channel behavior, permissions, sustained reliability | Pending | Pending |
 

@@ -1,15 +1,24 @@
 # VeekPanel
 
 A Windows-first, open-source PCPanel controller project with first-class Nobara/Linux support.
-**Current scope: M1 hardware diagnostics and M2 native audio diagnostics.**
+**Current scope: hardware/audio diagnostics, saved mappings and a native desktop preview.**
 Windows Core Audio and native PipeWire backends are implemented. Physical PCPanel
 acceptance is partial: Mini basic controls passed on Windows 11; lifecycle and
-Nobara hardware checks remain pending. Desktop UI, profiles, tray and installers come later.
+Nobara hardware checks remain pending. The desktop preview now includes profiles,
+groups, settings and a basic tray. Installers and production acceptance remain later work.
 
 The target is a friend's **PCPanel Mini 1.0**, corrected from the earlier Original
 identification. Its four knobs also act as four independent push buttons. Use the
 Mini HID path; the friend's Windows 11 capture and checklist confirm all four
 knob ranges, button edges, physical order and direction.
+
+## Native desktop preview
+
+The backend-connected Tauri/Svelte app provides real audio discovery and volume/mute,
+knob/button assignments, groups, profiles, saved configuration, settings and diagnostics.
+An explicitly labeled development panel uses simulated hardware with real audio.
+See [build/run instructions and current limitations](docs/CORE_AND_DESKTOP.md).
+It is a development preview, not a finished installer or daily-driver release.
 
 ## Hardware status
 
@@ -21,7 +30,8 @@ knob ranges, button edges, physical order and direction.
 | Pro | HID `0483:a3c5` | Implemented from public protocol references; physical test pending |
 
 Do not mistake replayed fixtures or a successful build for hardware compatibility.
-The Milestone 1 acceptance gate remains open until physical controls are checked.
+The Milestone 1 gate remains open for lifecycle and Nobara physical checks; the
+friend’s basic Windows Mini controls have already passed.
 
 ## Friend testing / downloadable diagnostic kit
 

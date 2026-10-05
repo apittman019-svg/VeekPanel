@@ -1,195 +1,321 @@
-Resume development of VeekPanel from the current repository state.
+Resume development of VeekPanel from the CURRENT repository state.
 
 Repository:
 https://github.com/apittman019-svg/VeekPanel
 
-First re-read AGENTS.md, README.md, the docs directory, git history, current source code, and working tree so you understand everything completed so far.
+Before making changes, re-read:
 
-IMPORTANT CHANGE OF PLAN:
+- AGENTS.md
+- README.md
+- docs/MILESTONES.md
+- docs/CONTINUATION_REQUEST.md
+- docs/AUDIO_VALIDATION.md
+- docs/ARCHITECTURE.md
+- recent git history
+- current source tree
+- current working tree
 
-I do not currently have the physical PCPanel hardware available for testing.
+Do not restart work that is already complete.
 
-Do NOT wait for physical hardware validation before continuing development.
+The repository is the source of truth.
 
-Treat the remaining physical-validation portion of Milestone 1 as BLOCKED/PENDING rather than attempting to guess hardware behavior.
+## Current direction
 
-Clearly document which hardware behaviors remain unverified, preserve the existing hardware abstraction and `veek-probe` tools, and continue development using mocks/synthetic hardware where appropriate.
+Continue to treat remaining physical PCPanel lifecycle/Nobara validation as a parallel pending task.
 
-Do not claim unverified PCPanel behavior is confirmed.
+Do NOT block normal software development on that remaining hardware work.
 
-## Proceed to Milestone 2
+The Mini's basic physical controls have already been validated on Windows 11. Preserve that evidence and do not redo it unnecessarily.
 
-Begin implementing the actual audio subsystem.
+Continue development through all work that can be completed without having the physical PCPanel locally attached.
 
-My primary development environment is Nobara Linux, but the final application must support both Linux and Windows.
+## Immediate priority: finish Milestone 2 integration quality
 
-Implement the audio system behind a clean cross-platform abstraction so Linux-specific behavior does not leak throughout the rest of the application.
+Review the existing Windows Core Audio and PipeWire implementations and the `veek-audio-probe`.
 
-### Linux backend
+Close any obvious remaining gaps that can be tested on the current development machine.
 
-Prioritize PipeWire/WirePlumber.
+Ensure the common audio abstraction cleanly supports:
 
-Implement real functionality for:
+- output discovery
+- input discovery
+- default input/output
+- system/default volume
+- device volume
+- application/session volume
+- output mute
+- input/microphone mute
+- application mute
+- dynamic stream/session creation and removal
+- external volume changes
+- audio device changes
+- backend restart/recovery
+- stable target metadata needed by the mapping layer
 
-- System/master output volume
-- Output device discovery
-- Input/microphone device discovery
-- Per-application audio stream discovery
-- Per-application volume
-- Output mute
-- Application mute
-- Microphone/input mute
-- Dynamic detection of applications starting/stopping audio
-- Dynamic detection of audio devices connecting/disconnecting
-- Default output/input tracking
-- Stable application identity where possible
+Do not rewrite working audio code just for stylistic reasons.
 
-Test this against the REAL PipeWire environment on this Nobara machine.
+Run the relevant tests and real Nobara/PipeWire integration checks where possible.
 
-Do not fake audio devices or application sessions except in explicit tests/mock mode.
+## Then proceed into Milestone 3
 
-Create useful diagnostic tooling so the audio backend can be tested without the PCPanel attached.
+Build the platform-independent core that turns VeekPanel from a diagnostic project into an actual application.
 
-For example, I should be able to use a CLI/debug tool to:
+### Mapping engine
 
-- list detected outputs
-- list detected inputs
-- list active applications/audio streams
-- inspect application identity metadata
-- read current volume
-- set volume
-- mute/unmute
-
-Actually run these tools against this machine and verify the backend works.
-
-## Windows architecture
-
-Keep Windows support as a first-class architectural requirement.
-
-Create the abstraction necessary for a future Windows Core Audio/WASAPI implementation, but do not let lack of a Windows test environment block Linux development.
-
-Do not pretend Windows functionality has been tested if it has not.
-
-If implementing the Windows backend can be done cleanly without interfering with Linux development, proceed when appropriate.
-
-## Mapping Engine
-
-Once the Linux audio backend is working, begin implementing the platform-independent mapping engine.
-
-It should support mappings such as:
-
-Physical Control
-→ System Volume
-
-Physical Control
-→ Application Volume
-
-Physical Control
-→ Audio Device
-
-Physical Control
-→ Microphone
-
-Physical Control
-→ Audio Group
-
-Button
-→ Mute/Unmute
-
-Button
-→ Microphone Mute
-
-Button
-→ Profile/Action
-
-Because the physical PCPanel is unavailable, use the existing mock/synthetic hardware layer to drive these tests.
-
-The mapping engine must not care whether events came from real hardware or the mock implementation.
-
-## Configuration
-
-Implement persistent configuration with schema/version support.
+Implement a real mapping engine that consumes normalized hardware events and controls normalized audio targets.
 
 Support:
 
-- Hardware mappings
-- Application mappings
-- Audio groups
-- Profiles
-- Device preferences
-- Button actions
+- knob → default output volume
+- knob → specific output device
+- knob → application volume
+- knob → microphone/input level
+- knob → audio group
+- button → target mute/unmute
+- button → microphone mute/unmute
+- button → profile switching
+- button → configurable action architecture
 
-Add configuration migration infrastructure now so future versions can change the schema safely.
+Hardware events must enter through an abstraction so the mapping engine works identically with:
 
-## Background architecture
+- real PCPanel devices
+- replayed captures
+- mock/development devices
 
-Begin preparing the application to operate continuously in the background.
+Do not couple mapping logic directly to USB/HID code.
 
-It should eventually:
+### Important knob behavior
 
-- detect/reconnect PCPanel hardware
-- monitor audio sessions
-- maintain mappings
-- survive audio-service changes
-- survive hardware disconnect/reconnect
-- run independently of whether the main GUI window is visible
+Implement sensible pickup/soft-takeover behavior so loading a profile or attaching a target does NOT cause an immediate volume jump simply because the physical knob position differs from the current system volume.
 
-Keep resource usage low and prefer event-driven APIs.
+The engine should wait until the physical knob crosses or reaches the current target level before taking control, unless the user chooses another behavior later.
 
-## GUI
+Make this logic deterministic and well tested.
 
-Once the Linux audio backend, mapping engine, and configuration system are functional, BEGIN building the actual desktop GUI.
+### Application identity
 
-Do not wait for physical PCPanel validation to start the GUI.
+Implement durable application identity.
 
-Use the original design requirements:
+Do not depend on PID, transient PipeWire node ID, or transient Windows session ID.
 
-- sleek modern appearance
+Use the strongest available stable metadata and layered fallback matching.
+
+Mappings should survive application restart whenever reasonably possible.
+
+Keep platform-specific identifiers behind the common identity model.
+
+### Audio groups
+
+Implement groups that allow one physical control to operate multiple targets.
+
+Examples:
+
+Gaming:
+- game
+- Discord
+
+Media:
+- Spotify
+- browser
+- VLC
+
+Handle absent group members safely.
+
+Define and document group-volume semantics instead of allowing accidental clipping or inconsistent relative levels.
+
+### Profiles
+
+Implement persistent profiles.
+
+Profiles should contain:
+
+- hardware control mappings
+- application mappings
+- audio groups
+- button assignments
+- preferred input/output targets
+- available hardware-specific options
+
+Support:
+
+- create
+- rename
+- duplicate
+- delete
+- switch
+
+Architect automatic profile switching for later without overcomplicating the initial implementation.
+
+## Configuration system
+
+Implement a durable versioned configuration format.
+
+Requirements:
+
+- schema/version field
+- safe migrations
+- atomic writes
+- corruption recovery/backups where appropriate
+- import/export-ready representation
+- platform-independent mappings wherever practical
+- deterministic serialization for debugging
+
+Never silently discard an older configuration because the schema changed.
+
+Write automated tests for migrations and recovery behavior.
+
+## Application/service core
+
+Create the long-running application controller that ties together:
+
+hardware
+→ normalized events
+→ mapping engine
+→ audio backend
+→ state/configuration
+
+It should also publish state changes for the future UI.
+
+Keep this layer independent from the GUI.
+
+The program should ultimately continue working when the main window is closed.
+
+Do not build tray/startup features yet unless they naturally fit the architecture; those belong primarily to the background milestone.
+
+## Start Milestone 4 once the backend core is genuinely usable
+
+Once the mapping engine, profiles, configuration, and backend application controller are functioning, begin building the actual desktop GUI.
+
+Use the technology stack already chosen by the project unless there is a documented technical reason to change it.
+
+The GUI must connect to the REAL backend.
+
+Do not create a disconnected visual prototype.
+
+## Visual direction
+
+The interface should feel like a modern first-party hardware controller application.
+
+Use:
+
 - Apple-inspired squircle geometry
-- rounded cards
-- generous spacing
-- subtle animations
-- dark/light themes
+- large rounded cards
+- smooth but restrained animations
 - clean typography
-- modern first-party hardware-control-app feel
-- visually represented PCPanel controls
-- live volume indicators
-- drag/drop or similarly intuitive control assignment
-- connected/disconnected states
-- application/device selection
-- profiles
-- settings
-- diagnostics
+- generous spacing
+- dark and light themes
+- subtle translucency where appropriate
+- modern iconography
+- minimal visual clutter
 
-However, do NOT create a fake frontend disconnected from the backend.
+Do not imitate macOS literally or copy Apple assets.
 
-The GUI should consume the actual audio/mapping/configuration APIs being built.
+### Main dashboard
 
-When physical hardware is unavailable, provide a clearly labeled development/mock PCPanel mode so the complete application flow can be exercised.
+Create a dashboard visually representing the PCPanel Mini.
 
-## Development strategy
+Show four prominent knob controls.
 
-Continue autonomously through everything that does NOT require the physical PCPanel.
+Each knob should display:
 
-Do not repeatedly stop simply because hardware validation remains pending.
+- assigned target
+- current target volume
+- mute state
+- mapping state
+- physical/hardware activity when available
 
-Only stop for me when:
+The physical Mini should remain the design reference, but the UI architecture should support other PCPanel models later.
 
-- information genuinely cannot be determined without my input,
-- an operation requires a decision with significant architectural consequences,
+### Assignment workflow
+
+Make control assignment visual and intuitive.
+
+A user should be able to select a knob and assign:
+
+- System Output
+- application
+- output device
+- microphone/input
+- audio group
+
+Prefer direct manipulation, drag/drop, or a similarly intuitive modern interaction.
+
+Do not expose raw backend identifiers to normal users.
+
+### Mock/development mode
+
+Because the physical hardware is not always locally available, retain an explicitly labeled mock/development device mode.
+
+This should allow the entire application workflow to be exercised using virtual knobs/buttons while controlling REAL system/application audio.
+
+Mock mode must never masquerade as real connected PCPanel hardware.
+
+## Diagnostics
+
+Retain and build upon the existing excellent diagnostic tooling.
+
+The eventual GUI diagnostics page should expose useful information such as:
+
+- hardware status
+- detected model
+- audio backend
+- outputs
+- inputs
+- application streams/sessions
+- stable app identity fields
+- mappings
+- recent backend errors
+
+Keep low-level raw hardware tooling available separately for developers.
+
+## Scope discipline
+
+Do NOT:
+
+- spend significant time redoing already validated Windows Mini knob/button parsing
+- wait on remaining hardware lifecycle tests
+- fake application/audio data outside development mode
+- build a beautiful frontend that has no real backend
+- mark untested functionality as verified
+- collapse platform-specific audio code into the common core
+- introduce unnecessary abstractions merely for theoretical future features
+
+Do:
+
+- preserve existing working code
+- keep Windows and Linux first-class
+- run tests frequently
+- use the actual Nobara PipeWire environment for real integration tests
+- add mock tests where hardware is unavailable
+- update documentation when architecture changes
+- make meaningful commits as coherent pieces are completed
+
+## Working style
+
+Work autonomously through this continuation.
+
+Do not stop after merely proposing an implementation plan.
+
+Inspect the existing implementation and begin making concrete progress.
+
+Only stop for me if:
+
+- a decision materially changes the product direction,
 - elevated permissions are required,
-- or continuing could risk damaging user data/system configuration.
+- an operation risks user data/system configuration,
+- or information genuinely cannot be inferred from the repository or tested safely.
 
-Otherwise continue implementing, testing, fixing, documenting, and committing sensible milestones.
+Otherwise continue implementing, testing, documenting and committing.
 
-Run formatting, linting, tests, and builds regularly.
+The next major goal is:
 
-Use the actual Nobara/PipeWire environment for integration testing wherever possible.
+**VeekPanel should become a functioning backend-driven desktop application where a mock Mini can control real system/application audio through persisted mappings and profiles, with the real Mini able to drop into the same hardware abstraction later.**
 
-Maintain a clear TODO/blocker documenting:
+After that foundation works, continue into the polished dashboard/configuration UI.
 
-**Physical PCPanel hardware validation still required before claiming full hardware compatibility.**
+## Subsequent user clarification (2026-10-05)
 
-When the hardware becomes available later, we will return to that validation and correct any protocol differences discovered.
+“Except I dont care if you directly copy apple for the visuals, gpt sol made the prompt”
 
-For now, maximize useful development progress without it.
+The author permits a directly Apple-like visual style; the earlier wording requiring
+only inspiration is not a product constraint. VeekPanel retains its own name/assets.

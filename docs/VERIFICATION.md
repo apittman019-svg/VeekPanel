@@ -2,7 +2,8 @@
 
 Initial implementation: 2026-10-03 UTC / 2026-10-02 America/New_York.
 Current milestone status: **M1 basic Mini controls passed on one Windows 11 unit;
-lifecycle/Nobara physical acceptance pending. M2 audio diagnostics implemented.**
+lifecycle/Nobara physical acceptance pending. M2 native audio, M3 core and an
+M4 backend-connected desktop preview implemented; production acceptance pending.**
 No physical PCPanel is available locally. The user corrected the friend's target
 to **Mini 1.0** on 2026-10-04. Historical entries below retain the Original
 assumption in effect at the time. See CONTINUATION_REQUEST.md for expanded scope.
@@ -260,3 +261,63 @@ Local Nobara checks for the physical excerpt: 27 hardware/probe tests passed,
 including full-frame replay of the excerpt; package formatting, strict Clippy and
 `git diff --check` passed. This replay is regression verification, not an additional
 physical test. Unrelated audio/configuration work remains outside this evidence commit.
+
+
+## Backend-driven desktop preview (2026-10-05)
+
+Continued the existing working tree rather than redoing hardware investigation.
+Nobara 44, Rust 1.99.0, Node 24 / pnpm 11.25.0. Native development headers and GUI
+test tools were extracted into a user-owned cache; no host packages, device
+permissions, SELinux policy or desktop services were modified.
+
+Implemented schema-1 configuration with atomic saves, backups, migration and
+conflict/lock protection; stable target selectors; independent analog/button
+mappings; relative/equal audio groups; pickup and release-before-press; profiles;
+a GUI-independent background controller; and a native Tauri/Svelte desktop preview.
+Its explicit development Mini drives the same engine as HID/serial events and
+controls actual native audio. The window has assignments, live target volume/mute
+and hardware position, mixer, profiles, editable groups, appearance/device settings,
+validated import/export, diagnostics and initial tray support. Old hardware input
+is discarded at connection, mapping and profile boundaries.
+
+Local verification on the final implementation of this increment:
+
+- Root formatting, strict Clippy, release build and **49 tests passed**. Includes
+  four config, six mapping-engine and two background-runtime tests; physical Mini
+  fixture regression is preserved. One Linux-specific lifecycle test is additional
+  to the 48 portable tests.
+- Desktop Rust formatting/strict Clippy/build passed. Svelte/TypeScript check:
+  **zero errors and warnings**; production frontend build passed.
+- Existing isolated native PipeWire integration passed: outputs/inputs/app streams,
+  volume/mute/channel balance, default changes, external notifications, disappearance,
+  synthetic serial pickup/buttons, service restart and stale-ID rejection.
+- New persistent-runtime integration passed against a private native server:
+  saved Mini mappings, pickup/button edges, stale UI rejection, backups/relaunch,
+  application identity surviving a new live stream ID after app relaunch, relative
+  output/application group levels, service recovery and no stale writes.
+- Native GUI automation passed with actual Tauri/WebKit/IPC, Xvfb and a private
+  PipeWire server. Through the UI it saved knob-to-output and button-to-microphone
+  mappings, changed native output to 200/255, toggled microphone mute, duplicated
+  the profile and persisted dark/light settings. Native readback was independently
+  checked with pw-dump. Screenshots inspected; no horizontal overflow at the tested
+  1200px window. Synthetic endpoints/panel are explicit test inputs, not physical
+  hardware or audible-output acceptance.
+
+The earlier live Nobara audio pass in this continuation also passed: host default
+output reduced by one percentage point and restored, secondary output/input mute
+restored, an explicitly named unlinked pw-cat stream discovered with stable ID/binary,
+volume/mute controlled, and disappearance observed. All changed endpoint state was
+restored and verified. No desktop service restart was attempted. That result is
+retained rather than unnecessarily mutating host audio again for identical checks.
+
+M2 improvements include client-level application metadata fallback and narrowly
+scoped handling for PipeWire objects disappearing during bind/destruction. Other
+native errors remain visible; permission/write failures are not swallowed.
+
+Remaining acceptance: interactive Windows audio/GUI, physical Mini-to-audio,
+Nobara USB and physical lifecycle, actual tray/close behavior, accessibility/scaling,
+performance/soak and distribution. Groups and device preferences are currently
+shared across profiles; profile-specific overrides and richer identity editing
+remain M3 work. This initial usable foundation does not mean all M3/M4 requirements
+or M5 reliability have been accepted. Windows/Linux CI results are recorded below
+once available; a Windows build alone is not interactive audio validation.

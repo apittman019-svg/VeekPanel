@@ -19,6 +19,12 @@ that result to untested models, revisions or platforms.
 
 User clarifications that override ambiguous wording in the original brief:
 
+- 2026-10-05: the user explicitly permits directly Apple-like visuals. The previous
+  inspiration-only language was generated for them and is not their restriction.
+- Keep each development pass focused on a concrete deliverable. Reuse established
+  evidence and run relevant checks; do not repeatedly troubleshoot accepted hardware
+  behavior or rerun broad checks without changes or an unresolved failure.
+
 - Corrected by the user on 2026-10-04: the friend's device is a **PCPanel Mini 1.0**,
   not the Original/Maple previously reported. It has four analog knobs and four
   independent push buttons. Use the Mini HID adapter (observed VID:PID `0483:a3c4`),
@@ -117,9 +123,17 @@ User clarifications that override ambiguous wording in the original brief:
   Published prerelease `m2-audio-2026-10-04` uses source
   `237421c12bd453adc4994af0bb94e6c734c76098`. Windows/Ubuntu CI passed 30 tests;
   packaged Linux native integration passed on Nobara. Windows CI only enumerated
-  an empty endpoint list: interactive Windows writes and all physical PCPanel
-  checks remain pending. Do not equate the release with milestone acceptance.
-- Future core/config crates and Tauri 2 + Svelte UI remain unimplemented.
+  an empty endpoint list: interactive Windows audio writes and physical PCPanel-to-audio
+  checks remain pending. Basic Mini hardware input was validated subsequently. Do not equate the release with milestone acceptance.
+- `crates/veek-config`: schema 1, validated imports, migrations, lock/conflict checks,
+  atomic saves and backups. `crates/veek-core`: stable selectors, independent analog/
+  button actions, groups, pickup, profile effects and ordered event coalescing.
+- `crates/veek-runtime`: shared background owner and local JSON-lines test harness.
+  Native backend/hardware reconnect rearms controls; simulated input requires Mock mode.
+- `app` (separate Cargo workspace/lockfile) and `ui` (pnpm/Svelte/TypeScript) implement
+  the actual Tauri desktop preview, wired to runtime IPC. Read docs/CORE_AND_DESKTOP.md.
+  Compile ui/dist before the native app. No web server or fake audio in the app.
+  Full M3/M4 acceptance, tray/startup reliability and distribution remain pending.
 - HID IDs: RGB `04d8:eb52`, Mini `0483:a3c4`, Pro `0483:a3c5`.
 - Original serial is **experimental**: 9600 8N1; `v<0..3>x<0..100>` and
   `b<0..3> <0|1>` lines; inferred active-low presses; periodic `pong`. Source is
@@ -140,11 +154,11 @@ User clarifications that override ambiguous wording in the original brief:
    automatic identity → per-model compatibility evidence. Physical gate pending.
 2. **M2 (current):** audio contract/backends; physical knob → master then app;
    subscriptions, input/output mute, service recovery and mock backend.
-3. **M3 (not started):** stable identity, mapping engine, groups, profiles, versioned
+3. **M3 (initial implementation, acceptance pending):** stable identity, mapping engine, groups, profiles, versioned
    persistent config/migrations and reboot/reconnect semantics.
-4. **M4 (not started):** real desktop UI, onboarding/configuration, live feedback,
+4. **M4 (native preview, acceptance pending):** real desktop UI, onboarding/configuration, live feedback,
    settings/diagnostics and accessibility.
-5. **M5 (not started):** tray/startup/background lifecycle and reliability soak.
+5. **M5 (initial tray/background foundation, soak/startup pending):** tray/startup/background lifecycle and reliability soak.
 6. **M6 (not started):** installers/packages, USB permissions, updates and clean installs.
 7. **M7 (not started):** measured performance, UX/accessibility and visual polish.
 

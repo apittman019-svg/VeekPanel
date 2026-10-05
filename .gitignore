@@ -10,3 +10,11 @@ captures/
 
 # Private user-supplied hardware evidence
 /thing.zip
+
+/app/target/
+/ui/node_modules/
+/ui/dist/
+
+__pycache__/
+
+/app/gen/

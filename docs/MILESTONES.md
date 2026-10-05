@@ -46,3 +46,14 @@ are not verified firmware versions. LED formats are investigated only. Discovery
 uses a 3-second scan fallback. Silent device stalls/resets, sleep/resume, duplicate
 interfaces and queue overload need physical/soak validation. Tests exercise transport
 errors and synthetic serial reconnect; they do not certify real hardware behavior.
+
+
+## Current software continuation
+
+M3 has an initial implementation of durable selectors, mappings/groups, independent
+buttons, profiles and atomic versioned configuration. M4 has an actual native
+Tauri/Svelte preview using the same background runtime, with an explicit simulated
+panel mode and real audio. Basic tray/background work has begun; login startup,
+soak/reliability and production acceptance remain pending. See
+[CORE_AND_DESKTOP.md](CORE_AND_DESKTOP.md) for exact implemented behavior, commands
+and remaining limitations. These changes do not close the hardware/platform gates.

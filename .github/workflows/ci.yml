@@ -1,4 +1,4 @@
-name: Hardware and audio prototype CI
+name: VeekPanel core and desktop CI
 on:
   push:
   pull_request:
@@ -35,6 +35,9 @@ jobs:
       - name: Native PipeWire integration (isolated server, synthetic audio/hardware)
         if: runner.os == 'Linux'
         run: python3 tests/audio/pipewire_integration.py target/release/veek-audio-probe
+      - name: Persistent mapping runtime (private native server)
+        if: runner.os == 'Linux'
+        run: python3 tests/audio/runtime_integration.py target/release/veek-runtime
       - name: Windows audio read-only smoke
         if: runner.os == 'Windows'
         shell: pwsh
@@ -106,3 +109,37 @@ jobs:
             veekpanel-m2-*.tar.gz
           if-no-files-found: error
           retention-days: 30
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: '11.25.0'
+      - name: Linux native desktop dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev libpipewire-0.3-dev libclang-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf pipewire-bin xvfb webkit2gtk-driver
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+      - run: pnpm --dir ui install --frozen-lockfile
+      - run: pnpm --dir ui check
+      - run: pnpm --dir ui build
+      - run: cargo fmt --manifest-path app/Cargo.toml --check
+      - run: cargo clippy --manifest-path app/Cargo.toml --all-targets --locked -- -D warnings
+      - run: cargo build --manifest-path app/Cargo.toml --locked
+      - name: Install native UI test driver
+        if: runner.os == 'Linux'
+        run: cargo install tauri-driver --version 2.1.0 --locked
+      - name: Native GUI with private PipeWire and synthetic panel
+        if: runner.os == 'Linux'
+        run: python3 tests/gui/native_smoke.py app/target/debug/veekpanel /tmp/veek-ui-evidence

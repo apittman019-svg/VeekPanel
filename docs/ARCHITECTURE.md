@@ -10,7 +10,10 @@ The M1 CLI is a developer diagnostic, not the finished end-user experience.
 **Implemented:** protocol types/parsers, model-specific validation, HID/serial I/O,
 cancelable reading, bounded event delivery, reconnect retry, local CLI diagnostics;
 native Windows Core Audio and PipeWire backends with M2 audio diagnostics.
-**Planned only:** persistent mapping, configuration, profiles, UI, tray and installers.
+**Now implemented as an initial preview:** persistent mapping/configuration/profiles,
+shared background ownership, Tauri/Svelte UI and basic tray. See
+[core/desktop details](CORE_AND_DESKTOP.md). Installers, full tray/startup lifecycle
+and production acceptance remain planned.
 Production diagnostics never substitute mock audio endpoints. Isolated tests create
 explicitly synthetic endpoints on their own PipeWire server.
 
@@ -40,9 +43,9 @@ Rust workspace conventions replace empty top-level component directories:
 | `crates/veek-audio` | Target IDs, capability flags, command/event contract | M2, exists |
 | `crates/veek-audio-windows` | COM/Core Audio only | M2, exists |
 | `crates/veek-audio-linux` | PipeWire/WirePlumber interaction only | M2, exists |
-| Future `crates/veek-core` | Identity matching, engine, groups and profile switching | M3 |
-| Future `crates/veek-config` | Validated schema, atomic saves, backups, migrations, import/export | M3 |
-| Future `app` and `ui` | Tauri composition/tray and TypeScript/Svelte views | M4/M5 |
+| `crates/veek-core` | Identity matching, engine, groups and profile switching | M3 |
+| `crates/veek-config` | Validated schema, atomic saves, backups, migrations, import/export | M3 |
+| `app` and `ui` | Tauri composition/tray and TypeScript/Svelte views | M4/M5 |
 | `tests`, `docs`, `packaging` | Fixtures/integration tests, evidence, eventual packaging | Incremental |
 
 Platform selection belongs in build-target dependencies and the app composition
@@ -83,7 +86,8 @@ The implementation and exact limitations are documented in [AUDIO_VALIDATION.md]
 commands. Readback reports whether each write was observed. Watch recovers with a
 new generation; temporary bindings fail closed and must be explicitly rearmed.
 Pickup and release-before-press handling prevent startup state from acting on audio.
-Persistent binding, group and reconnect policy remains M3/M5.
+Persistent bindings/groups now live in veek-core and veek-runtime; production
+lifecycle acceptance remains M3/M5. The M2 diagnostic bind remains temporary.
 
 ### Production direction to preserve
 
