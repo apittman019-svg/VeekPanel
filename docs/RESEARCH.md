@@ -120,3 +120,15 @@ target; Fedora, Ubuntu, Arch and Mint stay in the broader compatibility plan.
 
 Flatpak primary reference: [USB portal API](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Usb.html).
 Host udev ACLs still matter. No installer or permission changes were applied in M1.
+
+
+## Native app lifecycle follow-up (2026-10-04)
+
+PipeWire client metadata enrichment exposed races when transient clients disappear
+between registry announcement and bind, or before local proxy cleanup. The backend
+now handles exact missing-global binds and missing retired-proxy destroy replies,
+while retaining fatal handling for unrelated native errors. Native protocol Core
+Destroy is opcode 7; this is error/lifetime handling, not an ignored write failure.
+References: [Core API](https://docs.pipewire.org/core_8h_source.html),
+[upstream native protocol](https://github.com/PipeWire/pipewire/blob/master/doc/dox/internals/protocol.dox).
+Only API/protocol facts were consulted; no upstream implementation was copied.

@@ -1,6 +1,6 @@
 //! Native audio contract. IDs identify live objects, never persisted application mappings.
 #![forbid(unsafe_code)]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     sync::atomic::{AtomicU64, Ordering},
@@ -25,7 +25,7 @@ pub enum Error {
 }
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
     Output,
@@ -33,7 +33,7 @@ pub enum Kind {
     Playback,
     Recording,
 }
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Target {
     pub id: String,
     pub name: String,
@@ -46,18 +46,18 @@ pub struct Target {
     /// Stable hints for future matching, not a promise of persistent identity.
     pub identity: BTreeMap<String, String>,
 }
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Snapshot {
     pub backend: String,
     pub generation: u64,
     pub targets: Vec<Target>,
 }
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Selection {
     pub generation: u64,
     pub id: String,
 }
-#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Change {
     Volume(f32),
     Mute(bool),

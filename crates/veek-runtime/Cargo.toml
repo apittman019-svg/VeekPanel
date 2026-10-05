@@ -1,0 +1,24 @@
+[package]
+name = "veek-runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+veek-audio = { path = "../veek-audio" }
+veek-config = { path = "../veek-config" }
+veek-core = { path = "../veek-core" }
+veek-hardware = { path = "../veek-hardware" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hidapi.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+veek-audio-linux = { path = "../veek-audio-linux" }
+
+[target.'cfg(windows)'.dependencies]
+veek-audio-windows = { path = "../veek-audio-windows" }
+
+[dev-dependencies]
+tempfile = "3"

@@ -2,6 +2,7 @@
 #![cfg(target_os = "linux")]
 #![forbid(unsafe_code)]
 use pipewire as pw;
+use pw::proxy::ProxyT;
 use pw::{
     spa::{
         self,
@@ -15,7 +16,7 @@ use pw::{
 };
 use std::{
     cell::RefCell,
-    collections::BTreeMap,
+    collections::{BTreeMap, VecDeque},
     io::Cursor,
     rc::Rc,
     time::{Duration, Instant},
@@ -23,6 +24,7 @@ use std::{
 use veek_audio::{balanced_channels, Backend, Change, Error, Kind, Result, Target};
 
 struct Entry {
+    client: Option<u32>,
     target: Target,
     name: String,
     channels: Vec<f32>,
@@ -35,13 +37,20 @@ struct Metadata {
     _listener: pw::metadata::MetadataListener,
     _proxy: pw::metadata::Metadata,
 }
+struct ClientEntry {
+    identity: BTreeMap<String, String>,
+    _listener: pw::client::ClientListener,
+    _proxy: pw::client::Client,
+}
 #[derive(Default)]
 struct State {
     nodes: BTreeMap<u32, Entry>,
+    clients: BTreeMap<u32, ClientEntry>,
     metadata: BTreeMap<u32, Metadata>,
     defaults: BTreeMap<String, String>,
     cookie: u32,
     error: Option<String>,
+    retired_proxies: VecDeque<u32>,
 }
 pub struct PipeWire {
     _registry_listener: pw::registry::Listener,
@@ -50,6 +59,21 @@ pub struct PipeWire {
     _registry: pw::registry::RegistryRc,
     core: pw::core::CoreRc,
     mainloop: pw::main_loop::MainLoopRc,
+}
+fn retire(state: &mut State, id: u32) {
+    if state.retired_proxies.len() == 256 {
+        state.retired_proxies.pop_front();
+    }
+    state.retired_proxies.push_back(id);
+}
+fn retired_destroy_error(id: u32, result: i32, message: &str, retired: &VecDeque<u32>) -> bool {
+    id == pw::core::PW_ID_CORE
+        && result == -2
+        && message
+            .strip_prefix("unknown resource ")
+            .and_then(|s| s.strip_suffix(" op:7"))
+            .and_then(|s| s.parse::<u32>().ok())
+            .is_some_and(|id| retired.contains(&id))
 }
 fn native(e: impl std::fmt::Display) -> Error {
     Error::Unavailable(e.to_string())
@@ -77,7 +101,57 @@ impl PipeWire {
             })
             .error(move |id, _, res, message| {
                 if let Some(s) = error_state.upgrade() {
-                    s.borrow_mut().error = Some(format!("PipeWire object {id}: {message} ({res})"));
+                    let mut state = s.borrow_mut();
+                    // A server-side removal can race our proxy destructor. Only an ENOENT
+                    // response to Core::Destroy (opcode 7) for a locally retired proxy is
+                    // harmless. Never swallow writes, permissions, or disconnect errors.
+                    if retired_destroy_error(id, res, message, &state.retired_proxies) {
+                        return;
+                    }
+                    // Registry announcements race short-lived clients/streams exiting before
+                    // our bind reaches the server. Remove only that exact pending binding.
+                    if let Some(global) = (res == -2)
+                        .then(|| {
+                            message
+                                .strip_prefix("no global ")
+                                .and_then(|s| s.parse::<u32>().ok())
+                        })
+                        .flatten()
+                    {
+                        if state
+                            .clients
+                            .get(&global)
+                            .is_some_and(|c| c._proxy.upcast_ref().id() == id)
+                        {
+                            retire(&mut state, id);
+                            state.clients.remove(&global);
+                            return;
+                        }
+                        if state
+                            .nodes
+                            .get(&global)
+                            .is_some_and(|n| n.node.upcast_ref().id() == id)
+                        {
+                            retire(&mut state, id);
+                            state.nodes.remove(&global);
+                            return;
+                        }
+                        if state
+                            .metadata
+                            .get(&global)
+                            .is_some_and(|m| m._proxy.upcast_ref().id() == id)
+                        {
+                            retire(&mut state, id);
+                            state.metadata.remove(&global);
+                            state.defaults.clear();
+                            return;
+                        }
+                        // A global_remove may precede its failed bind reply.
+                        if state.retired_proxies.contains(&id) {
+                            return;
+                        }
+                    }
+                    state.error = Some(format!("PipeWire object {id}: {message} ({res})"));
                 }
             })
             .register();
@@ -95,7 +169,34 @@ impl PipeWire {
                     return;
                 };
                 let id = global.id;
-                if global.type_ == ObjectType::Node {
+                if global.type_ == ObjectType::Client {
+                    let Ok(client) = registry.bind::<pw::client::Client, _>(global) else {
+                        return;
+                    };
+                    let weak = Rc::downgrade(&state);
+                    let listener = client
+                        .add_listener_local()
+                        .info(move |info| {
+                            if let (Some(s), Some(props)) = (weak.upgrade(), info.props()) {
+                                if let Some(client) = s.borrow_mut().clients.get_mut(&id) {
+                                    client.identity = props
+                                        .iter()
+                                        .filter(|(key, _)| key.starts_with("application."))
+                                        .map(|(key, value)| (key.to_string(), value.to_string()))
+                                        .collect();
+                                }
+                            }
+                        })
+                        .register();
+                    state.borrow_mut().clients.insert(
+                        id,
+                        ClientEntry {
+                            identity: BTreeMap::new(),
+                            _listener: listener,
+                            _proxy: client,
+                        },
+                    );
+                } else if global.type_ == ObjectType::Node {
                     let kind = match props.get("media.class") {
                         Some("Audio/Sink") => Kind::Output,
                         Some("Audio/Source") => Kind::Input,
@@ -197,6 +298,7 @@ impl PipeWire {
                     state.borrow_mut().nodes.insert(
                         id,
                         Entry {
+                            client: props.get("client.id").and_then(|v| v.parse().ok()),
                             target,
                             name,
                             channels: Vec::new(),
@@ -262,8 +364,17 @@ impl PipeWire {
             .global_remove(move |id| {
                 if let Some(s) = removed.upgrade() {
                     let mut s = s.borrow_mut();
-                    s.nodes.remove(&id);
-                    if s.metadata.remove(&id).is_some() {
+                    if let Some(node) = s.nodes.remove(&id) {
+                        retire(&mut s, node.node.upcast_ref().id());
+                        drop(node);
+                    }
+                    if let Some(client) = s.clients.remove(&id) {
+                        retire(&mut s, client._proxy.upcast_ref().id());
+                        drop(client);
+                    }
+                    if let Some(metadata) = s.metadata.remove(&id) {
+                        retire(&mut s, metadata._proxy.upcast_ref().id());
+                        drop(metadata);
                         s.defaults.clear();
                     }
                 }
@@ -351,6 +462,20 @@ impl Backend for PipeWire {
             .values()
             .map(|entry| {
                 let mut target = entry.target.clone();
+                if let Some(client) = entry.client.and_then(|id| state.clients.get(&id)) {
+                    for key in [
+                        "application.id",
+                        "application.name",
+                        "application.process.binary",
+                    ] {
+                        if let Some(value) = client.identity.get(key) {
+                            target
+                                .identity
+                                .entry(key.into())
+                                .or_insert_with(|| value.clone());
+                        }
+                    }
+                }
                 target.id = format!("pw:{}:{}", state.cookie, target.id);
                 let key = match target.kind {
                     Kind::Output => "default.audio.sink",
@@ -413,5 +538,29 @@ impl Backend for PipeWire {
             return Err(Error::Unavailable("PipeWire event loop failed".into()));
         }
         self.check()
+    }
+}
+
+#[cfg(test)]
+mod lifecycle_tests {
+    use super::*;
+    #[test]
+    fn only_known_retired_proxy_destroy_enoent_is_harmless() {
+        let retired = VecDeque::from([8]);
+        assert!(retired_destroy_error(
+            0,
+            -2,
+            "unknown resource 8 op:7",
+            &retired
+        ));
+        for (id, result, message) in [
+            (0, -2, "unknown resource 8 op:3"),
+            (0, -2, "unknown resource 9 op:7"),
+            (0, -13, "unknown resource 8 op:7"),
+            (8, -2, "unknown resource 8 op:7"),
+            (0, -32, "connection closed"),
+        ] {
+            assert!(!retired_destroy_error(id, result, message, &retired));
+        }
     }
 }

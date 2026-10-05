@@ -1,0 +1,12 @@
+[package]
+name = "veek-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+veek-audio = { path = "../veek-audio" }
+veek-config = { path = "../veek-config" }
+veek-hardware = { path = "../veek-hardware" }
+serde = { version = "1", features = ["derive"] }
