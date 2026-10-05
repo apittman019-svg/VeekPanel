@@ -1,0 +1,3 @@
+selectors 0.38.0 declares MPL-2.0 in its Cargo.toml and source headers. Upstream revision: 572ecba2d1600e7c3d490586692a209faf703baa (servo/stylo). This is the unmodified standard license text from Mozilla.
+Source: https://www.mozilla.org/media/MPL/2.0/index.txt
+Original crate source is also bundled by license_inventory.py.

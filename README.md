@@ -5,12 +5,18 @@ A Windows-first, open-source PCPanel controller project with first-class Nobara/
 Windows Core Audio and native PipeWire backends are implemented. Physical PCPanel
 acceptance is partial: Mini basic controls passed on Windows 11; lifecycle and
 Nobara hardware checks remain pending. The desktop preview now includes profiles,
-groups, settings and a basic tray. Installers and production acceptance remain later work.
+groups, settings and a basic tray. A Windows preview installer is available; production acceptance and Linux packaging remain later work.
 
 The target is a friend's **PCPanel Mini 1.0**, corrected from the earlier Original
 identification. Its four knobs also act as four independent push buttons. Use the
 Mini HID path; the friend's Windows 11 capture and checklist confirm all four
 knob ranges, button edges, physical order and direction.
+
+## Windows download
+
+[Download the Windows desktop installer](https://github.com/apittman019-svg/VeekPanel/releases/tag/v0.1.0-preview.1).
+Run the setup EXE, then open VeekPanel from Start. No developer tools required.
+This is an unsigned preview for Windows 10/11 x64. See [installation and first use](docs/WINDOWS_INSTALLER.md).
 
 ## Native desktop preview
 
@@ -18,7 +24,7 @@ The backend-connected Tauri/Svelte app provides real audio discovery and volume/
 knob/button assignments, groups, profiles, saved configuration, settings and diagnostics.
 An explicitly labeled development panel uses simulated hardware with real audio.
 See [build/run instructions and current limitations](docs/CORE_AND_DESKTOP.md).
-It is a development preview, not a finished installer or daily-driver release.
+It is a development preview with a Windows installer, not a daily-driver release.
 
 ![Native VeekPanel desktop preview](docs/images/desktop-preview-dark.png)
 

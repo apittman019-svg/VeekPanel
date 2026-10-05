@@ -161,7 +161,7 @@ User clarifications that override ambiguous wording in the original brief:
 4. **M4 (native preview, acceptance pending):** real desktop UI, onboarding/configuration, live feedback,
    settings/diagnostics and accessibility.
 5. **M5 (initial tray/background foundation, soak/startup pending):** tray/startup/background lifecycle and reliability soak.
-6. **M6 (not started):** installers/packages, USB permissions, updates and clean installs.
+6. **M6 (Windows preview installer; broader packaging pending):** installers/packages, USB permissions, updates and clean installs.
 7. **M7 (not started):** measured performance, UX/accessibility and visual polish.
 
 Detailed acceptance criteria and risks live in `docs/MILESTONES.md`,
@@ -205,3 +205,14 @@ then background lifecycle and distribution. The user permits directly Apple-like
 visuals but wants the product name without a slogan underneath. Keep physical
 Mini lifecycle/Nobara/knob-to-audio and interactive Windows audio acceptance open;
 do not restart basic Windows Mini input research.
+
+
+## Installer priority supersedes profile work (2026-10-05)
+
+The user prioritized a downloadable Windows installer for the friend before more
+feature work. The installer uses the verified schema-1 desktop app and preserves
+the aligned, tagline-free brand. See docs/WINDOWS_INSTALLER.md and the newest
+verification entry. New schema-2 profile edits are unfinished in the original
+working tree and deliberately excluded from the installer; inspect them before
+resuming, and do not imply their migration/integration passed. Installer work was
+isolated in the codex/windows-installer worktree so those edits remain intact.

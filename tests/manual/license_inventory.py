@@ -12,8 +12,8 @@ import sys
 
 destination = pathlib.Path(sys.argv[1])
 destination.mkdir(parents=True, exist_ok=False)
-host = next(line.split(": ", 1)[1] for line in subprocess.check_output(["rustc", "-vV"], text=True).splitlines() if line.startswith("host: "))
-metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--locked", "--format-version", "1", "--filter-platform", host], text=True))
+host = next(line.split(": ", 1)[1] for line in subprocess.check_output(["rustc", "-vV"], text=True, encoding="utf-8").splitlines() if line.startswith("host: "))
+metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--locked", "--format-version", "1", "--filter-platform", host], text=True, encoding="utf-8"))
 nodes = {node["id"]: node for node in metadata["resolve"]["nodes"]}
 reachable = set()
 pending = list(metadata["workspace_members"])
@@ -33,7 +33,7 @@ for package in sorted(metadata["packages"], key=lambda p: (p["name"], p["version
     target.mkdir()
     inventory.append(f"{name}: {package.get('license') or 'UNSPECIFIED'}")
     inventory.append(f"Source: https://crates.io/api/v1/crates/{package['name']}/{package['version']}/download")
-    notices = [f for f in source.rglob("*") if f.is_file() and f.name.lower().startswith(("license", "copying", "notice"))]
+    notices = [f for f in source.rglob("*") if f.is_file() and f.name.lower().startswith(("license", "licence", "copying", "notice"))]
     if not notices:
         # Exact-version license omitted from the published cookie-factory archive.
         # The checked-in upstream text and provenance are reviewed, never guessed.

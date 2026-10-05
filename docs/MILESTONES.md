@@ -57,3 +57,10 @@ panel mode and real audio. Basic tray/background work has begun; login startup,
 soak/reliability and production acceptance remain pending. See
 [CORE_AND_DESKTOP.md](CORE_AND_DESKTOP.md) for exact implemented behavior, commands
 and remaining limitations. These changes do not close the hardware/platform gates.
+
+
+Windows installer work began at the user's explicit request on 2026-10-05, ahead
+of further profile work. A per-user NSIS preview packages the verified desktop
+foundation; this begins M6 but does not close clean-machine or production gates.
+See WINDOWS_INSTALLER.md and VERIFICATION.md for build, smoke-test and download
+status. Linux distribution and signing remain pending.
