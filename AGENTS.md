@@ -13,17 +13,19 @@ architecture and the actual backend-connected M4 desktop GUI.** The superseding
 request is preserved in `docs/CONTINUATION_REQUEST.md`. Do not use pending hardware
 validation as a reason to stop software work. Nobara is the current development
 machine; Windows remains a first-class product target. M1 physical validation is
-BLOCKED/PENDING, not passed. Never guess or claim untested hardware compatibility.
+partially validated: Mini basic discovery/controls passed on the friend's Windows
+11 machine; lifecycle and Nobara physical checks remain pending. Never generalize
+that result to untested models, revisions or platforms.
 
 User clarifications that override ambiguous wording in the original brief:
 
 - Corrected by the user on 2026-10-04: the friend's device is a **PCPanel Mini 1.0**,
   not the Original/Maple previously reported. It has four analog knobs and four
-  independent push buttons. Use the Mini HID adapter (reference VID:PID `0483:a3c4`),
-  not the Original serial guide. Revision-specific behavior still requires evidence.
-  The user reports that they figured out the hardware; clarify the observed results
-  before treating that as a complete physical acceptance test. The supplied serial
-  capture contains zero bytes and cannot validate Mini behavior.
+  independent push buttons. Use the Mini HID adapter (observed VID:PID `0483:a3c4`),
+  not the Original serial guide. The returned Windows 11 capture confirms all four
+  raw 0–255 ranges and button edges; the worksheet confirms left-to-right numbering
+  and clockwise increase. Printed model/revision and firmware were marked unknown.
+  See docs/HARDWARE_VALIDATION.md for the precise accepted checks and remaining gaps.
 - This is mainly a **Windows 10/11 application**. It must also work on **Nobara**;
   Nobara is the first Linux validation target. Broader Linux compatibility remains
   planned, with PipeWire as the native direction.
@@ -35,10 +37,13 @@ User clarifications that override ambiguous wording in the original brief:
   `m1-probe-2026-10-03` (source `f65350a4d1b25261410caddfc44504d1f64b44dd`).
   Mini-specific prerelease `m1-mini-2026-10-04` supersedes the Original launcher
   for this friend. Source: `e703b4cf70eaa03c5168b5f16a4ffc72d6249e8a`; Windows
-  users run `TEST-MINI.cmd`. Both Windows/Ubuntu CI passed 35 tests. No physical
-  Mini control events have been validated here.
-  Next hardware work is collecting and reviewing the friend's evidence, then
-  correcting the adapter if needed; publishing the kit did not complete M1.
+  users run `TEST-MINI.cmd`. Both Windows/Ubuntu CI passed 35 tests for the kit.
+  The returned real Windows 11 session has 4,473 reports, zero parse errors, all
+  four full-range knobs and matching presses/releases. Reviewed 2026-10-04; an
+  unchanged 16-report excerpt and provenance are in tests/fixtures. No adapter
+  correction was needed. Reconnect/rerun was marked Yes without a specific result
+  or second capture; sleep/resume was not tested. Next physical work is lifecycle
+  and Nobara validation, not repeating already confirmed basic Windows inputs.
 
 ## Product requirements to preserve
 

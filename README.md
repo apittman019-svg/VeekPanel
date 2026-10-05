@@ -3,11 +3,13 @@
 A Windows-first, open-source PCPanel controller project with first-class Nobara/Linux support.
 **Current scope: M1 hardware diagnostics and M2 native audio diagnostics.**
 Windows Core Audio and native PipeWire backends are implemented. Physical PCPanel
-acceptance remains pending. Desktop UI, profiles, tray and installers come later.
+acceptance is partial: Mini basic controls passed on Windows 11; lifecycle and
+Nobara hardware checks remain pending. Desktop UI, profiles, tray and installers come later.
 
 The target is a friend's **PCPanel Mini 1.0**, corrected from the earlier Original
 identification. Its four knobs also act as four independent push buttons. Use the
-Mini HID path; physical compatibility remains pending reviewed test evidence.
+Mini HID path; the friend's Windows 11 capture and checklist confirm all four
+knob ranges, button edges, physical order and direction.
 
 ## Hardware status
 
@@ -15,7 +17,7 @@ Mini HID path; physical compatibility remains pending reviewed test evidence.
 | --- | --- | --- |
 | Original / Maple Wood Edition | Explicit serial port, 9600 baud | Experimental, based on compatible replacement firmware; unique USB identity and stock firmware unverified |
 | RGB | HID `04d8:eb52` | Implemented from public protocol references; physical test pending |
-| Mini | HID `0483:a3c4` | Implemented from public protocol references; physical test pending |
+| Mini (user reports 1.0) | HID `0483:a3c4` | Basic detection, four full-range knobs and four buttons verified on one Windows 11 unit; lifecycle/Nobara pending |
 | Pro | HID `0483:a3c5` | Implemented from public protocol references; physical test pending |
 
 Do not mistake replayed fixtures or a successful build for hardware compatibility.

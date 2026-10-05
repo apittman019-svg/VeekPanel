@@ -1,7 +1,8 @@
 # Verification record
 
 Initial implementation: 2026-10-03 UTC / 2026-10-02 America/New_York.
-Current milestone status: **M1 physical acceptance pending; M2 audio diagnostics implemented.**
+Current milestone status: **M1 basic Mini controls passed on one Windows 11 unit;
+lifecycle/Nobara physical acceptance pending. M2 audio diagnostics implemented.**
 No physical PCPanel is available locally. The user corrected the friend's target
 to **Mini 1.0** on 2026-10-04. Historical entries below retain the Original
 assumption in effect at the time. See CONTINUATION_REQUEST.md for expanded scope.
@@ -225,3 +226,37 @@ points to the verified source. GitHub asset sizes and SHA256 digests match local
 files. Physical Mini 1.0 acceptance remains pending the friend's returned HID
 capture and observations; the earlier empty serial ZIP does not count as evidence
 of Mini behavior. This follow-up commit only records verification and skips CI.
+
+
+## Reviewed physical Mini capture — Windows 11 (2026-10-04)
+
+The friend returned the Mini kit's capture plus completed observations using source
+`e703b4cf70eaa03c5168b5f16a4ffc72d6249e8a`. Independently replayed all 4,473 raw HID
+reports (286,272 bytes): zero errors and exact agreement with every decoded event
+in the returned log. All reports are 64 bytes with zero padding after byte 2.
+Observed `0483:a3c4`, interface 0, usage `ff00:0001`, USB release `0200` (firmware
+unknown). Duration stop, 90,915 ms including setup; 4,445 analog and 28 button reports.
+
+Every knob reached raw 0 and 255. The worksheet confirms physical knobs 1–4 from
+left to right, clockwise increasing, full travel, and press/release working for
+each. Button press/release counts are 2/2, 7/7, 3/3, 2/2, with alternating edges
+and each final state released. No missing/stuck/repeated/unexpected events were
+reported. **Basic automatic detection and knob/button decoding passed for this
+unit on Windows 11. No protocol change was needed.**
+
+User identification is Mini 1.0; printed model/revision, firmware and Windows build
+remain unknown. The competing-apps field is blank. Reconnect/rerun is marked Yes
+without a specific outcome or second capture; in-process recovery is not proven.
+Sleep/resume is explicitly NOT TESTED; Nobara physical behavior, audio actions,
+Windows 10 and long-duration reliability remain untested by this evidence.
+
+The raw ZIP remains private and unchanged. Added 16 exact, non-identifying 64-byte
+reports (extrema and both button edges for each knob), preserving source order,
+with [hashes/provenance](../tests/fixtures/mini-windows-2026-10-04.md) and a regression
+replay check. It is a selected physical excerpt, not a continuous trace or a new
+hardware trial. Historical “pending” entries above describe the earlier state.
+
+Local Nobara checks for the physical excerpt: 27 hardware/probe tests passed,
+including full-frame replay of the excerpt; package formatting, strict Clippy and
+`git diff --check` passed. This replay is regression verification, not an additional
+physical test. Unrelated audio/configuration work remains outside this evidence commit.

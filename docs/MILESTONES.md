@@ -2,14 +2,15 @@
 
 The continuation request authorizes audio, mappings/configuration, background
 architecture and the backend-connected GUI without waiting for hardware. See
-CONTINUATION_REQUEST.md. M1 physical acceptance remains pending. On 2026-10-04 the
-user corrected the friend's target to **Mini 1.0**, not Original/Maple. Model
-identification alone does not establish validated control events.
+CONTINUATION_REQUEST.md. M1 is **partially validated**: the friend's Mini (reported
+1.0, corrected from Original) passed basic discovery and all four knob/button
+checks on Windows 11. Lifecycle and Nobara physical acceptance remain pending.
+See HARDWARE_VALIDATION.md for the reviewed 2026-10-04 capture and worksheet.
 
 | Milestone | Work | Evidence needed to accept |
 | --- | --- | --- |
 | Research/setup | Protocol/source/license investigation; Rust stack; Windows/Nobara architecture; risks; repository and CI | Traceable sources, buildable scoped prototype, current AGENTS.md |
-| 1 — Hardware | Model/HID allowlist; Original serial adapter; control parser; diagnostic utility; errors and reconnect; mock and physical tests | Stock Mini 1.0 identified and every rotation/press/release matches physical action on Windows and Nobara; endpoint ranges captured, reconnect and sleep checks documented. Other advertised models tested individually. |
+| 1 — Hardware | Model/HID allowlist; Original serial adapter; control parser; diagnostic utility; errors and reconnect; mock and physical tests | Basic controls passed on the supplied Windows 11 Mini; still require Nobara/lifecycle checks and precise revision evidence; endpoint ranges captured, reconnect and sleep checks documented. Other advertised models tested individually. |
 | 2 — Audio | Native audio contract, Windows Core Audio, Nobara PipeWire; mock backend; endpoint/session discovery and subscriptions | Physical knob → master and app volume on both systems; mic/output mute; external updates; disappearing devices/apps and restarted service recovery. No UI required. |
 | 3 — Core | Stable app identity, mappings, groups, versioned config/migrations, profile switching, durable reconnect policy | Automated config/migration/matching/group/profile tests; app relaunch/dual-boot mappings; atomic save/recovery; button/rotation independent; absent targets safe. |
 | 4 — UI | Tauri/Svelte desktop, device dashboard, onboarding, drag/drop, live feedback, settings and diagnostics | Every active element wired to real backend; no fake apps/devices; keyboard/accessibility, dark/light/scaling; no I/O blocking UI; performance baselines. |
@@ -20,7 +21,8 @@ identification alone does not establish validated control events.
 ## Parallel pending physical work: M1
 
 1. Read `AGENTS.md`, `docs/VERIFICATION.md` and `docs/HARDWARE_PROTOCOL.md`.
-2. Obtain evidence from the friend's Mini 1.0. Compare enumeration before/after connecting;
+2. Preserve the reviewed Windows Mini evidence. Obtain the remaining lifecycle/
+   Nobara observations; compare enumeration before/after connecting;
    record VID/PID/product/interface/driver with personal identifiers redacted.
    The device belongs to the user's friend. Use the M1 downloadable diagnostic kit
    for his trial when convenient; local access must not be assumed. The released Original serial launcher is inappropriate for this unit;
@@ -38,7 +40,8 @@ identification alone does not establish validated control events.
 ## Known M1 limitations to carry forward
 
 Original auto-identification and stock protocol are unresolved; explicit port must
-be supplied. HID implementations have no physical captures here. USB release numbers
+be supplied. Mini has one reviewed physical Windows 11 capture; RGB/Pro and Nobara
+HID behavior remain unverified. USB release numbers
 are not verified firmware versions. LED formats are investigated only. Discovery
 uses a 3-second scan fallback. Silent device stalls/resets, sleep/resume, duplicate
 interfaces and queue overload need physical/soak validation. Tests exercise transport

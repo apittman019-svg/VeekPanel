@@ -1,6 +1,8 @@
 # Physical hardware acceptance checklist
 
-**No rows are passed yet.** Software/PTY tests are recorded in `VERIFICATION.md`.
+**Mini basic detection and controls passed on the friend's Windows 11 machine.**
+Broader lifecycle/platform acceptance remains pending. Software/PTY tests are
+recorded separately in `VERIFICATION.md`.
 First priority is the friend's Mini 1.0, corrected by the user on 2026-10-04,
 on Windows and Nobara. Do not flash
 firmware, install guessed drivers, or send undocumented commands to obtain a pass.
@@ -33,11 +35,42 @@ sleep/resume, permissions and sustained input on each target OS. Initial state
 reports alone do not demonstrate physical movement. The Mini reference range is
 0–255; observe it rather than marking it passed from the implementation.
 
-All Mini physical checks remain pending reviewed evidence. The user reports the
-hardware issue is understood, but has not yet supplied Mini HID events or specific
-acceptance results. The earlier returned Original serial capture has zero bytes,
-was interrupted after approximately 25 seconds, and has an unfilled worksheet.
-It is inconclusive and cannot establish either a Mini failure or success.
+## Reviewed Mini result — Windows 11, 2026-10-04
+
+Source kit: `m1-mini-2026-10-04`, binary commit
+`e703b4cf70eaa03c5168b5f16a4ffc72d6249e8a`. The user supplied one physical capture
+and the friend's completed worksheet. The user calls the unit Mini 1.0; the
+worksheet lists printed model/revision and firmware as unknown. Windows edition/
+build and competing-app status were not filled in. Do not generalize to every
+firmware/revision or Windows 10.
+
+Observed USB `0483:a3c4`, interface 0, usage page `0xff00`, usage 1,
+`bcdDevice=0x0200` (USB release number, not a verified firmware version).
+The tool opened HID with state initialization enabled and recorded 4,473 64-byte
+reports: 4,445 analog, 28 button, 286,272 raw bytes, no parser errors. Capture
+finished on duration at 90,915 ms including setup. All reports replayed successfully
+and matched the supplied decoded events exactly. No adapter correction was needed.
+
+| Check | Windows 11, supplied unit | Nobara |
+| --- | --- | --- |
+| Automatic Mini HID discovery/open with initialization enabled | Passed | Pending |
+| All four knobs reach raw 0–255 | Passed: raw capture and physical worksheet | Pending |
+| Left-to-right knobs map to 1–4; clockwise increases value | Passed: tester confirmed | Pending |
+| Each knob button presses/releases independently | Passed: capture and tester; counts 2/2, 7/7, 3/3, 2/2 | Pending |
+| Observed missing/stuck/repeated/unexpected events | None reported in this trial; not a soak test | Pending |
+| Timed capture completion | Passed | Pending |
+| Unplug/replug and rerun | Tester marked Yes; result unspecified, second capture absent | Pending |
+| In-process reconnect, different USB port, permission recovery | Pending | Pending |
+| Sleep/resume or USB reset | Explicitly not tested | Pending |
+| Sustained simultaneous input, resource use and latency | Not established | Pending |
+
+The [physical regression excerpt](../tests/fixtures/mini-windows-2026-10-04.md)
+records provenance, source hashes and limitations. Its 16 unchanged frames are
+selected from the private capture; the full ZIP/worksheet are not committed.
+The original capture's `hardware_validation=unverified` metadata is preserved as
+produced: this reviewed table records acceptance of specific checks separately.
+The earlier empty Original serial capture remains inconclusive and is superseded
+by this HID evidence for the friend's actual Mini.
 
 ## Original-only serial collection (retained for other units)
 

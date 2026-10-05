@@ -135,3 +135,39 @@ fn mini_replay_covers_four_knobs_and_independent_button_edges() {
         assert!(text.contains(&format!("KNOB_{i}_PRESS = FALSE")));
     }
 }
+
+#[test]
+fn physical_mini_windows_excerpt_retains_full_frames_and_all_control_types() {
+    let path = fixture("mini-windows-2026-10-04.hex");
+    let input = std::fs::read_to_string(&path).unwrap();
+    let reports: Vec<_> = input
+        .lines()
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .collect();
+    assert_eq!(reports.len(), 16);
+    assert!(reports
+        .iter()
+        .all(|line| line.split_whitespace().count() == 64));
+    let output = Command::new(env!("CARGO_BIN_EXE_veek-probe"))
+        .args(["replay", "--model", "mini"])
+        .arg(path)
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let text = String::from_utf8(output.stdout).unwrap();
+    assert!(text.contains("OFFLINE REPLAY"));
+    assert_eq!(text.lines().count(), 17);
+    for knob in 1..=4 {
+        for event in [
+            format!("KNOB_{knob} = 0 (raw=0/255)"),
+            format!("KNOB_{knob} = 100 (raw=255/255)"),
+            format!("KNOB_{knob}_PRESS = TRUE"),
+            format!("KNOB_{knob}_PRESS = FALSE"),
+        ] {
+            assert!(
+                text.contains(&event),
+                "missing physical fixture event: {event}"
+            );
+        }
+    }
+}

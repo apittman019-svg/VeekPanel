@@ -1,10 +1,12 @@
 # PCPanel protocol investigation
 
-Status: public implementation evidence, **not physically verified here**.
+Status: public implementation evidence plus **reviewed physical Mini input on
+Windows 11**; other models and Nobara physical behavior remain unverified.
 See [research provenance](RESEARCH.md) for pinned source revisions and licenses.
 The user corrected the friend's device to **Mini 1.0** on 2026-10-04 (previously
 reported as Original). It has four pushable knobs. The existing Mini HID adapter
-is the appropriate investigation path; the exact unit/revision remains unverified.
+matched the returned physical capture. Printed revision and firmware are unknown;
+“Mini 1.0” is the user's identification, not a firmware-version determination.
 
 ## Model matrix
 
@@ -19,6 +21,19 @@ IDs/counts are corroborated by the Apache-2.0 [Device.java](https://github.com/n
 Ranges are described by the community [DescriptorFactory](https://github.com/nvdweem/PCPanel/blob/f349b91c202c8ff9c9cb4809646bbdf7a39b85a5/src/main/java/com/getpcpanel/device/provider/pcpanel/DescriptorFactory.java).
 Model names do not establish all firmware revisions. A USB release number is
 reported as `bcdDevice`, not relabeled as a known firmware version.
+
+## Physical Mini evidence (2026-10-04)
+
+The friend's Windows 11 capture confirms `0483:a3c4`, interface 0, usage page
+`0xff00`, usage 1, `bcdDevice=0x0200`. All 4,473 input reports are 64 bytes, with
+opcodes/index/value in the first three bytes and zero padding after them. No
+extra leading report-ID byte was present in these reads. All four analog inputs
+reached 0–255; button reports were 1 pressed and 0 released, matching the tester's
+observations. Left-to-right numbering is 1–4 and clockwise increases raw values.
+The run used the existing initialization request; it does not isolate which
+reports were caused by that request or prove initialization is necessary.
+See [acceptance and limitations](HARDWARE_VALIDATION.md#reviewed-mini-result--windows-11-2026-10-04)
+and [fixture provenance](../tests/fixtures/mini-windows-2026-10-04.md).
 
 ## Original/Maple (experimental adapter)
 
@@ -59,7 +74,8 @@ buffer. It does not assume one USB byte range for every model.
 input has no synthetic leading zero. A numbered input includes its report ID; no
 numbered PCPanel variation has been established here. Unknown framing is reported
 as a parser error, not guessed by stripping bytes. Linux and Windows physical
-captures must confirm behavior with the chosen backend.
+captures must confirm behavior with the chosen backend. The reviewed Mini Windows
+trial confirms this framing for that unit; Nobara and other revisions remain pending.
 
 ## HID initialization and output
 
@@ -104,8 +120,7 @@ adding LED support in a separately authorized milestone.
 
 ## Evidence still required
 
-Run [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md) first on the friend's stock
-Mini 1.0 on Windows and Nobara. Confirm endpoints, rotation direction, every press
-and release, framing and reconnect. Preserve redacted captures and add independent
-fixtures. Then test each claimed HID model. Unknown revisions, suspend/resume and
-silent USB resets are not certified by this prototype's automated tests.
+Continue [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md) with lifecycle/reconnect
+evidence and Nobara physical checks. Basic Windows Mini inputs now have physical
+evidence; other models still need their own trials. Unknown revisions, suspend/
+resume and silent USB resets are not certified by the existing software tests.
