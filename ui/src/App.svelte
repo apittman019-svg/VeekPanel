@@ -48,7 +48,7 @@
 
 <div class="shell" data-theme={theme}>
  <aside>
-  <div class="brand"><span class="brand-mark">◉</span><div>VeekPanel<small>YOUR SOUND. YOUR CONTROLS.</small></div></div>
+  <div class="brand"><span class="brand-mark">◉</span><div>VeekPanel</div></div>
   <nav aria-label="Main navigation">{#each pages as item,i}<button class:active={page===item} onclick={()=>{page=item;name='';}}><span aria-hidden="true">{['◈','▤','◫','⚙','⌁'][i]}</span>{item}</button>{/each}</nav>
   <div class="sidebar-bottom"><span class="status-dot" class:online={observed?.audio_status==='Connected'}></span>{audio?.backend??'Connecting audio'}<small>Development preview · 0.1</small></div>
  </aside>

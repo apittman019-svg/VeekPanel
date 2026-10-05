@@ -19,6 +19,8 @@ that result to untested models, revisions or platforms.
 
 User clarifications that override ambiguous wording in the original brief:
 
+- Keep the VeekPanel brand plain: the user asked to remove the small tagline
+  beneath the software name. Do not restore it.
 - 2026-10-05: the user explicitly permits directly Apple-like visuals. The previous
   inspiration-only language was generated for them and is not their restriction.
 - Keep each development pass focused on a concrete deliverable. Reuse established

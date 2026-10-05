@@ -2,10 +2,13 @@
 """Native Tauri/WebKit smoke against a private PipeWire daemon and config folder.
 Requires Xvfb, tauri-driver, WebKitWebDriver. No desktop audio is modified.
 """
-import base64,json,os,pathlib,subprocess,sys,tempfile,time,urllib.request,urllib.error
+import base64,json,os,pathlib,subprocess,sys,tempfile,time,urllib.request,urllib.error,shutil
 binary=pathlib.Path(sys.argv[1]).resolve();root_repo=pathlib.Path(__file__).resolve().parents[2]
 artifacts=pathlib.Path(sys.argv[2]).resolve() if len(sys.argv)>2 else pathlib.Path(tempfile.mkdtemp(prefix='veek-gui-artifacts-'))
 artifacts.mkdir(parents=True,exist_ok=True)
+# tauri-driver treats --native-driver as a filesystem path, not a PATH command.
+native_driver=shutil.which(os.environ.get('VEEK_WEBKIT_DRIVER','WebKitWebDriver'))
+if not native_driver:raise SystemExit('WebKitWebDriver not found; install it or set VEEK_WEBKIT_DRIVER to its full path')
 def until(fn,timeout=15):
  end=time.monotonic()+timeout
  while time.monotonic()<end:
@@ -44,7 +47,7 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    until(lambda:pathlib.Path(f'/tmp/.X11-unix/X{display}').exists())
    server=subprocess.Popen(['pipewire','-c',str(root_repo/'tests/audio/pipewire.conf')],env=env,stdout=log,stderr=log);until(lambda:(root/'veek-test').exists())
    for key,name in [('sink','output'),('source','input')]:subprocess.run(['pw-metadata','-n','default','0','default.audio.'+key,json.dumps({'name':'veek.'+name}),'Spa:String:JSON'],env=env,stdout=log,stderr=log,check=True)
-   driver=subprocess.Popen(['tauri-driver','--port',str(port),'--native-port','4455','--native-driver',os.environ.get('VEEK_WEBKIT_DRIVER','WebKitWebDriver')],env=env,stdout=log,stderr=log)
+   driver=subprocess.Popen(['tauri-driver','--port',str(port),'--native-port','4455','--native-driver',native_driver],env=env,stdout=log,stderr=log)
    until(lambda:http('GET','/status'))
    session=http('POST','/session',{'capabilities':{'alwaysMatch':{'tauri:options':{'application':str(binary)}}}})['sessionId']
    until(ready)
