@@ -18,3 +18,7 @@ captures/
 __pycache__/
 
 /app/gen/
+
+/desktop-notices/
+/installer-download/
+/ui/bundled-modules.json

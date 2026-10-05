@@ -1,0 +1,56 @@
+name: Windows desktop installer
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/windows-installer.yml'
+      - 'app/installer.conf.json'
+      - 'packaging/windows/**'
+permissions:
+  contents: read
+jobs:
+  installer:
+    runs-on: windows-latest
+    env:
+      RUSTFLAGS: '-C target-feature=+crt-static'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          version: '11.25.0'
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - run: pnpm --dir ui install --frozen-lockfile
+      - run: pnpm --dir ui check
+      - run: pnpm --dir ui build
+      - name: Desktop dependency notices
+        working-directory: app
+        run: python ../tests/manual/license_inventory.py ../desktop-notices/rust
+      - run: python packaging/windows/frontend_notices.py desktop-notices/frontend
+      - name: Record installer source
+        run: Set-Content desktop-notices/BUILD_COMMIT.txt $env:GITHUB_SHA
+      - name: Build current-user Windows installer
+        working-directory: app
+        run: ../ui/node_modules/.bin/tauri build --config installer.conf.json --bundles nsis -- --locked
+      - name: Install, launch, reinstall and uninstall on Windows
+        shell: pwsh
+        run: ./packaging/windows/smoke.ps1
+      - name: Hash verified installer
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem app/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($file.Name)" | Set-Content -Encoding ascii app/target/release/bundle/nsis/SHA256SUMS.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: VeekPanel-Windows-installer
+          path: |
+            app/target/release/bundle/nsis/*-setup.exe
+            app/target/release/bundle/nsis/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30

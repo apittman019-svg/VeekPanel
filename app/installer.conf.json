@@ -1,0 +1,31 @@
+{
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "publisher": "VeekPanel",
+    "shortDescription": "PCPanel audio controller for Windows",
+    "license": "MIT",
+    "homepage": "https://github.com/apittman019-svg/VeekPanel",
+    "resources": {
+      "../LICENSE": "LICENSE.txt",
+      "../packaging/windows/README.txt": "README.txt",
+      "../desktop-notices/": "THIRD_PARTY/"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": [
+          "English"
+        ],
+        "startMenuFolder": "VeekPanel"
+      }
+    }
+  }
+}
