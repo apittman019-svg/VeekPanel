@@ -45,8 +45,11 @@ bounds, not measured input-latency guarantees for blocking OS APIs.
 - Select a knob, choose its rotation target and independent button action, and save.
   Groups cover several targets; relative groups preserve observed volume ratios.
   Missing members are skipped with diagnostics. Group/device ambiguity fails closed.
-- Profiles support create, duplicate, rename, delete and switch. Buttons can toggle
-  mute or switch/cycle profiles. Schema imports also support explicit set-mute.
+- Profiles support create, duplicate, rename, delete and switch. Each profile owns
+  its mappings, audio groups and preferred input/output. Duplication copies all of
+  these independently; a new profile starts empty and follows system defaults.
+  Buttons can toggle mute or switch/cycle profiles. Schema imports also support
+  explicit set-mute. Switching profiles clears unsaved assignment/group drafts.
 - Settings cover theme, connection/model, preferred input/output, close-to-tray and
   JSON configuration import/export. Imported settings apply after validation.
 - The initial tray supports Open, Next profile and Quit. Closing hides the window
@@ -66,14 +69,20 @@ configurations are not replaced. A temporary file is synced and atomically persi
 config.json.bak preserves the preceding version. External file edits cause a
 conflict error; UI revisions prevent stale editors overwriting newer configuration.
 
-Groups and device preferences are currently shared across profiles; profile-specific
-overrides remain planned. Switching profiles changes the saved knob/button mappings.
+Schema 2 stores mappings, groups and device preferences inside each profile.
+Hardware connection and appearance/tray settings remain application-wide. A group
+ID resolves only within the active profile; identical IDs in duplicated profiles
+can have different members. Preferred-device selectors use the active profile
+without changing the OS default device.
 
-Schema 1 includes profiles/mappings, groups, hardware mode/address/model, device
-preferences and appearance/tray settings. Schema 0 is the documented prerelease
-profile-only shape with those optional sections absent: migration inserts defaults
-and backs up its bytes. This is migration infrastructure, not a claim that a prior
-public schema-0 application existed. Unknown fields/actions are rejected. Imports
+Schema 1 (the 0.1.0 desktop preview) and schema 0 migrate automatically: shared
+groups/preferences are copied into every profile to preserve existing behavior.
+The original bytes are backed up to config.json.bak before migration; subsequent
+saves use that file for the preceding configuration as usual. Invalid or newer
+files, including their existing backup, are left unchanged. Schema 0 allows omitted
+hardware/preferences/settings and inserts their defaults; schema 1 still requires
+those fields. Schema 0 was a documented prerelease format, not a public application.
+Older app versions cannot read schema 2; downgrading requires a schema-1 backup. Unknown fields/actions are rejected. Imports
 cannot contain executable commands because that action type is not implemented.
 
 Application matching uses exact application.id, application.path or process.binary;
@@ -118,7 +127,7 @@ for these tests; it exposes no network listener and is not the end-user interfac
 
 Remaining product work includes multiple panels, richer identity editing, foreground
 profiles, default-device switching/media/shortcut/opt-in command actions, LEDs,
-login startup, automatic updates, installers, signed distribution, accessibility/
+login startup, automatic updates, Linux installers, signed distribution, accessibility/
 scaling review, low-latency and idle baselines, long-run reliability and clean Windows
 interaction. Only implemented controls appear in the preview. Do not mark M3/M4 or
 M5 complete based solely on this initial feature set and synthetic integration.

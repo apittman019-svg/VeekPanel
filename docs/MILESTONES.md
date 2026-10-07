@@ -64,3 +64,10 @@ of further profile work. A per-user NSIS preview packages the verified desktop
 foundation; this begins M6 but does not close clean-machine or production gates.
 See WINDOWS_INSTALLER.md and VERIFICATION.md for build, smoke-test and download
 status. Linux distribution and signing remain pending.
+
+
+M3 profile continuation (2026-10-07): schema 2 gives every profile independent
+groups and preferred devices, with schema 0/1 migration and full duplication.
+Private native routing and native GUI checks passed locally; see VERIFICATION.md
+for Windows upgrade and release evidence. This is another M3/M4 increment, not
+acceptance of unimplemented actions, physical behavior or all original features.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Persistent mapping worker against a PRIVATE PipeWire server; synthetic panel only."""
-import json,os,pathlib,queue,subprocess,sys,tempfile,threading,time,wave
+import copy,json,os,pathlib,queue,subprocess,sys,tempfile,threading,time,wave
 binary=pathlib.Path(sys.argv[1]).resolve()
 config=pathlib.Path(__file__).with_name('pipewire.conf').resolve()
 def until(fn,timeout=8):
@@ -18,10 +18,19 @@ def stop(p):
 with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
  root=pathlib.Path(folder);env=dict(os.environ,XDG_RUNTIME_DIR=folder,PIPEWIRE_RUNTIME_DIR=folder,PIPEWIRE_REMOTE='veek-test')
  env.pop('PIPEWIRE_CONFIG_DIR',None);env.pop('PIPEWIRE_CONFIG_NAME',None)
+ # A second private output makes profile device preferences observably different.
+ private_config=root/'pipewire.conf'
+ private_config.write_text(config.read_text().rsplit(']',1)[0]+'''    { factory = adapter args = {
+        factory.name = support.null-audio-sink node.name = veek.secondary
+        node.description = "VeekPanel second isolated output" media.class = Audio/Sink
+        audio.position = [ FL FR ] object.linger = true
+    } }
+]
+''')
  server=worker=app=None
  with open(root/'log','w+') as log:
   def start_server():
-   p=subprocess.Popen(['pipewire','-c',str(config)],env=env,stdout=log,stderr=log)
+   p=subprocess.Popen(['pipewire','-c',str(private_config)],env=env,stdout=log,stderr=log)
    until(lambda:(root/'veek-test').exists())
    for key,name in [('sink','output'),('source','input')]:subprocess.run(['pw-metadata','-n','default','0','default.audio.'+key,json.dumps({'name':'veek.'+name}),'Spa:String:JSON'],env=env,stdout=log,stderr=log,check=True)
    return p
@@ -37,7 +46,8 @@ with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
    assert r['ok']==ok,r
    return r.get('state') if ok else r
   def state():return request({'type':'state'})
-  def output(s):return next(t for t in s['audio']['targets'] if t['kind']=='output')
+  def output(s):return next(t for t in s['audio']['targets'] if t['identity'].get('node.name')=='veek.output')
+  def secondary():return next(t for t in state()['audio']['targets'] if t['identity'].get('node.name')=='veek.secondary')
   def volume(v):return until(lambda:abs(output(state())['volume']-v)<.01)
   try:
    server=start_server();worker,responses=start_worker();s=until(lambda:(x if (x:=state())['audio'] else None));t=output(s)
@@ -64,7 +74,9 @@ with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
     return next((t for t in state()['audio']['targets'] if t['identity'].get('application.id')=='org.veekpanel.mapping-test'),None)
    app=launch_app();stream=until(application)
    selector={'type':'match','kind':'playback','identities':{'application.id':'org.veekpanel.mapping-test'}}
-   s=state();c=s['config'];c['groups']=[{'id':'mix','name':'Output + app','members':[{'type':'default_output'},selector],'relative':True}]
+   s=state();c=s['config'];primary=c['profiles'][0]
+   primary['preferences']['output']={'type':'match','kind':'output','identities':{'node.name':'veek.output'}}
+   primary['groups']=[{'id':'mix','name':'Output + app','members':[{'type':'preferred_output'},selector],'relative':True}]
    for index,target in [(1,selector),(2,{'type':'group','id':'mix'})]:
     c['profiles'][0]['mappings'].append({'control':{'device':'primary','kind':'analog','index':index},'action':{'type':'volume','target':target}})
    request({'type':'save','revision':s['revision'],'config':c})
@@ -81,6 +93,28 @@ with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
    set_level(output(state()),.4);set_level(application(),.2)
    request({'type':'mock_analog','index':2,'raw':0});request({'type':'mock_analog','index':2,'raw':204})
    volume(.8);until(lambda:abs(application()['volume']-.4)<.01)
+   # The same group ID is local to each profile, as is its preferred device.
+   s=state();c=s['config'];primary=c['profiles'][0]
+   alternate=copy.deepcopy(primary);alternate.update(id='alternate',name='Second output')
+   alternate['preferences']['output']={'type':'match','kind':'output','identities':{'node.name':'veek.secondary'}}
+   alternate['groups']=[{'id':'mix','name':'Only second output','members':[{'type':'preferred_output'}],'relative':False}]
+   c['profiles'].append(alternate)
+   request({'type':'save','revision':s['revision'],'config':c})
+   set_level(secondary(),.3)
+   request({'type':'activate','id':'alternate'})
+   request({'type':'mock_analog','index':2,'raw':255})
+   assert abs(secondary()['volume']-.3)<.01 # First input after switching cannot jump volume.
+   request({'type':'mock_analog','index':2,'raw':0})
+   until(lambda:secondary()['volume']<.01)
+   request({'type':'mock_analog','index':2,'raw':153})
+   until(lambda:abs(secondary()['volume']-.6)<.01)
+   volume(.8);assert abs(application()['volume']-.4)<.01
+   request({'type':'activate','id':primary['id']})
+   request({'type':'mock_analog','index':2,'raw':0});volume(.8)
+   request({'type':'mock_analog','index':2,'raw':255})
+   volume(1);until(lambda:abs(application()['volume']-.5)<.01)
+   assert abs(secondary()['volume']-.6)<.01
+   request({'type':'activate','id':'alternate'});c['active_profile']='alternate'
    stop(app);app=None;until(lambda:application() is None)
 
    old=state()['audio'];stop(server);until(lambda:state()['audio'] is None);until(lambda:not(root/'veek-test').exists());server=start_server()
@@ -92,8 +126,12 @@ with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
    assert s['config']==c
    until(lambda:state()['hardware_status'].startswith('Development panel'))
    before=output(s)['volume'];request({'type':'mock_analog','index':0,'raw':220});volume(before)
+   set_level(secondary(),.5)
+   request({'type':'mock_analog','index':2,'raw':0});assert abs(secondary()['volume']-.5)<.01
+   request({'type':'mock_analog','index':2,'raw':200});until(lambda:abs(secondary()['volume']-200/255)<.01)
+   volume(before) # Relaunch still routes the local group to the second output.
    request({'type':'quit'});assert worker.wait(timeout=5)==0
-   print('PASS: private native PipeWire persistent mappings, simulated Mini pickup/buttons, stale UI rejection, durable app relaunch/group volume, backup/relaunch, service recovery and no stale writes')
+   print('PASS: private native PipeWire persistent mappings, simulated Mini pickup/buttons, stale UI rejection, durable app relaunch/group volume, profile-local groups/preferences and switch pickup, backup/relaunch, service recovery and no stale writes')
   except BaseException:
    log.flush();log.seek(0);print(log.read()[-12000:],file=sys.stderr);raise
   finally:stop(app);stop(worker);stop(server)

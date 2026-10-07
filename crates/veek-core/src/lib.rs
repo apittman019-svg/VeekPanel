@@ -44,6 +44,7 @@ pub fn resolve<'a>(
     selector: &Selector,
     snapshot: &'a Snapshot,
 ) -> Result<Resolved<'a>, String> {
+    let profile = config.active().ok_or("Active profile no longer exists")?;
     let (targets, relative, warnings) = match selector {
         Selector::DefaultOutput | Selector::DefaultInput => {
             let kind = if matches!(selector, Selector::DefaultOutput) {
@@ -64,7 +65,7 @@ pub fn resolve<'a>(
         Selector::PreferredOutput => {
             return resolve(
                 config,
-                config
+                profile
                     .preferences
                     .output
                     .as_ref()
@@ -75,7 +76,7 @@ pub fn resolve<'a>(
         Selector::PreferredInput => {
             return resolve(
                 config,
-                config
+                profile
                     .preferences
                     .input
                     .as_ref()
@@ -100,7 +101,7 @@ pub fn resolve<'a>(
             (found, false, vec![])
         }
         Selector::Group { id } => {
-            let group = config
+            let group = profile
                 .groups
                 .iter()
                 .find(|g| &g.id == id)
@@ -503,7 +504,7 @@ mod tests {
             .map(|t| selector_for(t).unwrap())
             .chain([selector_for(&target("absent", 0.2)).unwrap()])
             .collect();
-        c.groups.push(Group {
+        c.profiles[0].groups.push(Group {
             id: "mix".into(),
             name: "Mix".into(),
             members: selectors,
@@ -585,6 +586,8 @@ mod tests {
             id: "next".into(),
             name: "Next".into(),
             mappings: vec![],
+            groups: vec![],
+            preferences: Default::default(),
         });
         c.profiles[0].mappings[0].action = Action::NextProfile;
         e.reset();
@@ -606,7 +609,7 @@ mod tests {
         }
         assert!(resolve(&c, &Selector::DefaultOutput, &s).is_err());
         assert!(resolve(&c, &selector_for(&s.targets[0]).unwrap(), &s).is_err());
-        c.preferences.output = Some(Selector::Match {
+        c.profiles[0].preferences.output = Some(Selector::Match {
             kind: Kind::Output,
             identities: BTreeMap::from([("node.name".into(), "missing".into())]),
         });
@@ -614,6 +617,40 @@ mod tests {
             .unwrap()
             .targets
             .is_empty());
+    }
+    #[test]
+    fn profile_group_and_preference_resolution_stay_independent() {
+        let mut c = Config::default();
+        let mut s = snap();
+        for t in &mut s.targets {
+            t.kind = Kind::Output;
+            t.identity = BTreeMap::from([("node.name".into(), t.id.clone())]);
+        }
+        c.profiles[0].preferences.output = Some(selector_for(&s.targets[0]).unwrap());
+        c.profiles[0].groups.push(Group {
+            id: "mix".into(),
+            name: "First mix".into(),
+            members: vec![Selector::PreferredOutput],
+            relative: true,
+        });
+        let mut other = c.profiles[0].clone();
+        other.id = "second".into();
+        other.preferences.output = Some(selector_for(&s.targets[1]).unwrap());
+        other.groups[0].relative = false;
+        c.profiles.push(other);
+        c.validate().unwrap();
+        let selector = Selector::Group { id: "mix".into() };
+        let first = resolve(&c, &selector, &s).unwrap();
+        assert_eq!(first.targets[0].id, "a");
+        assert!(first.relative);
+        c.active_profile = "second".into();
+        let second = resolve(&c, &selector, &s).unwrap();
+        assert_eq!(second.targets[0].id, "b");
+        assert!(!second.relative);
+        s.targets.pop();
+        assert!(resolve(&c, &selector, &s).unwrap().targets.is_empty());
+        c.active_profile = "default".into();
+        assert_eq!(resolve(&c, &selector, &s).unwrap().targets[0].id, "a");
     }
     #[test]
     fn coalescing_preserves_button_barriers_and_last_analog_order() {

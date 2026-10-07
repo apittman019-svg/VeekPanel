@@ -700,6 +700,8 @@ mod tests {
             id: "second".into(),
             name: "Second".into(),
             mappings: vec![],
+            groups: vec![],
+            preferences: Default::default(),
         });
         runtime
             .handle

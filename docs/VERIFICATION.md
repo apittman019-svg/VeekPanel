@@ -394,3 +394,29 @@ missing-WebView2 download on a clean consumer machine, interactive Windows audio
 physical Mini-to-audio/lifecycle, upgrades across versions, Linux packages and
 production/soak acceptance remain pending. Basic Windows Mini input evidence is
 unchanged. Installer success does not close all M6 or physical milestone gates.
+
+
+## Independent profile settings (2026-10-07)
+
+Resumed the preserved profile edits after delivering the first installer. Schema 2
+moves groups and preferred input/output into each profile. Schema 0/1 migrations
+copy former shared settings into every profile and preserve the original bytes in
+the normal backup. Malformed/future configurations and prior backups are unchanged
+on rejection. Group IDs resolve within their owning profile. Duplicate copies
+everything independently; new profiles start empty; switching clears editing drafts.
+
+Local Nobara checks: **52 Rust tests passed**, workspace formatting and strict
+Clippy passed; frontend check reported zero errors/warnings and production build
+passed; native desktop built. Private native PipeWire integration confirmed distinct
+profile destinations, same-ID groups with different membership, pickup reset on
+switch, application relaunch matching, persistence/relaunch and service recovery.
+Actual native Tauri GUI automation passed group/preference creation, full duplication,
+independent edits and draft clearing after switches, plus existing simulated Mini
+volume/microphone mute and dark/light checks. Native dark screenshot was inspected.
+No physical USB or desktop audio was changed by these private-server tests.
+
+Desktop version is 0.1.1. Windows CI now also installs the published 0.1.0 baseline
+(verified by its pinned SHA-256), loads representative legacy settings, upgrades
+the app, checks schema-2 migration and exact backup, and checks relaunch/reinstall/
+uninstall preservation. CI and published artifact evidence will be recorded below
+when completed. Consumer Windows and physical Mini-to-audio acceptance remain open.

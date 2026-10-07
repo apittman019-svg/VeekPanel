@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/windows-installer.yml'
       - 'app/installer.conf.json'
+      - 'app/tauri.conf.json'
       - 'packaging/windows/**'
 permissions:
   contents: read
@@ -40,9 +41,15 @@ jobs:
         # Invoke Node directly so PowerShell does not consume the argument
         # separator in pnpm's .ps1 shim before Cargo receives --locked.
         run: node ../ui/node_modules/@tauri-apps/cli/tauri.js build --config installer.conf.json --bundles nsis -- --locked
-      - name: Install, launch, reinstall and uninstall on Windows
+      - name: Download verified upgrade baseline
         shell: pwsh
-        run: ./packaging/windows/smoke.ps1
+        run: |
+          $path = Join-Path $env:RUNNER_TEMP 'VeekPanel-0.1.0-setup.exe'
+          Invoke-WebRequest 'https://github.com/apittman019-svg/VeekPanel/releases/download/v0.1.0-preview.1/VeekPanel_0.1.0_x64-setup.exe' -OutFile $path
+          if ((Get-FileHash $path -Algorithm SHA256).Hash.ToLower() -ne 'd4bb646af11e3646caaf696be9e91c9b3af9ca440546e1aa83ef84ab042f6c16') { throw 'Upgrade baseline checksum mismatch' }
+      - name: Install, launch, upgrade, reinstall and uninstall on Windows
+        shell: pwsh
+        run: ./packaging/windows/smoke.ps1 -PreviousInstaller (Join-Path $env:RUNNER_TEMP 'VeekPanel-0.1.0-setup.exe')
       - name: Hash verified installer
         shell: pwsh
         run: |

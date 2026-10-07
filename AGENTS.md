@@ -127,7 +127,7 @@ User clarifications that override ambiguous wording in the original brief:
   packaged Linux native integration passed on Nobara. Windows CI only enumerated
   an empty endpoint list: interactive Windows audio writes and physical PCPanel-to-audio
   checks remain pending. Basic Mini hardware input was validated subsequently. Do not equate the release with milestone acceptance.
-- `crates/veek-config`: schema 1, validated imports, migrations, lock/conflict checks,
+- `crates/veek-config`: schema 2, profile-owned groups/preferences, validated imports, migrations, lock/conflict checks,
   atomic saves and backups. `crates/veek-core`: stable selectors, independent analog/
   button actions, groups, pickup, profile effects and ordered event coalescing.
 - `crates/veek-runtime`: shared background owner and local JSON-lines test harness.
@@ -232,3 +232,21 @@ reinstall and uninstall preserving settings on Windows Server 2025. See
 docs/VERIFICATION.md for its exact digest and remaining consumer/hardware gates.
 The Windows packaging CLI must run through `node .../tauri.js` in PowerShell to
 preserve `-- --locked`; the smoke test waits for configuration after window creation.
+
+
+## Profile continuation (2026-10-07)
+
+The Windows installer priority was delivered, and the user authorized continued
+development from the original brief. The formerly unfinished profile work is now
+implemented and locally verified: schema 2, independent groups/device preferences,
+complete profile duplication and cleared editing drafts on profile switches.
+Legacy schema 0/1 migrations preserve behavior in every profile and back up the
+original bytes. Hardware and appearance/tray settings remain global.
+
+Local checks passed 52 Rust tests, strict workspace lint, frontend type/build
+checks, private native PipeWire routing/relaunch/recovery, and actual Tauri GUI
+profile editing/duplication/switching. Windows upgrade verification is being added
+for desktop 0.1.1; check the newest VERIFICATION.md entry for final CI/release status.
+The earlier schema-1 statements describe the 0.1.0 release, not current source.
+Next work: clearer pickup/action feedback and accessible assignment UX, then
+background lifecycle/startup reliability. Keep physical and soak gates open.
