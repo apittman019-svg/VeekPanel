@@ -37,7 +37,9 @@ jobs:
         run: Set-Content desktop-notices/BUILD_COMMIT.txt $env:GITHUB_SHA
       - name: Build current-user Windows installer
         working-directory: app
-        run: ../ui/node_modules/.bin/tauri build --config installer.conf.json --bundles nsis -- --locked
+        # Invoke Node directly so PowerShell does not consume the argument
+        # separator in pnpm's .ps1 shim before Cargo receives --locked.
+        run: node ../ui/node_modules/@tauri-apps/cli/tauri.js build --config installer.conf.json --bundles nsis -- --locked
       - name: Install, launch, reinstall and uninstall on Windows
         shell: pwsh
         run: ./packaging/windows/smoke.ps1

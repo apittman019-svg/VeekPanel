@@ -46,7 +46,7 @@ cd ..
 python packaging/windows/frontend_notices.py desktop-notices/frontend
 cd app
 $env:RUSTFLAGS = '-C target-feature=+crt-static'
-../ui/node_modules/.bin/tauri build --config installer.conf.json --bundles nsis -- --locked
+node ../ui/node_modules/@tauri-apps/cli/tauri.js build --config installer.conf.json --bundles nsis -- --locked
 ```
 
 The generated setup EXE is under `app/target/release/bundle/nsis`.
