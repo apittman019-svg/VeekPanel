@@ -35,6 +35,11 @@ uninstall with configuration preserved. These are automated Windows runner check
 not proof of physical Mini audio actions or clean consumer-machine acceptance.
 Check docs/VERIFICATION.md for the actual run results and release hashes.
 
+Preview `v0.1.0-preview.1` was published from `71a1c77` after
+[Windows installer CI passed](https://github.com/apittman019-svg/VeekPanel/actions/runs/37573097127).
+GitHub's Windows Server 2025 runner verified the checks above; consumer Windows
+10/11 and physical hardware acceptance remain separate.
+
 Local Windows reproduction after Rust/Node/pnpm prerequisites:
 
 ```powershell

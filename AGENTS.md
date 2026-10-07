@@ -216,3 +216,19 @@ verification entry. New schema-2 profile edits are unfinished in the original
 working tree and deliberately excluded from the installer; inspect them before
 resuming, and do not imply their migration/integration passed. Installer work was
 isolated in the codex/windows-installer worktree so those edits remain intact.
+
+The user also supplied Antigravity work on `gemini-test`, reviewed 2026-10-07.
+Commit `086288cc02bf4c25110582e49002a5276d312480` adds a Linux/Wine Windows
+installer builder and produced an actual setup EXE. It was found locally and
+pushed to preserve the work. Application behavior is unchanged from `48ac784`.
+`QWEN-test` contains no commits beyond that same base. The release pipeline uses
+native Windows CI, dependency notices and installation smoke checks; the Wine
+builder remains on its branch. Do not confuse a produced EXE with a tested
+Windows installation or physical PCPanel acceptance.
+
+Windows desktop prerelease `v0.1.0-preview.1` is published from `71a1c77`.
+Installer CI `37573097127` passed installation, responsive window/config creation,
+reinstall and uninstall preserving settings on Windows Server 2025. See
+docs/VERIFICATION.md for its exact digest and remaining consumer/hardware gates.
+The Windows packaging CLI must run through `node .../tauri.js` in PowerShell to
+preserve `-- --locked`; the smoke test waits for configuration after window creation.

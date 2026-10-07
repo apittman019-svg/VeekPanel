@@ -344,3 +344,53 @@ integration also passed after the driver-path correction. Windows ran 48 portabl
 tests; Linux ran those plus its PipeWire lifecycle test (49). Windows interactive
 GUI/audio and physical Mini-to-audio are still untested. The subsequent handoff
 commit contains only documentation and screenshots and skips redundant CI.
+
+## Windows desktop installer and branch review (2026-10-07)
+
+Reviewed the user's Antigravity worktree and preserved its local commit
+`086288cc02bf4c25110582e49002a5276d312480` on public `gemini-test`. It adds
+Linux/Wine cross-build scripts and produced a real NSIS setup EXE; inspection
+confirmed an x64 Windows app inside its build. Its application source is the
+unchanged `48ac784` desktop foundation. `QWEN-test` has no changes beyond that
+base. These findings do not establish that the Wine-built installer was tested
+on Windows. The existing unfinished schema-2 profile edits remain separate.
+
+Published [Windows preview v0.1.0-preview.1](https://github.com/apittman019-svg/VeekPanel/releases/tag/v0.1.0-preview.1)
+from `71a1c77d6d7fc84ea9580885fecc0c74f8f08bf9` using the native Windows
+release pipeline. It packages schema 1, current-user NSIS installation, static
+MSVC runtime, automatic missing-WebView2 download, project/dependency licenses,
+applicable unmodified MPL dependency source and getting-started instructions.
+The Wine builder remains preserved on `gemini-test`, rather than being required
+by the native Windows pipeline.
+
+[Installer CI 37573097127](https://github.com/apittman019-svg/VeekPanel/actions/runs/37573097127)
+**passed** on GitHub's Windows Server 2025 runner:
+
+- Locked frontend install, zero-error/warning Svelte check and production build;
+  dependency-notice generation; locked native Rust release/NSIS build.
+- Silent install and installed application/dependency-notice presence.
+- Installed app opened a responsive native window and created configuration.
+- Same-version reinstall preserved the configuration bytes.
+- Uninstall removed the application and preserved configuration bytes.
+
+Two packaging/test issues were resolved without changing app behavior: invoke
+the pinned Tauri CLI through Node directly so PowerShell's shim does not swallow
+the Cargo argument separator; wait for startup/configuration as well as the
+window handle before testing saved defaults. The initial responsive window can
+appear before Tauri's setup callback completes. The final test still fails if
+initialization does not complete within 30 seconds.
+
+[Standard CI 37572505739](https://github.com/apittman019-svg/VeekPanel/actions/runs/37572505739)
+passed all four Windows/Linux core and desktop jobs for `e0c9f56` (the same
+application and packaging implementation, before the smoke-test timing fix).
+The release EXE was downloaded locally and its hash checked against the CI
+checksum, then against GitHub's published asset digest:
+
+- File: `VeekPanel_0.1.0_x64-setup.exe`, **2,474,378 bytes**.
+- SHA-256: `d4bb646af11e3646caaf696be9e91c9b3af9ca440546e1aa83ef84ab042f6c16`.
+
+This is an unsigned desktop preview. Windows 10/11 consumer clean installs,
+missing-WebView2 download on a clean consumer machine, interactive Windows audio,
+physical Mini-to-audio/lifecycle, upgrades across versions, Linux packages and
+production/soak acceptance remain pending. Basic Windows Mini input evidence is
+unchanged. Installer success does not close all M6 or physical milestone gates.
