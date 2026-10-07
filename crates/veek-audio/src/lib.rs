@@ -206,7 +206,7 @@ pub fn balanced_channels(channels: &[f32], peak: f32) -> Result<Vec<f32>> {
         .collect())
 }
 
-/// Temporary M2 diagnostic pickup, not a persistent mapping engine.
+/// Deterministic soft takeover shared by diagnostics and the mapping engine.
 #[derive(Default)]
 pub struct Pickup {
     previous: Option<f32>,
@@ -214,6 +214,10 @@ pub struct Pickup {
     caught: bool,
 }
 impl Pickup {
+    /// Whether a physical movement has acquired the observed volume.
+    pub fn is_active(&self) -> bool {
+        self.caught
+    }
     pub fn update(&mut self, position: f32, observed: f32) -> Option<f32> {
         if Change::Volume(position).validate().is_err() || !observed.is_finite() {
             return None;
@@ -245,6 +249,9 @@ pub struct PressEdge {
     released: bool,
 }
 impl PressEdge {
+    pub fn is_ready(&self) -> bool {
+        self.released
+    }
     /// Startup/held presses are ignored until a release is observed.
     pub fn update(&mut self, pressed: bool) -> bool {
         if !pressed {

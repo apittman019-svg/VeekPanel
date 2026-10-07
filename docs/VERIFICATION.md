@@ -420,3 +420,44 @@ Desktop version is 0.1.1. Windows CI now also installs the published 0.1.0 basel
 the app, checks schema-2 migration and exact backup, and checks relaunch/reinstall/
 uninstall preservation. CI and published artifact evidence will be recorded below
 when completed. Consumer Windows and physical Mini-to-audio acceptance remain open.
+
+
+## Live control readiness and accessible assignments (2026-10-07)
+
+Reviewed current main `345f79f`, gemini-test `086288c`, and schema-2 continuation
+`8e60df9`. Profile-settings CI [37574468939](https://github.com/apittman019-svg/VeekPanel/actions/runs/37574468939)
+passed all four core/desktop jobs; Windows installer workflow
+[37574468881](https://github.com/apittman019-svg/VeekPanel/actions/runs/37574468881)
+also passed, including its legacy upgrade check. The next feature builds on
+that verified branch, preserving the original installers and profile work.
+
+Added `veek-core::feedback` with engine-owned pickup/controlling, button readiness,
+offline/missing/blocked states, physical position and observed group-peak pickup
+level. Runtime snapshots reconcile live target changes and native readback before
+publishing feedback. External volume changes rearm pickup without a synthetic
+hardware event. Failed/unconfirmed writes cannot publish active control.
+The desktop explains pickup direction/level and independent button readiness,
+retains partial-group warnings, and supports keyboard selection with accessible
+labels, a submit form, and a selected-control live region.
+
+Local Ubuntu 24.04 workspace, pinned Rust 1.99.0, Node 24/pnpm 11.25.0:
+**56 Rust tests passed**, workspace formatting and strict Clippy passed; frontend
+check reported zero errors/warnings and production build passed. Native desktop
+build/formatting/strict Clippy and the full workspace release build passed. Python
+integration scripts passed syntax checks. Four new regression tests cover readiness transitions,
+external changes, unavailable/ambiguous/capability-limited targets, group pickup and
+independent buttons, plus native-write rejection through the mocked runtime.
+Build dependencies were extracted into a temporary sysroot. No user's desktop
+audio, USB permissions or configuration was changed.
+
+This workspace prohibits private sockets (`socket(AF_UNIX, SOCK_STREAM)` returns
+EPERM), so local private PipeWire/native GUI integration cannot execute. The
+existing CI tests were extended to check feedback/rearming through native PipeWire
+and actual WebDriver keyboard selection. Git HTTPS push had no authenticated
+credential; the connected GitHub integration returned HTTP 403, Resource not
+accessible by integration, for repository writes. No remote feature branch or PR
+was created and new CI could not be triggered. The complete change is committed
+locally on codex/control-feedback and supplied as an apply-ready patch based on
+8e60df93119a9cd2697d07dd0f2beca52f4f821d. Run native integrations/CI after importing
+that patch; do not represent them as passed in this workspace. Manual screen-reader behavior, consumer Windows interaction, physical
+PCPanel-to-audio/lifecycle, Nobara USB and full reliability acceptance remain open.

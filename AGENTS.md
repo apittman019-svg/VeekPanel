@@ -250,3 +250,20 @@ for desktop 0.1.1; check the newest VERIFICATION.md entry for final CI/release s
 The earlier schema-1 statements describe the 0.1.0 release, not current source.
 Next work: clearer pickup/action feedback and accessible assignment UX, then
 background lifecycle/startup reliability. Keep physical and soak gates open.
+
+
+## Control feedback continuation (2026-10-07)
+
+Reviewed main `345f79f`, gemini-test `086288c`, and the newer profile-settings
+branch `8e60df9`. The profile branch passed all four core/desktop CI jobs and
+the Windows installer/legacy-upgrade smoke workflow. Continue from that schema-2
+foundation instead of reimplementing it. Linux/Wine packaging on gemini-test
+produces a Windows installer; Linux desktop packages still remain pending.
+
+The next M4 increment adds engine-owned pickup/readiness feedback, independent
+button release state, external-volume reconciliation, and accessible assignment
+navigation/form/status descriptions. No schema or platform-adapter rewrite.
+See the newest VERIFICATION.md entry for this increment's actual checks.
+Next software module: opt-in startup and background lifecycle/single-instance
+behavior, followed by reliability and Linux distribution. Preserve physical,
+consumer Windows and accessibility/soak acceptance gates.

@@ -46,6 +46,8 @@ with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
    assert r['ok']==ok,r
    return r.get('state') if ok else r
   def state():return request({'type':'state'})
+  def feedback(index=0,kind='analog'):
+   return next(f for f in state()['feedback'] if f['control']['index']==index and f['control']['kind']==kind)
   def output(s):return next(t for t in s['audio']['targets'] if t['identity'].get('node.name')=='veek.output')
   def secondary():return next(t for t in state()['audio']['targets'] if t['identity'].get('node.name')=='veek.secondary')
   def volume(v):return until(lambda:abs(output(state())['volume']-v)<.01)
@@ -57,11 +59,21 @@ with tempfile.TemporaryDirectory(prefix='veek-runtime-private-') as folder:
    c['profiles'][0]['mappings']=[{'control':{'device':'primary','kind':'analog','index':0},'action':{'type':'volume','target':{'type':'default_output'}}},{'control':{'device':'primary','kind':'button','index':0},'action':{'type':'toggle_mute','target':{'type':'default_input'}}}]
    request({'type':'save','revision':s['revision'],'config':c});until(lambda:state()['hardware_status'].startswith('Development panel'))
    request({'type':'save','revision':s['revision'],'config':c},ok=False)
+   until(lambda:feedback()['phase']=='awaiting_input')
    request({'type':'mock_analog','index':0,'raw':0});volume(.5)
+   assert feedback()['phase']=='pickup' and abs(feedback()['target_volume']-.5)<.01
+   request({'type':'mock_analog','index':0,'raw':200});volume(200/255)
+   assert feedback()['phase']=='controlling'
+   s=state();request({'type':'volume','selection':{'id':output(s)['id'],'generation':s['audio']['generation']},'value':.3})
+   until(lambda:feedback()['phase']=='pickup')
+   request({'type':'mock_analog','index':0,'raw':190});volume(.3)
+   request({'type':'mock_analog','index':0,'raw':0});volume(0)
    request({'type':'mock_analog','index':0,'raw':200});volume(200/255)
    source=lambda:next(t for t in state()['audio']['targets'] if t['kind']=='input')
+   assert feedback(kind='button')['phase']=='waiting_release'
    before=source()['muted'];request({'type':'mock_button','index':0,'pressed':True});assert source()['muted']==before
-   request({'type':'mock_button','index':0,'pressed':False});request({'type':'mock_button','index':0,'pressed':True});until(lambda:source()['muted']!=before)
+   request({'type':'mock_button','index':0,'pressed':False});assert feedback(kind='button')['phase']=='ready'
+   request({'type':'mock_button','index':0,'pressed':True});until(lambda:source()['muted']!=before)
    request({'type':'mock_button','index':0,'pressed':True});assert source()['muted']!=before
    assert (root/'config.json.bak').exists()
    # Persist application identity and group mappings; verify against a real native client.

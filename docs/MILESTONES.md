@@ -71,3 +71,9 @@ groups and preferred devices, with schema 0/1 migration and full duplication.
 Private native routing and native GUI checks passed locally; see VERIFICATION.md
 for Windows upgrade and release evidence. This is another M3/M4 increment, not
 acceptance of unimplemented actions, physical behavior or all original features.
+
+
+The 2026-10-07 M4 feedback increment exposes actual pickup and button readiness
+from the mapping engine, including external-volume rearming, keyboard control
+selection and an accessible assignment form/live status. This is incremental
+assignment accessibility, not full assistive-technology or M4 acceptance.

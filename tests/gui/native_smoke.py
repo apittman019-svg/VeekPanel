@@ -64,17 +64,34 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    session=http('POST','/session',{'capabilities':{'alwaysMatch':{'tauri:options':{'application':str(binary)}}}})['sessionId']
    until(ready)
    click('Use development panel');until(lambda:js('return document.body.textContent.includes("Simulated knobs and buttons")'))
+   # Native keyboard navigation selects and focuses independently of mouse clicks.
+   element=http('POST',f'/session/{session}/element',{'using':'css selector','value':'[data-control-index="0"]'})
+   element_id=element['element-6066-11e4-a52e-4f735466cecf']
+   http('POST',f'/session/{session}/element/{element_id}/click',{})
+   def keypress(value):
+    http('POST',f'/session/{session}/actions',{'actions':[{'type':'key','id':'keyboard','actions':[{'type':'keyDown','value':value},{'type':'keyUp','value':value}]}]})
+   keypress('\ue014') # ArrowRight
+   assert js('return document.activeElement.dataset.controlIndex==="1" && document.activeElement.getAttribute("aria-pressed")==="true" && document.querySelector("#assignment-title").textContent==="Configure knob 2"')
+   keypress('\ue010') # End
+   assert js('return document.activeElement.dataset.controlIndex==="3"')
+   keypress('\ue011') # Home
+   assert js('return document.activeElement.dataset.controlIndex==="0" && document.activeElement.getAttribute("aria-controls")==="assignment"')
    # Configure actual GUI controls: synthetic hardware -> real private PipeWire output.
    js('const s=[...document.querySelectorAll("label")].find(l=>l.textContent.startsWith("Turn controls")).querySelector("select");s.value=JSON.stringify({type:"default_output"});s.dispatchEvent(new Event("change",{bubbles:true}));')
    js('const s=[...document.querySelectorAll("label")].find(l=>l.textContent.startsWith("Press action")).querySelector("select");s.value=JSON.stringify({type:"default_input"});s.dispatchEvent(new Event("change",{bubbles:true}));')
    click('Save assignment');until(lambda:js('return document.body.textContent.includes("Assignment saved")'))
    js('const r=[...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("output"));const i=r.querySelector("input");i.value=50;i.dispatchEvent(new Event("change",{bubbles:true}));')
    until(lambda:js('return [...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("output")).querySelector(".volume").textContent==="50%"'))
+   until(lambda:js('return document.querySelector(".knob-select").getAttribute("aria-describedby")=="control-status-0" && document.querySelector("#control-status-0").dataset.phase==="awaiting_input"'))
    for raw in [0,200]:
     until(lambda:js('return !document.querySelector(".knob-card input").disabled'))
     js('const i=document.querySelector(".knob-card input");i.value=arguments[0];i.dispatchEvent(new Event("change",{bubbles:true}));',raw)
     time.sleep(.4)
+    expected='pickup' if raw==0 else 'controlling'
+    until(lambda:js('return document.querySelector("#control-status-0").dataset.phase===arguments[0]',expected))
+    if raw==0:assert js('return document.querySelector("#control-status-0").textContent.includes("Turn up through 50%")')
    until(lambda:js('return [...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("output")).querySelector(".volume").textContent==="78%"'))
+   assert js('return document.querySelector(".selected-feedback").getAttribute("aria-live")=="polite" && document.querySelector(".assignment").tagName=="FORM"')
    js('document.querySelector(".knob-card .press").click();')
    until(lambda:js('return [...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("input")).querySelector("button").textContent==="Unmute"'))
    dump=json.loads(subprocess.check_output(['pw-dump'],env=env,text=True))

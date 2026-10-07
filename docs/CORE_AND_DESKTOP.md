@@ -26,7 +26,7 @@ cargo build --manifest-path app/Cargo.toml --locked
 The native window uses bundled local frontend assets and narrow Tauri commands.
 It does not host a remote-control HTTP service. Native audio objects remain on a
 background owner thread; IPC mutations use a blocking-task pool, not the UI thread.
-The background state refreshes at 250 ms, UI at 400 ms while visible. Hardware reads
+The background state and engine readiness refresh at 250 ms, UI at 400 ms while visible. Hardware reads
 have 100 ms timeouts; native event waits are bounded to 20 ms. These are scheduling
 bounds, not measured input-latency guarantees for blocking OS APIs.
 
@@ -42,8 +42,16 @@ bounds, not measured input-latency guarantees for blocking OS APIs.
   The simulated sliders send an event when released. The first position never writes;
   move again across the current audio volume to pick up control. A simulated press
   emits release, press, release, so it cannot remain held after a mouse cancellation.
-- Select a knob, choose its rotation target and independent button action, and save.
-  Groups cover several targets; relative groups preserve observed volume ratios.
+- Select a knob with Tab/Enter or left/right arrows, Home and End, choose its
+  rotation target and independent button action, and save through the assignment
+  form. Selection, target labels and live readiness have accessible descriptions.
+- Each assigned rotation reports awaiting movement, pickup direction/level, or
+  active control from the engine. Buttons independently report release-required
+  or ready state. Missing/ambiguous/unsupported audio and partial-group warnings
+  remain visible; external volume changes rearm pickup before the next movement.
+  Feedback is published after native readback; an unconfirmed write cannot report
+  successful control. A selected-control live region announces readiness changes.
+- Groups cover several targets; relative groups preserve observed volume ratios.
   Missing members are skipped with diagnostics. Group/device ambiguity fails closed.
 - Profiles support create, duplicate, rename, delete and switch. Each profile owns
   its mappings, audio groups and preferred input/output. Duplication copies all of

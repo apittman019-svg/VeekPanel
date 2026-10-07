@@ -29,6 +29,7 @@ pub struct State {
     pub audio_status: String,
     pub hardware_status: String,
     pub controls: BTreeMap<String, u8>,
+    pub feedback: Vec<veek_core::ControlFeedback>,
     pub diagnostics: Vec<String>,
 }
 #[derive(Deserialize)]
@@ -107,6 +108,7 @@ where
         audio_status: "Connecting".into(),
         hardware_status: "Starting".into(),
         controls: BTreeMap::new(),
+        feedback: vec![],
         diagnostics: vec![],
     }));
     let (tx, rx) = mpsc::sync_channel(64);
@@ -479,7 +481,22 @@ fn run<F>(
                 note(&mut state, e.clone());
                 engine.reset();
             }
+            // Publish feedback from native readback, not from planned effects.
+            if let Some(c) = &mut audio {
+                match c.snapshot() {
+                    Ok(s) => state.audio = Some(s),
+                    Err(e) => {
+                        state.audio = None;
+                        state.audio_status = e.to_string();
+                        note(&mut state, e.to_string());
+                        audio = None;
+                        engine.reset();
+                        retry = Instant::now() + Duration::from_secs(3);
+                    }
+                }
+            }
             // Publish saved state before acknowledging, so an immediate UI refresh sees it.
+            state.feedback = engine.feedback(&state.config, state.audio.as_ref());
             *shared.lock().unwrap_or_else(|e| e.into_inner()) = state.clone();
             let _ = request.reply.try_send(result);
             dirty = true;
@@ -559,6 +576,7 @@ fn run<F>(
                     }
                 }
             }
+            state.feedback = engine.feedback(&state.config, state.audio.as_ref());
             *shared.lock().unwrap_or_else(|e| e.into_inner()) = state.clone();
             refresh = Instant::now() + Duration::from_millis(250);
         }
@@ -658,6 +676,11 @@ mod tests {
         })
         .unwrap();
         wait_for(h, |s| s.hardware_status.starts_with("Development panel"));
+        wait_for(h, |s| {
+            s.feedback
+                .first()
+                .is_some_and(|f| f.phase == veek_core::FeedbackPhase::AwaitingInput)
+        });
         assert!(h
             .request(Command::Save {
                 revision: before.revision,
@@ -667,9 +690,30 @@ mod tests {
         h.request(Command::MockAnalog { index: 0, raw: 10 })
             .unwrap();
         assert_eq!(t.lock().unwrap().volume, Some(0.5));
+        assert_eq!(
+            h.state().feedback[0].phase,
+            veek_core::FeedbackPhase::Pickup
+        );
         h.request(Command::MockAnalog { index: 0, raw: 200 })
             .unwrap();
         assert!((t.lock().unwrap().volume.unwrap() - 200. / 255.).abs() < 0.001);
+        assert_eq!(
+            h.state().feedback[0].phase,
+            veek_core::FeedbackPhase::Controlling
+        );
+        // An external audio change must be visible before the next hardware event.
+        t.lock().unwrap().volume = Some(0.25);
+        wait_for(h, |s| {
+            s.feedback[0].phase == veek_core::FeedbackPhase::Pickup
+        });
+        h.request(Command::MockAnalog { index: 0, raw: 180 })
+            .unwrap();
+        assert_eq!(t.lock().unwrap().volume, Some(0.25));
+        t.lock().unwrap().volume = None;
+        wait_for(h, |s| {
+            s.feedback[0].phase == veek_core::FeedbackPhase::Blocked
+        });
+        t.lock().unwrap().volume = Some(0.25);
         let stale = Selection {
             generation: h.state().audio.as_ref().unwrap().generation + 1,
             id: "test-live-output".into(),
@@ -685,6 +729,66 @@ mod tests {
         let (store, loaded) = Store::open(path).unwrap();
         assert_eq!(loaded, c);
         drop(store);
+    }
+    #[test]
+    fn unconfirmed_audio_never_publishes_controlling_feedback() {
+        struct Ignore(Mock);
+        impl Backend for Ignore {
+            fn name(&self) -> &'static str {
+                "explicit ignored-write mock"
+            }
+            fn snapshot(&mut self) -> veek_audio::Result<Vec<Target>> {
+                self.0.snapshot()
+            }
+            fn wait(&mut self, d: Duration) -> veek_audio::Result<()> {
+                self.0.wait(d)
+            }
+            fn write(&mut self, _: &str, _: Change) -> veek_audio::Result<()> {
+                Ok(())
+            }
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let t = Arc::new(Mutex::new(target()));
+        let shared = t.clone();
+        let runtime = start_with(dir.path().join("config.json"), move || {
+            Ok(Box::new(Ignore(Mock(shared.clone()))))
+        })
+        .unwrap();
+        let h = &runtime.handle;
+        wait_for(h, |s| s.audio.is_some());
+        let before = h.state();
+        let mut c = before.config;
+        c.hardware.mode = HardwareMode::Mock;
+        c.profiles[0].mappings.push(veek_config::Mapping {
+            control: veek_config::Control {
+                device: "primary".into(),
+                kind: veek_config::ControlKind::Analog,
+                index: 0,
+            },
+            action: veek_config::Action::Volume {
+                target: veek_config::Selector::DefaultOutput,
+            },
+        });
+        h.request(Command::Save {
+            revision: before.revision,
+            config: c,
+        })
+        .unwrap();
+        wait_for(h, |s| s.hardware_status.starts_with("Development panel"));
+        h.request(Command::MockAnalog { index: 0, raw: 0 }).unwrap();
+        assert!(h
+            .request(Command::MockAnalog { index: 0, raw: 200 })
+            .is_err());
+        assert_eq!(t.lock().unwrap().volume, Some(0.5));
+        assert_eq!(
+            h.state().feedback[0].phase,
+            veek_core::FeedbackPhase::AwaitingInput
+        );
+        assert!(h
+            .state()
+            .diagnostics
+            .iter()
+            .any(|m| m.contains("not confirmed")));
     }
     #[test]
     fn offline_profile_actions_still_work_and_corrupt_config_is_never_reset() {

@@ -6,6 +6,9 @@ use veek_audio::{Change, Kind, Pickup, PressEdge, Selection, Snapshot, Target};
 use veek_config::{Action, Config, Control, ControlKind, Selector};
 use veek_hardware::protocol::ControlEvent;
 
+mod feedback;
+pub use feedback::{ControlFeedback, FeedbackPhase};
+
 const ID_KEYS: &[&str] = &[
     "application.id",
     "application.path",
@@ -155,6 +158,29 @@ struct InputState {
     button: PressEdge,
     ratios: Vec<f32>,
     expected: BTreeMap<String, f32>,
+    position: Option<f32>,
+}
+impl InputState {
+    fn synchronize(&mut self, snapshot: &Snapshot, targets: &[&Target]) {
+        let signature = (
+            snapshot.generation,
+            targets.iter().map(|t| t.id.clone()).collect(),
+        );
+        if self.signature != signature {
+            *self = Self {
+                signature,
+                ..Default::default()
+            };
+        } else if targets.iter().any(|t| {
+            self.expected.get(&t.id).is_some_and(|before| {
+                t.volume
+                    .is_none_or(|v| !v.is_finite() || (before - v).abs() > 0.02)
+            })
+        }) {
+            self.pickup = Pickup::default();
+            self.expected.clear();
+        }
+    }
 }
 #[derive(Default)]
 pub struct Engine {
@@ -220,23 +246,15 @@ impl Engine {
             }
         };
         effect.diagnostics.extend(resolved.warnings);
-        let signature = (
-            snapshot.generation,
-            resolved.targets.iter().map(|t| t.id.clone()).collect(),
-        );
         let state = self.inputs.entry(control).or_default();
-        if state.signature != signature {
-            *state = InputState {
-                signature,
-                ..Default::default()
-            };
-        }
+        state.synchronize(snapshot, &resolved.targets);
         match (&mapping.action, event) {
             (Action::Volume { .. }, ControlEvent::Analog { raw, maximum, .. }) => {
                 if maximum == 0 || raw > maximum {
                     effect.diagnostics.push("Invalid analog range".into());
                     return effect;
                 }
+                state.position = Some(f32::from(raw) / f32::from(maximum));
                 if resolved.targets.is_empty() {
                     effect
                         .diagnostics
@@ -254,15 +272,6 @@ impl Engine {
                         .push("A mapped target has no usable volume control".into());
                     return effect;
                 };
-                if resolved.targets.iter().zip(&volumes).any(|(t, v)| {
-                    state
-                        .expected
-                        .get(&t.id)
-                        .is_some_and(|before| (before - v).abs() > 0.02)
-                }) {
-                    state.pickup = Pickup::default();
-                    state.expected.clear();
-                }
                 let peak = volumes.iter().copied().fold(0., f32::max);
                 if resolved.relative && peak > 0. {
                     state.ratios = volumes.iter().map(|v| v / peak).collect();
@@ -651,6 +660,138 @@ mod tests {
         assert!(resolve(&c, &selector, &s).unwrap().targets.is_empty());
         c.active_profile = "default".into();
         assert_eq!(resolve(&c, &selector, &s).unwrap().targets[0].id, "a");
+    }
+    #[test]
+    fn feedback_tracks_pickup_and_rearms_on_observed_changes_without_writing() {
+        let mut c = Config::default();
+        let mut s = snap();
+        mapping(
+            &mut c,
+            ControlKind::Analog,
+            0,
+            Action::Volume {
+                target: selector_for(&s.targets[0]).unwrap(),
+            },
+        );
+        let mut e = Engine::default();
+        assert_eq!(
+            e.feedback(&c, Some(&s))[0].phase,
+            FeedbackPhase::AwaitingInput
+        );
+        assert!(e.handle(&c, analog(10), &s).audio.is_empty());
+        let f = e.feedback(&c, Some(&s)).remove(0);
+        assert_eq!(f.phase, FeedbackPhase::Pickup);
+        assert_eq!(f.position, Some(0.1));
+        assert_eq!(f.target_volume, Some(0.4));
+        let effects = e.handle(&c, analog(60), &s);
+        apply(&mut s, effects);
+        assert_eq!(
+            e.feedback(&c, Some(&s))[0].phase,
+            FeedbackPhase::Controlling
+        );
+        s.targets[0].volume = Some(0.2);
+        assert_eq!(e.feedback(&c, Some(&s))[0].phase, FeedbackPhase::Pickup);
+        // Publishing feedback must not synthesize movement or acquire control.
+        assert!(e.handle(&c, analog(55), &s).audio.is_empty());
+        assert!(e.handle(&c, analog(20), &s).audio.len() == 1);
+        s.targets[0].id = "new-session".into();
+        assert_eq!(
+            e.feedback(&c, Some(&s))[0].phase,
+            FeedbackPhase::AwaitingInput
+        );
+        s.generation += 1;
+        assert!(e.handle(&c, analog(70), &s).audio.is_empty());
+        e.reset();
+        assert_eq!(e.feedback(&c, Some(&s))[0].position, None);
+    }
+    #[test]
+    fn feedback_reports_offline_missing_ambiguous_and_unsupported_targets() {
+        let mut c = Config::default();
+        let mut s = snap();
+        mapping(
+            &mut c,
+            ControlKind::Analog,
+            0,
+            Action::Volume {
+                target: selector_for(&s.targets[0]).unwrap(),
+            },
+        );
+        let mut e = Engine::default();
+        assert_eq!(e.feedback(&c, None)[0].phase, FeedbackPhase::AudioOffline);
+        s.targets[0].volume = None;
+        assert_eq!(e.feedback(&c, Some(&s))[0].phase, FeedbackPhase::Blocked);
+        s.targets[0].volume = Some(1.5);
+        assert_eq!(e.feedback(&c, Some(&s))[0].phase, FeedbackPhase::Blocked);
+        s.targets.clear();
+        assert_eq!(
+            e.feedback(&c, Some(&s))[0].phase,
+            FeedbackPhase::TargetUnavailable
+        );
+        s = snap();
+        assert_eq!(
+            e.feedback(&c, Some(&s))[0].phase,
+            FeedbackPhase::AwaitingInput
+        );
+        c.profiles[0].mappings[0].action = Action::Volume {
+            target: Selector::DefaultOutput,
+        };
+        for t in &mut s.targets {
+            t.kind = Kind::Output;
+            t.default = true;
+        }
+        let f = e.feedback(&c, Some(&s)).remove(0);
+        assert_eq!(f.phase, FeedbackPhase::Blocked);
+        assert!(f.message.unwrap().contains("More than one device"));
+    }
+    #[test]
+    fn feedback_preserves_group_peak_and_independent_button_readiness() {
+        let mut c = Config::default();
+        let mut s = snap();
+        c.profiles[0].groups.push(Group {
+            id: "mix".into(),
+            name: "Mix".into(),
+            relative: true,
+            members: s.targets.iter().map(|t| selector_for(t).unwrap()).collect(),
+        });
+        mapping(
+            &mut c,
+            ControlKind::Analog,
+            0,
+            Action::Volume {
+                target: Selector::Group { id: "mix".into() },
+            },
+        );
+        mapping(
+            &mut c,
+            ControlKind::Button,
+            0,
+            Action::ToggleMute {
+                target: selector_for(&s.targets[1]).unwrap(),
+            },
+        );
+        let mut e = Engine::default();
+        assert_eq!(e.feedback(&c, Some(&s))[0].target_volume, Some(0.4));
+        assert_eq!(
+            e.feedback(&c, Some(&s))[1].phase,
+            FeedbackPhase::WaitingRelease
+        );
+        e.handle(&c, button(false), &s);
+        assert_eq!(e.feedback(&c, Some(&s))[1].phase, FeedbackPhase::Ready);
+        e.handle(&c, analog(0), &s);
+        assert_eq!(e.feedback(&c, Some(&s))[1].phase, FeedbackPhase::Ready);
+        let effects = e.handle(&c, button(true), &s);
+        apply(&mut s, effects);
+        assert_eq!(
+            e.feedback(&c, Some(&s))[1].phase,
+            FeedbackPhase::WaitingRelease
+        );
+        assert_eq!(s.targets[1].muted, Some(true));
+        e.handle(&c, button(false), &s);
+        assert_eq!(e.feedback(&c, Some(&s))[1].phase, FeedbackPhase::Ready);
+        c.profiles[0].mappings[1].action = Action::NextProfile;
+        e.reset();
+        e.handle(&c, button(false), &s);
+        assert_eq!(e.feedback(&c, None)[1].phase, FeedbackPhase::Ready);
     }
     #[test]
     fn coalescing_preserves_button_barriers_and_last_analog_order() {
