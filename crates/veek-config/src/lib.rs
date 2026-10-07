@@ -146,6 +146,9 @@ pub enum Theme {
 pub struct Settings {
     pub theme: Theme,
     pub close_to_tray: bool,
+    /// Missing in earlier schema-2 files; login registration is machine-local.
+    #[serde(default)]
+    pub start_minimized: bool,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -547,6 +550,32 @@ fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn earlier_schema_two_defaults_start_minimized_without_rewriting() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.json");
+        let mut value = serde_json::to_value(Config::default()).unwrap();
+        value["settings"]
+            .as_object_mut()
+            .unwrap()
+            .remove("start_minimized");
+        let original = serde_json::to_vec(&value).unwrap();
+        fs::write(&path, &original).unwrap();
+        let (mut store, mut config) = Store::open(&path).unwrap();
+        assert!(!config.settings.start_minimized);
+        assert_eq!(fs::read(&path).unwrap(), original);
+        assert!(!path.with_extension("json.bak").exists());
+        config.settings.start_minimized = true;
+        store.save(&config).unwrap();
+        assert_eq!(fs::read(path.with_extension("json.bak")).unwrap(), original);
+        assert!(
+            decode(&fs::read(&path).unwrap())
+                .unwrap()
+                .0
+                .settings
+                .start_minimized
+        );
+    }
     fn legacy(version: u32) -> serde_json::Value {
         serde_json::json!({
             "schema_version": version, "active_profile": "one",

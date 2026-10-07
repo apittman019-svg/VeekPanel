@@ -12,8 +12,9 @@ cancelable reading, bounded event delivery, reconnect retry, local CLI diagnosti
 native Windows Core Audio and PipeWire backends with M2 audio diagnostics.
 **Now implemented as an initial preview:** persistent mapping/configuration/profiles,
 shared background ownership, Tauri/Svelte UI and basic tray. See
-[core/desktop details](CORE_AND_DESKTOP.md). Installers, full tray/startup lifecycle
-and production acceptance remain planned.
+[core/desktop details](CORE_AND_DESKTOP.md). Windows preview installation is available;
+opt-in startup and single-instance composition are implemented, while full lifecycle,
+Linux distribution and production acceptance remain pending.
 Production diagnostics never substitute mock audio endpoints. Isolated tests create
 explicitly synthetic endpoints on their own PipeWire server.
 

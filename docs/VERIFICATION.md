@@ -461,3 +461,42 @@ locally on codex/control-feedback and supplied as an apply-ready patch based on
 8e60df93119a9cd2697d07dd0f2beca52f4f821d. Run native integrations/CI after importing
 that patch; do not represent them as passed in this workspace. Manual screen-reader behavior, consumer Windows interaction, physical
 PCPanel-to-audio/lifecycle, Nobara USB and full reliability acceptance remain open.
+
+## Opt-in startup and background lifecycle (2026-10-07)
+
+Recovered the saved control-feedback patch onto `8e60df9` as local `d7bfe86`.
+No rewrite of the schema-2 profile foundation, Windows/Wine branch, native audio
+adapters or hardware protocols. This increment adds:
+
+- Machine-local startup registration only on an explicit UI action: HKCU Run on
+  Windows; an atomic owned XDG autostart entry on Linux. Paths are quoted/rejected
+  safely; writes are serialized/off-thread and verified by OS registration readback.
+- Optional `settings.start_minimized`; earlier schema-2 files default false without
+  rewriting. Config failures and missing/unconfirmed tray recovery show the window.
+  Linux probes the StatusNotifier host off-thread before allowing hiding.
+- First-plugin single-instance handoff; manual launches reveal/focus the existing
+  window, duplicate login launches stay quiet; existing config-lock guard remains.
+- Explicit shutdown joins the runtime owner, rather than relying on process teardown.
+
+Local Ubuntu 24.04 remote workspace, pinned Rust 1.99.0:
+**57 workspace Rust tests and 7 desktop Rust tests passed**. Both formatting checks,
+strict workspace/desktop Clippy, frontend zero-error/zero-warning check, production
+frontend build and locked native desktop debug build passed. The modified native
+GUI integration script passed syntax compilation. Temporary Linux test directories
+were the only startup files modified; no personal login registration was enabled.
+
+CI now runs app unit tests on Windows/Linux and uses a private session bus for the
+native Linux GUI test. Added GUI assertions cover scoped startup readback/removal,
+start-minimized persistence and duplicate-launch handoff. This workspace still
+denies private Unix sockets, so these new integrations have **not run here**.
+Windows registry code, new Windows CI/installer behavior, actual login delivery,
+tray lifecycle and shutdown under native failures need the home/CI/manual checks.
+No new release or Windows installer is produced by this increment.
+
+GitHub writes remain deferred at the user's request after the integration's 403.
+The combined handoff patch includes feedback plus this increment against `8e60df9`;
+follow docs/LOCAL_HANDOFF.md in an isolated home worktree. Do not assume a Git pull
+will contain these local changes. Startup cleanup on uninstall/relocation remains
+follow-up distribution work; disable the checkbox before removing this preview.
+Physical Mini/audio, Nobara USB, consumer Windows, accessibility and soak gates
+remain open.

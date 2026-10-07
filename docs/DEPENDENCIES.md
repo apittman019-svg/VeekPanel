@@ -13,6 +13,12 @@ remain system-managed; the diagnostic archive does not ship PipeWire itself.
 `packaging/third-party/cookie-factory-0.3.3` supplies the exact-version upstream
 MIT notice omitted from that registry archive; provenance is recorded beside it.
 
+Desktop startup/single-instance dependencies are pinned in the separate `app/Cargo.lock`:
+`tauri-plugin-single-instance` 2.5.2, Linux `zbus` 5.19.0, and Windows
+`windows-registry` 0.6.1. Distribution notice generation must use the app's reachable
+dependency graph. No autostart-plugin implementation or external startup code is copied;
+the small native registration adapters are original VeekPanel code.
+
 | Package | Version | Declared license |
 | --- | --- | --- |
 | aho-corasick | 1.1.5 | Unlicense OR MIT |

@@ -107,6 +107,28 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    group_name('Integration mix');group_members(['System output','System microphone'])
    click('Create group');until(lambda:len(active_profile()['groups'])==1 and idle())
    click('Settings');until(lambda:js('return document.querySelector("h1").textContent==="Settings"'))
+   # Explicit startup registration stays inside the private XDG config folder.
+   login_entry=root/'config/autostart/org.veekpanel.desktop.desktop'
+   assert not login_entry.exists() and not saved_config()['settings']['start_minimized']
+   assert js('return !document.querySelector("[data-setting=login-startup]").checked')
+   js('document.querySelector("[data-setting=login-startup]").click();')
+   until(lambda:login_entry.exists() and idle() and js('return document.querySelector("[data-setting=login-startup]").checked'))
+   assert f'Exec="{binary}" --autostart' in login_entry.read_text()
+   js('document.querySelector("[data-setting=start-minimized]").click();')
+   until(lambda:saved_config()['settings']['start_minimized'] and idle())
+   assert 'startup_registered' not in saved_config()['settings']
+   # Duplicate launches hand off before opening a second runtime/config writer.
+   before=(root/'config/org.veekpanel.desktop/config.json').read_bytes()
+   for args in [[],['--autostart']]:
+    result=subprocess.run([str(binary),*args],env=env,stdout=log,stderr=log,timeout=10)
+    assert result.returncode==0,result.returncode
+    assert (root/'config/org.veekpanel.desktop/config.json').read_bytes()==before
+   assert ready() is False # Still on Settings; original WebView/session remains alive.
+   assert js('return document.querySelector("h1").textContent==="Settings"')
+   js('document.querySelector("[data-setting=login-startup]").click();')
+   until(lambda:not login_entry.exists() and idle() and js('return !document.querySelector("[data-setting=login-startup]").checked'))
+   js('document.querySelector("[data-setting=start-minimized]").click();')
+   until(lambda:not saved_config()['settings']['start_minimized'] and idle())
    js('const s=[...document.querySelectorAll("label")].find(l=>l.textContent.startsWith("Preferred output")).querySelector("select");s.value=[...s.options].find(o=>o.value&&JSON.parse(o.value).identities?.["node.name"]==="veek.output").value;s.dispatchEvent(new Event("change",{bubbles:true}));')
    until(lambda:active_profile()['preferences']['output'] is not None and idle())
    original=active_profile()
@@ -154,7 +176,7 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    assert saved['schema_version']==2 and 'groups' not in saved and 'preferences' not in saved
    assert next(p for p in saved['profiles'] if p['id']==original_id)==original
    assert active['groups']==[edited] and active['preferences']['output'] is None
-   print('PASS: native Tauri IPC, real private PipeWire discovery, GUI simulated Mini -> native volume/mic mute, assignment persistence, profile-owned groups/preferences with independent duplicates and cleared switch drafts, dark/light rendering; artifacts:',artifacts)
+   print('PASS: native Tauri IPC, real private PipeWire discovery, GUI simulated Mini -> native volume/mic mute, assignment persistence, profile-owned groups/preferences with independent duplicates and cleared switch drafts, opt-in XDG login registration/readback/removal, start-minimized persistence, duplicate-launch handoff, dark/light rendering; artifacts:',artifacts)
   except BaseException:
    log.flush();log.seek(0);print(log.read()[-10000:],file=sys.stderr);raise
   finally:

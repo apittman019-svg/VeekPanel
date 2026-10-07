@@ -5,12 +5,13 @@ export type Control={device:string,kind:'analog'|'button',index:number};
 export type Group={id:string,name:string,members:Selector[],relative:boolean};
 export type Preferences={output:Selector|null,input:Selector|null};
 export type Profile={id:string,name:string,mappings:{control:Control,action:Action}[],groups:Group[],preferences:Preferences};
-export type Config={schema_version:number,active_profile:string,profiles:Profile[],hardware:{mode:'disabled'|'mock'|'serial'|'hid'|'auto_hid',model:'original'|'rgb'|'mini'|'pro',address:string},settings:{theme:'system'|'light'|'dark',close_to_tray:boolean}};
+export type Config={schema_version:number,active_profile:string,profiles:Profile[],hardware:{mode:'disabled'|'mock'|'serial'|'hid'|'auto_hid',model:'original'|'rgb'|'mini'|'pro',address:string},settings:{theme:'system'|'light'|'dark',close_to_tray:boolean,start_minimized:boolean}};
 export type Target={id:string,name:string,kind:Kind,default:boolean,volume:number|null,muted:boolean|null,identity:Record<string,string>};
 export type Audio={backend:string,generation:number,targets:Target[]};
 export type ControlFeedback={control:Control,phase:'awaiting_input'|'pickup'|'controlling'|'waiting_release'|'ready'|'audio_offline'|'target_unavailable'|'blocked',position:number|null,target_volume:number|null,message:string|null};
 export type State={config:Config,revision:number,audio:Audio|null,audio_status:string,hardware_status:string,controls:Record<string,number>,feedback:ControlFeedback[],diagnostics:string[]};
-export type Payload={state:State,mappings:{control:Control,targets:string[],messages:string[]}[]};
+export type Desktop={tray_ready:boolean,tray_error:string|null,startup_supported:boolean,startup_registered:boolean|null,startup_error:string|null};
+export type Payload={state:State,mappings:{control:Control,targets:string[],messages:string[]}[],desktop:Desktop};
 export function durable(t:Target):Selector|null {
  const keys=t.kind==='output'||t.kind==='input'?['endpoint.id','node.name']:['application.id','application.path','application.process.binary'];
  const key=keys.find(k=>t.identity[k]);return key?{type:'match',kind:t.kind,identities:{[key]:t.identity[key]}}:null;

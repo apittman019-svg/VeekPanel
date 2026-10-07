@@ -53,7 +53,8 @@ errors and synthetic serial reconnect; they do not certify real hardware behavio
 M3 has an initial implementation of durable selectors, mappings/groups, independent
 buttons, profiles and atomic versioned configuration. M4 has an actual native
 Tauri/Svelte preview using the same background runtime, with an explicit simulated
-panel mode and real audio. Basic tray/background work has begun; login startup,
+panel mode and real audio. Tray/background work now includes opt-in login registration,
+start-in-tray and single-instance handoff; actual login delivery, tray lifecycle,
 soak/reliability and production acceptance remain pending. See
 [CORE_AND_DESKTOP.md](CORE_AND_DESKTOP.md) for exact implemented behavior, commands
 and remaining limitations. These changes do not close the hardware/platform gates.
@@ -77,3 +78,9 @@ The 2026-10-07 M4 feedback increment exposes actual pickup and button readiness
 from the mapping engine, including external-volume rearming, keyboard control
 selection and an accessible assignment form/live status. This is incremental
 assignment accessibility, not full assistive-technology or M4 acceptance.
+
+The 2026-10-07 M5 software increment implements machine-local per-user startup
+registration, conservative hide/recovery policy, duplicate-launch handoff and
+explicit background shutdown. Unit and build checks passed in the remote Linux
+workspace; new native GUI/Windows CI and manual reboot/tray/soak checks remain
+pending. No physical acceptance or daily-driver certification is claimed.

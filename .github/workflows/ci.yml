@@ -136,10 +136,11 @@ jobs:
       - run: pnpm --dir ui build
       - run: cargo fmt --manifest-path app/Cargo.toml --check
       - run: cargo clippy --manifest-path app/Cargo.toml --all-targets --locked -- -D warnings
+      - run: cargo test --manifest-path app/Cargo.toml --locked
       - run: cargo build --manifest-path app/Cargo.toml --locked
       - name: Install native UI test driver
         if: runner.os == 'Linux'
         run: cargo install tauri-driver --version 2.1.0 --locked
       - name: Native GUI with private PipeWire and synthetic panel
         if: runner.os == 'Linux'
-        run: python3 tests/gui/native_smoke.py app/target/debug/veekpanel /tmp/veek-ui-evidence
+        run: dbus-run-session -- python3 tests/gui/native_smoke.py app/target/debug/veekpanel /tmp/veek-ui-evidence

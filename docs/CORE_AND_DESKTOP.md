@@ -58,10 +58,12 @@ bounds, not measured input-latency guarantees for blocking OS APIs.
   these independently; a new profile starts empty and follows system defaults.
   Buttons can toggle mute or switch/cycle profiles. Schema imports also support
   explicit set-mute. Switching profiles clears unsaved assignment/group drafts.
-- Settings cover theme, connection/model, preferred input/output, close-to-tray and
+- Settings cover theme, connection/model, preferred input/output, close-to-tray,
+  start-in-tray, machine-local login registration and
   JSON configuration import/export. Imported settings apply after validation.
 - The initial tray supports Open, Next profile and Quit. Closing hides the window
-  only when close-to-tray is selected and tray creation succeeded. Actual desktop
+  only when close-to-tray is selected and tray creation succeeded (Linux also
+  requires an observed StatusNotifier host). Actual desktop
   tray visibility, sleep/resume and Windows tray behavior still need manual trials.
 - Diagnostics show local observed identities/errors. Copy redacted report deliberately
   excludes names, paths, USB serials and raw error text. A configuration export can
@@ -124,7 +126,8 @@ python3 tests/audio/runtime_integration.py target/release/veek-runtime
 cargo fmt --manifest-path app/Cargo.toml --check
 cargo clippy --manifest-path app/Cargo.toml --all-targets --locked -- -D warnings
 # Native Linux UI automation needs tauri-driver 2.1.0, WebKitWebDriver and Xvfb:
-python3 tests/gui/native_smoke.py app/target/debug/veekpanel /tmp/veek-ui-evidence
+cargo test --manifest-path app/Cargo.toml --locked
+dbus-run-session -- python3 tests/gui/native_smoke.py app/target/debug/veekpanel /tmp/veek-ui-evidence
 ```
 
 The runtime integration and GUI test launch a private PipeWire server and temporary
@@ -135,7 +138,7 @@ for these tests; it exposes no network listener and is not the end-user interfac
 
 Remaining product work includes multiple panels, richer identity editing, foreground
 profiles, default-device switching/media/shortcut/opt-in command actions, LEDs,
-login startup, automatic updates, Linux installers, signed distribution, accessibility/
+login/reboot acceptance, automatic updates, Linux installers, signed distribution, accessibility/
 scaling review, low-latency and idle baselines, long-run reliability and clean Windows
 interaction. Only implemented controls appear in the preview. Do not mark M3/M4 or
 M5 complete based solely on this initial feature set and synthetic integration.
@@ -143,3 +146,46 @@ M5 complete based solely on this initial feature set and synthetic integration.
 API references: [Tauri commands](https://v2.tauri.app/develop/calling-rust/),
 [Tauri native WebDriver tests](https://v2.tauri.app/develop/tests/webdriver/),
 [Svelte](https://svelte.dev/docs/svelte/overview). Consulted 2026-10-04.
+
+## Startup and background increment (2026-10-07)
+
+Login startup defaults off. Only the explicit Settings action writes OS registration:
+Windows uses the current user's Run key, value `org.veekpanel.desktop`, with a quoted
+executable plus `--autostart`; Linux atomically writes
+`$XDG_CONFIG_HOME/autostart/org.veekpanel.desktop.desktop` (or the per-user default).
+Linux AppImage registration points to the AppImage, not its temporary mount.
+There are no shell commands, machine-wide registry changes or elevated runtime.
+Paths that cannot be represented safely fail visibly. Windows Run commands longer
+than 260 UTF-16 units are rejected; Linux paths containing `%` or `=` are rejected.
+Registration changes are serialized, run off the UI thread and require readback.
+The UI reports **registered**, not guaranteed delivery: OS settings/policy can override it.
+Changed entries require an explicit repair/removal; foreign Linux entries are not overwritten.
+
+The global `settings.start_minimized` defaults false for existing schema-2 files,
+which are not rewritten on load. A save/import may include this optional field;
+pre-increment schema-2 builds reject it as unknown. Keep a compatible backup before
+downgrading. OS login registration is never exported, imported or automatically repaired.
+
+The main window starts unshown until initialization decides whether it should appear.
+Configuration failures or missing tray recovery show it. Linux checks the desktop's
+StatusNotifier host off-thread before allowing hiding; legacy-only/unconfirmed trays
+leave the window visible and disable close-to-tray for this session. This conservative
+check is not proof that the icon is visibly rendered. The host is checked at startup;
+host disappearance after that remains a reliability acceptance case.
+
+The first Tauri plugin enforces a single instance. A manual second launch reveals,
+unminimizes and focuses the existing window; a duplicate `--autostart` launch stays
+quiet. Linux requires a desktop session D-Bus; isolated tests use `dbus-run-session`.
+The configuration lock remains an independent guard if handoff fails. Quit explicitly
+joins the background owner before process exit, releasing config/hardware/audio.
+
+Use the Settings checkbox to remove login registration before moving/uninstalling
+this development build. Installer-specific removal/upgrade handling, actual login
+delivery, tray-host loss, consumer Windows and Nobara lifecycle/soak remain pending.
+See [background validation](BACKGROUND_VALIDATION.md) and [local handoff](LOCAL_HANDOFF.md).
+
+Protocol references consulted 2026-10-07:
+[Tauri single instance](https://v2.tauri.app/plugin/single-instance/),
+[Windows Run keys](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys),
+[XDG Exec quoting](https://specifications.freedesktop.org/desktop-entry/latest/exec-variables.html),
+[KDE tray interface](https://github.com/KDE/plasma-workspace/blob/master/xembed-sni-proxy/org.kde.StatusNotifierWatcher.xml).

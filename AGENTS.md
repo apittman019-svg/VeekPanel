@@ -267,3 +267,20 @@ See the newest VERIFICATION.md entry for this increment's actual checks.
 Next software module: opt-in startup and background lifecycle/single-instance
 behavior, followed by reliability and Linux distribution. Preserve physical,
 consumer Windows and accessibility/soak acceptance gates.
+
+## Startup/background continuation (2026-10-07)
+
+The control-feedback patch was recovered unchanged onto the schema-2 foundation.
+This increment adds explicit machine-local per-user startup registration, optional
+global start-in-tray, duplicate-launch handoff and background-owner shutdown.
+Linux requires an observed StatusNotifier host before hiding; missing/unconfirmed
+tray or config initialization failures leave the window visible. No runtime imports
+or profile operations change login registration. See docs/CORE_AND_DESKTOP.md and
+docs/BACKGROUND_VALIDATION.md for behavior, compatibility and open acceptance.
+
+Local Linux checks passed 57 workspace tests and 7 desktop tests, strict lint,
+frontend checks/build and the native desktop build. Private sockets remain blocked;
+the new GUI assertions and Windows CI are not executed here. GitHub writes remain
+deferred, with a combined patch and docs/LOCAL_HANDOFF.md for the home checkout.
+Next: execute native/Windows lifecycle checks, fix installer startup cleanup, then
+reliability/Linux distribution. Keep physical, reboot and multi-day soak gates open.
