@@ -13,17 +13,23 @@ Set-Service Audiosrv -StartupType Manual
 Start-Service AudioEndpointBuilder
 Start-Service Audiosrv
 $app = Start-Process $exe -PassThru
+$config = Join-Path $env:APPDATA 'org.veekpanel.desktop/config.json'
 try {
     $visible = $false
+    # Windows can expose Tauri's window before WebView2 initialization and the
+    # setup callback have finished. Wait for both the window and saved defaults.
     for ($i=0; $i -lt 60; $i++) {
         Start-Sleep -Milliseconds 500
         $app.Refresh()
         if ($app.HasExited) { throw "Installed app exited early: $($app.ExitCode)" }
-        if ($app.MainWindowHandle -ne 0 -and $app.Responding) { $visible=$true; break }
+        if ($app.MainWindowHandle -ne 0 -and $app.Responding) { $visible=$true }
+        if ($visible -and (Test-Path $config)) { break }
     }
     if (!$visible) { throw 'Installed app did not open a responsive window' }
-    $config = Join-Path $env:APPDATA 'org.veekpanel.desktop/config.json'
-    if (!(Test-Path $config)) { throw 'Installed app did not initialize configuration' }
+    if (!(Test-Path $config)) {
+        Get-ChildItem (Split-Path $config) -ErrorAction SilentlyContinue | Select-Object Name,Length
+        throw "Installed app did not initialize configuration within 30 seconds: $config"
+    }
     $before = Get-FileHash $config
 } finally {
     if (!$app.HasExited) {
