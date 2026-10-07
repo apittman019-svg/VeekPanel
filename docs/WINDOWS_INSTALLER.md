@@ -1,8 +1,9 @@
 # Windows desktop preview installer
 
-The installer packages the verified schema-1 desktop app. Profile-specific
-schema-2 work was left separate when the user prioritized an installable build.
-This is the GUI, not the older console diagnostic kit.
+The published 0.1.0 installer packages the verified schema-1 desktop app. Current
+0.1.1 source includes schema-2 profiles and the later feedback/startup work;
+the newest startup cleanup increment has not been released. This is the GUI,
+not the older console diagnostic kit.
 
 Download the setup EXE from the [Windows preview release](https://github.com/apittman019-svg/VeekPanel/releases/tag/v0.1.0-preview.1).
 Run it, finish setup, and open VeekPanel from Start. Close other PCPanel software,
@@ -61,3 +62,24 @@ acceptance remain pending. Basic Windows Mini hardware input evidence is unchang
 References: [Tauri Windows installers](https://v2.tauri.app/distribute/windows-installer/)
 and [bundle configuration](https://v2.tauri.app/reference/config/#bundleconfig),
 consulted 2026-10-05. No vendor binaries or firmware are redistributed.
+
+## Current-source startup cleanup (2026-10-07)
+
+Installation never enables login startup. The app's explicit opt-in writes HKCU
+Run value `org.veekpanel.desktop` as `"<installed path>\veekpanel.exe" --autostart`.
+The supported NSIS post-uninstall hook removes that value only if it exactly
+matches this installation's command. Missing, changed or other-installation
+entries are preserved; no machine-wide registration is touched. Configuration
+is retained. Registry removal failure is reported in installer details and exit status.
+
+Same-path reinstall and `/UPDATE` removal/replacement preserve the existing opt-in.
+A normal upgrade that uninstalls the old app invokes ordinary cleanup, so the user
+must re-enable startup afterward. Disable startup before relocating the executable;
+exact matching intentionally does not interpret aliases or arbitrary commands.
+The published 0.1.0 installer remains unchanged.
+
+Hook integration was checked against pinned Tauri CLI 2.12.1 / bundler 2.10.1 source.
+The actual hook passes an NSIS compile-only check with warnings as errors. Updated
+Windows smoke tests cover scoped registry cleanup, preservation and native
+single-instance/shutdown behavior. Those new Windows checks are pending CI;
+compiler success is not Windows installer acceptance.

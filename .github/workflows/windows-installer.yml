@@ -6,6 +6,9 @@ on:
       - '.github/workflows/windows-installer.yml'
       - 'app/installer.conf.json'
       - 'app/tauri.conf.json'
+      - 'app/src/**'
+      - 'app/Cargo.toml'
+      - 'app/Cargo.lock'
       - 'packaging/windows/**'
 permissions:
   contents: read

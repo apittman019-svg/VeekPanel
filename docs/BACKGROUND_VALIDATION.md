@@ -8,6 +8,10 @@ This is an M5 development increment, not completed lifecycle acceptance.
   rewriting; first save backs up original bytes and persists the preference.
 - Desktop tests: hide policy combinations; manual versus duplicate-login launches;
   Windows command quoting/unsafe paths/length; truthful registration readback.
+- Tray monitor tests: loss reveals once, recovery does not hide, and shutdown wakes
+  the idle worker and releases its owned probe. A private-D-Bus fixture exercises
+  uncached host state and watcher disappearance/replacement; it compiles locally
+  but execution is pending because this workspace denies Unix sockets.
 - Linux temporary-directory tests: opt-in/idempotent registration and removal,
   space/special-character quoting, repair of owned changed entries, rejection of
   foreign entries and filesystem errors. They never alter the user's startup files.
@@ -17,6 +21,16 @@ This is an M5 development increment, not completed lifecycle acceptance.
 - CI now runs desktop unit tests on both OSes and starts the Linux GUI harness
   in a private session bus. Windows registry delivery and real tray behavior still
   require manual acceptance.
+- The actual NSIS cleanup hook passes a compile-only check with warnings as errors.
+  Windows smoke assertions cover no implicit startup, a path with spaces, native
+  second-launch handoff and graceful shutdown, scoped cleanup, foreign/unrelated
+  registry values, and `/UPDATE` preservation. Native Windows execution is pending.
+
+Private-bus regression (disposable session only):
+
+```sh
+dbus-run-session -- env VEEK_PRIVATE_DBUS_TEST=1 cargo test --manifest-path app/Cargo.toml --locked private_bus_tray_host_loss_and_recovery -- --ignored
+```
 
 ## Manual acceptance: Windows 10/11 and Nobara
 
@@ -41,5 +55,8 @@ Record OS/desktop, source commit, install path and actual observed result.
    repeated audio-service recovery and multi-day idle/load soak. These are open
    acceptance cases; do not restart a user's desktop/audio services unattended.
 
-Installer handling of an existing startup entry on uninstall/relocation is not yet
-implemented. Disable startup in Settings before uninstalling/moving this preview.
+Current-source Windows installers clean only their exact owned startup command on
+normal uninstall. Same-path reinstall and `/UPDATE` replacement preserve opt-in;
+normal uninstall-based upgrades remove it. The published 0.1.0 installer has no
+new hook. Disable startup in Settings before relocation or Linux removal. Native
+installer, real desktop tray-loss recovery and reboot acceptance remain open.

@@ -29,6 +29,46 @@ fn reveal(app: &tauri::AppHandle) {
     }
 }
 
+fn queue_reveal(app: &tauri::AppHandle) {
+    let handle = app.clone();
+    // Workers never wait for the UI thread: Exit can safely join them.
+    let _ = app.run_on_main_thread(move || reveal(&handle));
+}
+
+#[cfg(target_os = "linux")]
+fn start_tray_watch(app: &tauri::App, state: Arc<Desktop>, minimized: bool) -> std::io::Result<()> {
+    let handle = app.handle().clone();
+    let mut recovery = lifecycle::TrayRecovery::default();
+    let mut first = true;
+    let monitor = lifecycle::TrayMonitor::start(
+        std::time::Duration::from_secs(3),
+        lifecycle::tray_host_ready,
+        move |result| {
+            let ready = result.is_ok();
+            state.tray_ready.store(ready, Ordering::SeqCst);
+            *state.tray_error.lock().expect("tray mutex") = result.err().map(|e| {
+                format!(
+                "{e}. Start in tray and close-to-tray are disabled until the desktop tray recovers."
+            )
+            });
+            let show = recovery.observe(ready)
+                || (first
+                    && !lifecycle::start_hidden(
+                        minimized,
+                        true,
+                        ready,
+                        state.reopen_requested.load(Ordering::SeqCst),
+                    ));
+            first = false;
+            if show {
+                queue_reveal(&handle);
+            }
+        },
+    )?;
+    app.manage(Mutex::new(Some(monitor)));
+    Ok(())
+}
+
 #[tauri::command]
 async fn snapshot(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
     let handle = app
@@ -159,7 +199,7 @@ fn main() {
         .plugin(tauri_plugin_single_instance::init(move |app, args, _cwd| {
             if lifecycle::reveal_second_launch(&args) {
                 instance_state.reopen_requested.store(true, Ordering::SeqCst);
-                reveal(app);
+                queue_reveal(app);
             }
         }))
         .manage(desktop)
@@ -188,23 +228,21 @@ fn main() {
             if !minimized { reveal(app.handle()); }
             match create_tray(app) {
                 Ok(()) => {
-                    let state = setup_state.clone();
-                    let handle = app.handle().clone();
-                    tauri::async_runtime::spawn_blocking(move || {
-                        match lifecycle::tray_host_ready() {
-                            Ok(()) => state.tray_ready.store(true, Ordering::SeqCst),
-                            Err(e) => {
-                                *state.tray_error.lock().expect("tray mutex") = Some(format!(
-                                    "{e}. Start in tray and close-to-tray are disabled for this session."
-                                ));
-                            }
+                    #[cfg(target_os = "linux")]
+                    if let Err(e) = start_tray_watch(app, setup_state.clone(), minimized) {
+                        *setup_state.tray_error.lock().expect("tray mutex") = Some(format!(
+                            "Cannot monitor the desktop tray: {e}. Close-to-tray is disabled."
+                        ));
+                        reveal(app.handle());
+                    }
+                    #[cfg(not(target_os = "linux"))]
+                    {
+                        setup_state.tray_ready.store(true, Ordering::SeqCst);
+                        if !lifecycle::start_hidden(minimized, true, true,
+                            setup_state.reopen_requested.load(Ordering::SeqCst)) {
+                            reveal(app.handle());
                         }
-                        if !lifecycle::start_hidden(minimized, true,
-                            state.tray_ready.load(Ordering::SeqCst),
-                            state.reopen_requested.load(Ordering::SeqCst)) {
-                            reveal(&handle);
-                        }
-                    });
+                    }
                 }
                 Err(e) => {
                     *setup_state.tray_error.lock().expect("tray mutex") = Some(format!(
@@ -229,6 +267,10 @@ fn main() {
         .expect("VeekPanel startup failed; configuration has not been reset")
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
+                #[cfg(target_os = "linux")]
+                if let Some(watch) = app.try_state::<Mutex<Option<lifecycle::TrayMonitor>>>() {
+                    if let Ok(mut owner) = watch.lock() { drop(owner.take()); }
+                }
                 // Join owner thread before process exit: release config/hardware/audio.
                 if let Some(runtime) = app.try_state::<Mutex<Option<veek_runtime::Runtime>>>() {
                     if let Ok(mut owner) = runtime.lock() { drop(owner.take()); }

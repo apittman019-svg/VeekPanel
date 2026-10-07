@@ -84,3 +84,8 @@ registration, conservative hide/recovery policy, duplicate-launch handoff and
 explicit background shutdown. Unit and build checks passed in the remote Linux
 workspace; new native GUI/Windows CI and manual reboot/tray/soak checks remain
 pending. No physical acceptance or daily-driver certification is claimed.
+
+The next 2026-10-07 M5/M6 increment adds ongoing Linux tray-host loss/recovery
+handling and scoped Windows startup cleanup on uninstall. Desktop unit/build/lint
+and hook compilation passed. Private-D-Bus/native Windows/desktop-shell trials
+remain pending; these software changes do not close M5/M6 acceptance.

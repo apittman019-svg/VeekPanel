@@ -168,10 +168,13 @@ downgrading. OS login registration is never exported, imported or automatically 
 
 The main window starts unshown until initialization decides whether it should appear.
 Configuration failures or missing tray recovery show it. Linux checks the desktop's
-StatusNotifier host off-thread before allowing hiding; legacy-only/unconfirmed trays
-leave the window visible and disable close-to-tray for this session. This conservative
-check is not proof that the icon is visibly rendered. The host is checked at startup;
-host disappearance after that remains a reliability acceptance case.
+StatusNotifier host off-thread before allowing hiding. An uncached probe repeats
+after a three-second idle interval, with a two-second D-Bus method timeout.
+Legacy-only/unconfirmed trays leave the window visible and disable close-to-tray.
+Observed host loss reveals the window once; host recovery enables tray hiding again
+without hiding the window automatically. This check is not proof that the icon is
+visibly rendered, and the method timeout does not bound every native connection step.
+Shutdown wakes and joins the monitor before releasing the background runtime.
 
 The first Tauri plugin enforces a single instance. A manual second launch reveals,
 unminimizes and focuses the existing window; a duplicate `--autostart` launch stays
@@ -179,9 +182,14 @@ quiet. Linux requires a desktop session D-Bus; isolated tests use `dbus-run-sess
 The configuration lock remains an independent guard if handoff fails. Quit explicitly
 joins the background owner before process exit, releasing config/hardware/audio.
 
-Use the Settings checkbox to remove login registration before moving/uninstalling
-this development build. Installer-specific removal/upgrade handling, actual login
-delivery, tray-host loss, consumer Windows and Nobara lifecycle/soak remain pending.
+Current-source Windows installers remove only the exact startup command belonging
+to that installation on ordinary uninstall. Same-path reinstall and `/UPDATE`
+replacement preserve the opt-in; an upgrade that ordinarily uninstalls the old
+version clears its entry and requires explicit re-enabling. Other paths/changed
+commands are preserved. This hook is not present in the published 0.1.0 installer.
+Use Settings to disable startup before relocating a build or removing a Linux
+preview. Native installer checks, actual login delivery, desktop shell recovery,
+consumer Windows and Nobara lifecycle/soak remain pending.
 See [background validation](BACKGROUND_VALIDATION.md) and [local handoff](LOCAL_HANDOFF.md).
 
 Protocol references consulted 2026-10-07:

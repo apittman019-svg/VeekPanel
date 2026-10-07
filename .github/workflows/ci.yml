@@ -128,7 +128,7 @@ jobs:
           version: '11.25.0'
       - name: Linux native desktop dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev libpipewire-0.3-dev libclang-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf pipewire-bin xvfb webkit2gtk-driver
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev libpipewire-0.3-dev libclang-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf pipewire-bin xvfb webkit2gtk-driver dbus nsis
       - name: Install pinned Rust
         run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
       - run: pnpm --dir ui install --frozen-lockfile
@@ -137,6 +137,12 @@ jobs:
       - run: cargo fmt --manifest-path app/Cargo.toml --check
       - run: cargo clippy --manifest-path app/Cargo.toml --all-targets --locked -- -D warnings
       - run: cargo test --manifest-path app/Cargo.toml --locked
+      - name: Tray host loss/recovery on a disposable session bus
+        if: runner.os == 'Linux'
+        run: dbus-run-session -- env VEEK_PRIVATE_DBUS_TEST=1 cargo test --manifest-path app/Cargo.toml --locked private_bus_tray_host_loss_and_recovery -- --ignored
+      - name: Compile the actual Windows startup cleanup hook
+        if: runner.os == 'Linux'
+        run: makensis -WX -V2 -DVEEK_HOOK_OUTPUT=/tmp/veek-hook-syntax.exe tests/gui/installer_hook_compile.nsi
       - run: cargo build --manifest-path app/Cargo.toml --locked
       - name: Install native UI test driver
         if: runner.os == 'Linux'

@@ -2,8 +2,9 @@
 
 Same ChatGPT account does not put this remote checkout on the home filesystem.
 The combined `veekpanel-development.patch` transfers code independently of GitHub
-connector permissions. It includes the prior control-feedback work **and** this
-startup/background increment; do not separately reapply the older feedback patch.
+connector permissions. It includes control feedback, startup/background work,
+Windows startup cleanup and Linux tray recovery. Do not separately reapply an
+older development or feedback patch.
 
 Patch base: `8e60df93119a9cd2697d07dd0f2beca52f4f821d`, the remote
 `codex/profile-settings` schema-2 foundation. The published schema-1 `main` is not
@@ -15,8 +16,8 @@ the file's actual path with this prompt:
 ```text
 Continue VeekPanel from the mobile handoff. Inspect AGENTS.md, recent history,
 and the dirty worktree first. Preserve all existing user/Qwen/Gemini changes.
-The attached veekpanel-development.patch includes both control feedback and
-startup/background work, based on commit
+The attached veekpanel-development.patch includes control feedback, startup,
+Windows installer cleanup and Linux tray recovery, based on commit
 8e60df93119a9cd2697d07dd0f2beca52f4f821d on codex/profile-settings.
 
 Fetch the repository using the PC's normal configured Git credentials if needed.
@@ -29,6 +30,7 @@ and the newest docs/VERIFICATION.md entry after applying.
 Run relevant Rust/desktop/frontend checks and the private native PipeWire and
 GUI integrations on Nobara. Use dbus-run-session for the GUI harness. Do not
 change my personal startup registration or audio services just to run tests.
+Run the disposable-bus tray regression documented in docs/BACKGROUND_VALIDATION.md.
 Record actual results; keep physical PCPanel and Windows/reboot/soak gates open.
 Commit the verified changes on the new codex branch. Report the branch and result
 before publishing a new release or changing main, QWEN-test, or gemini-test.

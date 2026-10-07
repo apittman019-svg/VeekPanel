@@ -284,3 +284,20 @@ the new GUI assertions and Windows CI are not executed here. GitHub writes remai
 deferred, with a combined patch and docs/LOCAL_HANDOFF.md for the home checkout.
 Next: execute native/Windows lifecycle checks, fix installer startup cleanup, then
 reliability/Linux distribution. Keep physical, reboot and multi-day soak gates open.
+
+## Installer cleanup and tray recovery continuation (2026-10-07)
+
+Current-source Windows installers now remove only their exact owned HKCU login
+command on ordinary uninstall. Same-path reinstall and `/UPDATE` preserve opt-in;
+normal uninstall-based upgrades clear it. The published 0.1.0 installer is unchanged.
+Linux continuously probes uncached tray-host state off-thread: observed loss reveals
+once and disables hiding; recovery restores hiding eligibility without auto-hiding.
+Exit wakes and joins the tray monitor before the background runtime.
+
+Local checks passed 9 desktop tests with 1 private-D-Bus integration ignored,
+strict desktop lint/formatting, locked native build and the actual NSIS hook's
+compile-only check with warnings as errors. Windows smoke coverage is extended;
+native Windows/D-Bus/GUI execution remains pending. See the newest verification
+entry. Import the refreshed combined handoff before continuing on the home PC.
+Next: native lifecycle verification, Linux distribution and measured performance.
+Keep GitHub writes deferred and physical/reboot/soak acceptance open.

@@ -500,3 +500,50 @@ will contain these local changes. Startup cleanup on uninstall/relocation remain
 follow-up distribution work; disable the checkbox before removing this preview.
 Physical Mini/audio, Nobara USB, consumer Windows, accessibility and soak gates
 remain open.
+
+## Scoped Windows startup cleanup and Linux tray recovery (2026-10-07)
+
+Continued from local startup/background commit `961fb5d` on the schema-2 branch.
+The current-source NSIS post-uninstall hook compares the exact quoted installed
+executable plus `--autostart` before deleting only HKCU Run value
+`org.veekpanel.desktop`. Install never enables it; other paths/changed commands
+are preserved. Same-path reinstall and `/UPDATE` replacement retain opt-in.
+An ordinary upgrade that uninstalls the old app clears the old owned entry;
+re-enabling requires the user. Linux removal/relocation remains manual.
+
+Integration uses the supported hook contract in pinned Tauri CLI 2.12.1 /
+bundler 2.10.1 source. The stock template removes the product-name Run value,
+whereas VeekPanel runtime registration uses the bundle identifier. No upstream
+template was copied or replaced. The published 0.1.0 release is unchanged.
+
+Linux tray monitoring repeats an uncached StatusNotifier-host probe off-thread
+after a three-second idle interval, with a two-second D-Bus method timeout.
+Observed loss reveals the window once and disables hiding; observed recovery
+restores hiding eligibility without automatically hiding. UI reveals are queued
+without waiting on the UI thread. Exit wakes and joins the monitor before runtime
+shutdown. A method timeout is not a guarantee that every connection/authentication
+step terminates in that period, and host presence does not prove icon rendering.
+
+Local Ubuntu 24.04 remote workspace, pinned Rust 1.99.0:
+**9 desktop Rust tests passed, 1 private-D-Bus integration test ignored**;
+desktop formatting, strict all-target Clippy and locked native debug build passed.
+The two new unit tests cover recovery transitions and prompt idle-worker shutdown
+with probe ownership released. The private-bus fixture compiled and is wired into
+Linux CI to exercise host-property changes and watcher loss/replacement, but did
+not execute here because private Unix sockets remain prohibited.
+
+NSIS 3.09 compiled the actual startup cleanup hook in an uninstaller section with
+`-WX` (warnings as errors). The synthetic EXE was never executed. Windows smoke
+assertions now cover a path with spaces, native manual/login duplicate handoff,
+graceful shutdown/lock release, no implicit startup, owned-only cleanup, unrelated
+and other-installation values, and `/UPDATE` removal/replacement preservation.
+The published schema-1 baseline skips new single-instance assertions. These new
+Windows checks have not executed here; PowerShell was reviewed but no local
+PowerShell parser/runtime is available. The compiler check is not native acceptance.
+
+Root Rust/frontend sources are unchanged in this follow-up; their 57-test,
+lint/type/build evidence from the preceding entry remains applicable. No new
+installer, release, GitHub push or CI result is claimed. The refreshed combined
+handoff includes all local increments against `8e60df9`; follow LOCAL_HANDOFF.md.
+Native Linux GUI/D-Bus, consumer Windows, login/reboot, physical Mini/audio,
+Nobara USB and full accessibility/reliability soak acceptance remain open.

@@ -20,6 +20,7 @@
       },
       "nsis": {
         "installMode": "currentUser",
+        "installerHooks": "../packaging/windows/installer-hooks.nsh",
         "displayLanguageSelector": false,
         "languages": [
           "English"
