@@ -32,6 +32,7 @@ jobs:
         run: rustup toolchain install 1.99.0 --profile minimal
       - run: pnpm --dir ui install --frozen-lockfile
       - run: pnpm --dir ui check
+      - run: pnpm --dir ui test
       - run: pnpm --dir ui build
       - name: Desktop dependency notices
         working-directory: app

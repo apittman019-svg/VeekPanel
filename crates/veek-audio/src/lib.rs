@@ -138,6 +138,16 @@ impl<B: Backend> Controller<B> {
         })
     }
     pub fn apply(&mut self, selection: &Selection, change: Change) -> Result<Receipt> {
+        self.apply_observed(selection, change)
+            .map(|(receipt, _)| receipt)
+    }
+    /// Return the same native readback used to confirm the write. Consumers can
+    /// publish this observation without performing another full enumeration.
+    pub fn apply_observed(
+        &mut self,
+        selection: &Selection,
+        change: Change,
+    ) -> Result<(Receipt, Snapshot)> {
         change.validate()?;
         if !self.valid || selection.generation != self.generation {
             return Err(Error::Stale);
@@ -159,12 +169,14 @@ impl<B: Backend> Controller<B> {
             }
             return Err(error);
         }
-        let observed = resolve(&self.snapshot()?, &selection.id)?.clone();
-        Ok(Receipt {
+        let snapshot = self.snapshot()?;
+        let observed = resolve(&snapshot, &selection.id)?.clone();
+        let receipt = Receipt {
             requested: change,
             confirmed: change.matches(&observed),
             observed,
-        })
+        };
+        Ok((receipt, snapshot))
     }
     pub fn wait(&mut self, timeout: Duration) -> Result<()> {
         if !self.valid {
@@ -370,6 +382,53 @@ mod tests {
             next.apply(&s, Change::Mute(true)).unwrap_err(),
             Error::Stale
         );
+    }
+    #[test]
+    fn returned_observation_is_complete_and_failed_readback_invalidates_controller() {
+        let mut backend = mock();
+        let mut other = backend.targets[0].clone();
+        other.id = "other".into();
+        other.default = false;
+        other.volume = Some(0.7);
+        backend.targets.push(other.clone());
+        let mut controller = Controller::new(backend);
+        let selected = controller.select("default-output").unwrap();
+        let (receipt, snapshot) = controller
+            .apply_observed(&selected, Change::Volume(0.2))
+            .unwrap();
+        assert!(receipt.confirmed);
+        assert_eq!(snapshot.generation, selected.generation);
+        assert_eq!(snapshot.targets, vec![receipt.observed, other]);
+
+        struct LoseReadback(Mock);
+        impl Backend for LoseReadback {
+            fn name(&self) -> &'static str {
+                "readback failure mock"
+            }
+            fn snapshot(&mut self) -> Result<Vec<Target>> {
+                self.0.snapshot()
+            }
+            fn wait(&mut self, timeout: Duration) -> Result<()> {
+                self.0.wait(timeout)
+            }
+            fn write(&mut self, id: &str, change: Change) -> Result<()> {
+                self.0.write(id, change)?;
+                self.0.fail = true;
+                Ok(())
+            }
+        }
+        let mut failing = Controller::new(LoseReadback(mock()));
+        let selected = failing.select("default-output").unwrap();
+        assert!(matches!(
+            failing.apply_observed(&selected, Change::Mute(true)),
+            Err(Error::Unavailable(_))
+        ));
+        failing.backend.0.fail = false;
+        assert!(matches!(
+            failing.apply_observed(&selected, Change::Mute(false)),
+            Err(Error::Stale)
+        ));
+        assert_eq!(failing.backend.0.writes, 1);
     }
     #[test]
     fn capability_missing_and_ambiguous_defaults() {

@@ -30,6 +30,14 @@ The background state and engine readiness refresh at 250 ms, UI at 400 ms while 
 have 100 ms timeouts; native event waits are bounded to 20 ms. These are scheduling
 bounds, not measured input-latency guarantees for blocking OS APIs.
 
+Runtime publications are immutable and versioned separately from configuration
+edits. Unchanged observations retain the same publication; desktop polling omits
+unchanged runtime/mapping payloads and preserves the UI's object references.
+Tray/startup status is still checked each visible refresh. Successful writes reuse
+their complete native readback for feedback instead of immediately enumerating
+again. Follow-up UI requests wake the owner after native events are dispatched;
+idle waits keep their existing 20 ms limit. See [performance evidence](PERFORMANCE.md).
+
 ## Use the preview
 
 - Dashboard lists real outputs, inputs and active application/recording streams.

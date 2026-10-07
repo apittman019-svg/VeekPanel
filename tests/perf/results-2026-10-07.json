@@ -1,0 +1,87 @@
+{
+  "environment": "Ubuntu 24.04 remote workspace, pinned Rust 1.99.0, release profile",
+  "baseline_commit": "13a4903e698d576eedf8b10ac2b607e84f53b110",
+  "date": "2026-10-07",
+  "scope": "Synthetic mock audio, no physical USB/native audio/UI acceptance; three sequential runs per phase",
+  "runs": {
+    "baseline": [
+      {
+        "command_snapshots": 500,
+        "commands": 100,
+        "confirmed_writes": 100,
+        "fixture": "synthetic-100-targets-8-profiles",
+        "idle_snapshots_per_second": 3,
+        "request_p50_us": 20438,
+        "request_p95_us": 20562,
+        "request_p99_us": 20677,
+        "state_clone_1000_us": 25153
+      },
+      {
+        "command_snapshots": 498,
+        "commands": 100,
+        "confirmed_writes": 100,
+        "fixture": "synthetic-100-targets-8-profiles",
+        "idle_snapshots_per_second": 3,
+        "request_p50_us": 20415,
+        "request_p95_us": 20563,
+        "request_p99_us": 20605,
+        "state_clone_1000_us": 28161
+      },
+      {
+        "command_snapshots": 500,
+        "commands": 100,
+        "confirmed_writes": 100,
+        "fixture": "synthetic-100-targets-8-profiles",
+        "idle_snapshots_per_second": 3,
+        "request_p50_us": 20439,
+        "request_p95_us": 20637,
+        "request_p99_us": 20766,
+        "state_clone_1000_us": 25102
+      }
+    ],
+    "optimized": [
+      {
+        "command_snapshots": 300,
+        "commands": 100,
+        "confirmed_writes": 100,
+        "fixture": "synthetic-100-targets-8-profiles",
+        "full_state_json_bytes": 27224,
+        "idle_publications_per_second": 0,
+        "idle_snapshots_per_second": 3,
+        "request_p50_us": 118,
+        "request_p95_us": 163,
+        "request_p99_us": 263,
+        "shared_observation_1000_us": 9,
+        "state_clone_1000_us": 30855
+      },
+      {
+        "command_snapshots": 300,
+        "commands": 100,
+        "confirmed_writes": 100,
+        "fixture": "synthetic-100-targets-8-profiles",
+        "full_state_json_bytes": 27224,
+        "idle_publications_per_second": 0,
+        "idle_snapshots_per_second": 3,
+        "request_p50_us": 125,
+        "request_p95_us": 227,
+        "request_p99_us": 307,
+        "shared_observation_1000_us": 9,
+        "state_clone_1000_us": 25021
+      },
+      {
+        "command_snapshots": 300,
+        "commands": 100,
+        "confirmed_writes": 100,
+        "fixture": "synthetic-100-targets-8-profiles",
+        "full_state_json_bytes": 27224,
+        "idle_publications_per_second": 0,
+        "idle_snapshots_per_second": 3,
+        "request_p50_us": 122,
+        "request_p95_us": 208,
+        "request_p99_us": 418,
+        "shared_observation_1000_us": 8,
+        "state_clone_1000_us": 24152
+      }
+    ]
+  }
+}

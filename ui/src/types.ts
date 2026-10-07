@@ -11,7 +11,8 @@ export type Audio={backend:string,generation:number,targets:Target[]};
 export type ControlFeedback={control:Control,phase:'awaiting_input'|'pickup'|'controlling'|'waiting_release'|'ready'|'audio_offline'|'target_unavailable'|'blocked',position:number|null,target_volume:number|null,message:string|null};
 export type State={config:Config,revision:number,audio:Audio|null,audio_status:string,hardware_status:string,controls:Record<string,number>,feedback:ControlFeedback[],diagnostics:string[]};
 export type Desktop={tray_ready:boolean,tray_error:string|null,startup_supported:boolean,startup_registered:boolean|null,startup_error:string|null};
-export type Payload={state:State,mappings:{control:Control,targets:string[],messages:string[]}[],desktop:Desktop};
+export type Payload={version:number,state:State,mappings:{control:Control,targets:string[],messages:string[]}[],desktop:Desktop};
+export type SnapshotResponse={version:number,state:State|null,mappings:Payload['mappings']|null,desktop:Desktop};
 export function durable(t:Target):Selector|null {
  const keys=t.kind==='output'||t.kind==='input'?['endpoint.id','node.name']:['application.id','application.path','application.process.binary'];
  const key=keys.find(k=>t.identity[k]);return key?{type:'match',kind:t.kind,identities:{[key]:t.identity[key]}}:null;

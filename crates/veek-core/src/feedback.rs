@@ -14,7 +14,7 @@ pub enum FeedbackPhase {
     Blocked,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ControlFeedback {
     pub control: Control,
     pub phase: FeedbackPhase,

@@ -89,3 +89,8 @@ The next 2026-10-07 M5/M6 increment adds ongoing Linux tray-host loss/recovery
 handling and scoped Windows startup cleanup on uninstall. Desktop unit/build/lint
 and hook compilation passed. Private-D-Bus/native Windows/desktop-shell trials
 remain pending; these software changes do not close M5/M6 acceptance.
+
+The 2026-10-07 first M7 optimization pass reduces redundant audio reads and unchanged
+desktop traffic, shares immutable publications, and wakes follow-up UI requests.
+See PERFORMANCE.md for synthetic before/after measurements. Native Windows/Nobara
+CPU/memory, startup, physical latency and visual/accessibility acceptance remain open.

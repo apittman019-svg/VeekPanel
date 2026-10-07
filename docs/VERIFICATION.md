@@ -547,3 +547,44 @@ installer, release, GitHub push or CI result is claimed. The refreshed combined
 handoff includes all local increments against `8e60df9`; follow LOCAL_HANDOFF.md.
 Native Linux GUI/D-Bus, consumer Windows, login/reboot, physical Mini/audio,
 Nobara USB and full accessibility/reliability soak acceptance remain open.
+
+## Measured runtime and desktop optimization (2026-10-07)
+
+The user prioritized optimization and reserved animations for an Astra pass.
+Baseline local source `13a4903` was profiled with an explicitly injected mock
+backend: 100 targets, 8 profiles and 100 alternating armed analog writes. A
+baseline-only test patch and raw before/after data are retained in tests/perf.
+Three isolated release-mode baseline runs used 498–500 audio snapshots for 100
+confirmed writes; three final runs used 300 for the same 100 confirmed writes.
+Burst p99 moved from 20.605–20.766 ms to 0.263–0.418 ms. Full state acquisition
+previously copied data in 25.102–28.161 ms per 1,000 calls; the desktop's new shared
+acquisition took 0.008–0.009 ms. These are fixture results, not physical latency,
+native CPU/memory, UI rendering or an overall speedup claim. Scheduling/load
+variation and exact reproduction are documented in PERFORMANCE.md.
+
+Successful input/write commands reuse the complete verified native observation
+for publication. Validation and readback remain mandatory; failures reconcile and
+rearm. Immutable publications change only when observed state changes and are
+distinct from saved-config revisions. Unchanged visible IPC replies omit runtime
+and mapping data while still checking live machine-local tray/startup status.
+Frontend merging preserves references and rejects missing/mismatched caches.
+After command handling, native events are dispatched and the owner waits on the
+command queue so follow-up requests wake it immediately. Idle scheduling remains
+bounded to the same 20 ms interval; isolated requests/native calls can still wait.
+
+Local Ubuntu 24.04 remote workspace, pinned Rust 1.99.0, Node 24/pnpm 11.25.0:
+**59 workspace tests passed (1 probe ignored by default), 10 desktop tests passed
+(1 private-D-Bus integration ignored), and 4 frontend merge tests passed**.
+Strict workspace/desktop Clippy, both formatting checks, frontend zero-error/
+zero-warning type check, frontend production build and locked native desktop debug
+build passed. The release probe ran explicitly. After the final command-wakeup/
+publication-lock change, runtime regressions, strict lint and native build passed
+again. New tests cover complete readback and failed-readback invalidation, stable
+idle publications and external updates without config revision changes, conditional
+payload resync/desktop status, and frontend identity/cache/profile transitions.
+
+No native GUI/private PipeWire/Windows CI result is claimed in this remote socket-
+restricted environment. Their existing integration checks remain required, along
+with Windows/Nobara CPU/RSS, startup, physical-input latency and multi-day soak.
+GitHub writes remain deferred. The refreshed handoff includes the combined patch
+and a scoped Git bundle preserving the local commits and performance baseline.

@@ -162,7 +162,7 @@ User clarifications that override ambiguous wording in the original brief:
    settings/diagnostics and accessibility.
 5. **M5 (initial tray/background foundation, soak/startup pending):** tray/startup/background lifecycle and reliability soak.
 6. **M6 (Windows preview installer; broader packaging pending):** installers/packages, USB permissions, updates and clean installs.
-7. **M7 (not started):** measured performance, UX/accessibility and visual polish.
+7. **M7 (initial measured optimization; native/polish acceptance pending):** performance, UX/accessibility and visual polish.
 
 Detailed acceptance criteria and risks live in `docs/MILESTONES.md`,
 `docs/ARCHITECTURE.md` and `docs/RESEARCH.md`.
@@ -301,3 +301,20 @@ native Windows/D-Bus/GUI execution remains pending. See the newest verification
 entry. Import the refreshed combined handoff before continuing on the home PC.
 Next: native lifecycle verification, Linux distribution and measured performance.
 Keep GitHub writes deferred and physical/reboot/soak acceptance open.
+
+## Optimization continuation (2026-10-07)
+
+The user prioritized optimization and plans an Astra pass for animations. The first
+increment reuses complete verified native readback, shares unchanged immutable
+runtime publications, omits unchanged runtime/mapping IPC payloads, and wakes
+follow-up UI requests without adding idle polling. Native adapters, button barriers
+and pickup/generation checks retain their contracts. See docs/PERFORMANCE.md and
+the newest verification entry for measured results and limitations.
+
+Local checks passed 59 workspace tests (1 performance probe ignored by default),
+10 desktop tests (1 private-D-Bus test ignored), 4 frontend merge tests, strict
+lint/formatting, frontend check/build and the native debug build. The release
+performance probe ran explicitly against mock audio. Native GUI/PipeWire and
+Windows/Nobara CPU/memory/physical latency remain pending. Do not convert these
+software timings into physical claims or reopen the accepted basic Windows Mini
+input investigation. GitHub remains deferred; use the refreshed combined handoff.

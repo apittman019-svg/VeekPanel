@@ -3,7 +3,8 @@
  import {invoke} from '@tauri-apps/api/core';
  import {durable,key} from './types';
  import {feedbackText} from './feedback';
- import type {Payload,Config,Selector,Target,Action} from './types';
+ import {mergeSnapshot} from './snapshot';
+ import type {Payload,SnapshotResponse,Config,Selector,Target,Action} from './types';
  let data=$state<Payload|null>(null),page=$state('Dashboard'),error=$state(''),notice=$state(''),busy=$state(false);
  let selected=$state(0),rotation=$state(''),press=$state(''),name=$state(''),groupMembers=$state<string[]>([]),relative=$state(true),importText=$state('');
  let editingGroup=$state<string|null>(null);let hardwareAddress=$state('');let deviceFilter=$state('all');let refreshing:Promise<void>|null=null;
@@ -29,7 +30,7 @@
  function refresh():Promise<void>{
   if(refreshing)return refreshing;
   refreshing=(async()=>{
-   try{const previous=data?.state.config.active_profile;const first=!data;data=await invoke<Payload>('snapshot');
+   try{const previous=data?.state.config.active_profile;const first=!data;const response=await invoke<SnapshotResponse>('snapshot',{knownVersion:data?.version??null});data=mergeSnapshot(data,response);
     if(first||previous!==data.state.config.active_profile){clearProfileDrafts();selectKnob(0);}
    }catch(e){error=String(e);}
   })().finally(()=>{refreshing=null;});

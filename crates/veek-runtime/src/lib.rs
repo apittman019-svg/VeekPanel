@@ -21,7 +21,7 @@ use veek_hardware::{
     Model,
 };
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, PartialEq, Serialize)]
 pub struct State {
     pub config: Config,
     pub revision: u64,
@@ -51,10 +51,34 @@ struct Request {
 #[derive(Clone)]
 pub struct Handle {
     tx: SyncSender<Request>,
-    state: Arc<Mutex<State>>,
+    state: Arc<Mutex<PublishedState>>,
+}
+#[derive(Clone)]
+pub struct PublishedState {
+    /// Publication version changes for any observed state, independently of the
+    /// configuration revision used to reject stale edits.
+    pub version: u64,
+    pub state: Arc<State>,
+}
+fn publish(shared: &Mutex<PublishedState>, state: &State) {
+    // The runtime is the sole publisher. Compare/clone outside the mutex so UI
+    // readers only contend with the brief pointer replacement.
+    let previous = shared.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    if previous.state.as_ref() != state {
+        let next = PublishedState {
+            version: previous.version.wrapping_add(1),
+            state: Arc::new(state.clone()),
+        };
+        *shared.lock().unwrap_or_else(|e| e.into_inner()) = next;
+    }
 }
 impl Handle {
     pub fn state(&self) -> State {
+        self.shared_state().state.as_ref().clone()
+    }
+    /// Cheap immutable observation; readers retain a consistent version while
+    /// serialization/mapping work runs without holding the publication mutex.
+    pub fn shared_state(&self) -> PublishedState {
         self.state.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
     pub fn request(&self, command: Command) -> Result<(), String> {
@@ -101,15 +125,18 @@ where
     F: Fn() -> veek_audio::Result<Box<dyn Backend>> + Send + 'static,
 {
     let (store, config) = Store::open(path).map_err(|e| e.to_string())?;
-    let state = Arc::new(Mutex::new(State {
-        config,
-        revision: 1,
-        audio: None,
-        audio_status: "Connecting".into(),
-        hardware_status: "Starting".into(),
-        controls: BTreeMap::new(),
-        feedback: vec![],
-        diagnostics: vec![],
+    let state = Arc::new(Mutex::new(PublishedState {
+        version: 1,
+        state: Arc::new(State {
+            config,
+            revision: 1,
+            audio: None,
+            audio_status: "Connecting".into(),
+            hardware_status: "Starting".into(),
+            controls: BTreeMap::new(),
+            feedback: vec![],
+            diagnostics: vec![],
+        }),
     }));
     let (tx, rx) = mpsc::sync_channel(64);
     let stop = Arc::new(AtomicBool::new(false));
@@ -335,6 +362,10 @@ fn input(
         }
     };
     let effects = engine.handle(&state.config, event, &snapshot);
+    state.audio = audio.as_ref().map(|_| snapshot);
+    if state.audio.is_some() {
+        state.audio_status = "Connected".into();
+    }
     for message in effects.diagnostics {
         note(state, message);
     }
@@ -344,11 +375,12 @@ fn input(
         save(store, state, config, state.revision, engine)?;
     }
     for (selection, change) in effects.audio {
-        let receipt = audio
+        let (receipt, observed) = audio
             .as_mut()
             .ok_or("Audio is unavailable")?
-            .apply(&selection, change)
+            .apply_observed(&selection, change)
             .map_err(|e| e.to_string())?;
+        state.audio = Some(observed);
         if !receipt.confirmed {
             engine.reset();
             return Err("Audio change was not confirmed; input has been rearmed".into());
@@ -374,8 +406,10 @@ fn command(
             config.active_profile = id;
             save(store, state, config, state.revision, engine)
         }
-        Command::Volume { selection, value } => write(audio, &selection, Change::Volume(value)),
-        Command::Mute { selection, muted } => write(audio, &selection, Change::Mute(muted)),
+        Command::Volume { selection, value } => {
+            write(state, audio, &selection, Change::Volume(value))
+        }
+        Command::Mute { selection, muted } => write(state, audio, &selection, Change::Mute(muted)),
         Command::MockAnalog { index, raw } => {
             if state.config.hardware.mode != HardwareMode::Mock {
                 return Err("Enable development panel mode before sending simulated input".into());
@@ -414,30 +448,61 @@ fn command(
     }
 }
 fn write(
+    state: &mut State,
     audio: &mut Option<Controller<Native>>,
     selection: &Selection,
     change: Change,
 ) -> Result<(), String> {
-    let receipt = audio
+    let (receipt, observed) = audio
         .as_mut()
         .ok_or("Audio is unavailable")?
-        .apply(selection, change)
+        .apply_observed(selection, change)
         .map_err(|e| e.to_string())?;
+    state.audio = Some(observed);
+    state.audio_status = "Connected".into();
     if !receipt.confirmed {
         return Err("Audio change was not confirmed by native readback".into());
     }
     Ok(())
 }
+fn refresh_audio(
+    state: &mut State,
+    audio: &mut Option<Controller<Native>>,
+    engine: &mut Engine,
+    retry: &mut Instant,
+) {
+    if let Some(controller) = audio {
+        match controller.snapshot() {
+            Ok(snapshot) => {
+                state.audio = Some(snapshot);
+                state.audio_status = "Connected".into();
+            }
+            Err(error) => {
+                state.audio = None;
+                state.audio_status = error.to_string();
+                note(state, error.to_string());
+                *audio = None;
+                engine.reset();
+                *retry = Instant::now() + Duration::from_secs(3);
+            }
+        }
+    }
+}
 fn run<F>(
     mut store: Store,
-    shared: Arc<Mutex<State>>,
+    shared: Arc<Mutex<PublishedState>>,
     rx: Receiver<Request>,
     stop: Arc<AtomicBool>,
     connect: F,
 ) where
     F: Fn() -> veek_audio::Result<Box<dyn Backend>>,
 {
-    let mut state = shared.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    let mut state = shared
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .state
+        .as_ref()
+        .clone();
     let mut engine = Engine::default();
     let mut audio = None;
     let mut retry = Instant::now();
@@ -445,6 +510,7 @@ fn run<F>(
     let mut input_after = Instant::now();
     let mut input_revision = state.revision;
     let mut hardware = state.config.hardware.clone();
+    let mut pending = None;
     let mut reader = reader(hardware.clone())
         .map_err(|e| note(&mut state, e))
         .ok();
@@ -465,7 +531,16 @@ fn run<F>(
             }
         }
         let mut dirty = false;
-        for request in rx.try_iter().take(32) {
+        let mut handled_request = false;
+        for request in pending.take().into_iter().chain(rx.try_iter()).take(32) {
+            handled_request = true;
+            let observed_by_command = matches!(
+                &request.command,
+                Command::MockAnalog { .. }
+                    | Command::MockButton { .. }
+                    | Command::Volume { .. }
+                    | Command::Mute { .. }
+            );
             let result = if Instant::now() > request.deadline {
                 Err("Command expired without execution".into())
             } else {
@@ -482,24 +557,16 @@ fn run<F>(
                 engine.reset();
             }
             // Publish feedback from native readback, not from planned effects.
-            if let Some(c) = &mut audio {
-                match c.snapshot() {
-                    Ok(s) => state.audio = Some(s),
-                    Err(e) => {
-                        state.audio = None;
-                        state.audio_status = e.to_string();
-                        note(&mut state, e.to_string());
-                        audio = None;
-                        engine.reset();
-                        retry = Instant::now() + Duration::from_secs(3);
-                    }
-                }
+            // Successful input/write commands already own a fresh observation.
+            // Saves and failures still reconcile native state before acknowledging.
+            if !observed_by_command || result.is_err() {
+                refresh_audio(&mut state, &mut audio, &mut engine, &mut retry);
             }
             // Publish saved state before acknowledging, so an immediate UI refresh sees it.
             state.feedback = engine.feedback(&state.config, state.audio.as_ref());
-            *shared.lock().unwrap_or_else(|e| e.into_inner()) = state.clone();
+            publish(&shared, &state);
             let _ = request.reply.try_send(result);
-            dirty = true;
+            refresh = Instant::now() + Duration::from_millis(250);
         }
         if input_revision != state.revision {
             // Reports collected before a saved mapping/profile change belong to the old intent.
@@ -550,8 +617,11 @@ fn run<F>(
             if let Err(err) = input(&mut state, &mut store, &mut engine, &mut audio, e) {
                 note(&mut state, err);
                 engine.reset();
+                refresh_audio(&mut state, &mut audio, &mut engine, &mut retry);
             }
             dirty = true;
+            // Input has already refreshed audio and captured any write readback.
+            refresh = Instant::now() + Duration::from_millis(250);
             if state.revision != input_revision {
                 // A profile button also invalidates the remainder of this captured batch.
                 input_after = Instant::now();
@@ -559,29 +629,22 @@ fn run<F>(
                 break;
             }
         }
-        if dirty || Instant::now() >= refresh {
-            if let Some(c) = &mut audio {
-                match c.snapshot() {
-                    Ok(s) => {
-                        state.audio = Some(s);
-                        state.audio_status = "Connected".into();
-                    }
-                    Err(e) => {
-                        state.audio = None;
-                        state.audio_status = e.to_string();
-                        note(&mut state, e.to_string());
-                        audio = None;
-                        engine.reset();
-                        retry = Instant::now() + Duration::from_secs(3);
-                    }
-                }
-            }
-            state.feedback = engine.feedback(&state.config, state.audio.as_ref());
-            *shared.lock().unwrap_or_else(|e| e.into_inner()) = state.clone();
+        if Instant::now() >= refresh {
+            refresh_audio(&mut state, &mut audio, &mut engine, &mut retry);
+            dirty = true;
             refresh = Instant::now() + Duration::from_millis(250);
         }
+        if dirty {
+            state.feedback = engine.feedback(&state.config, state.audio.as_ref());
+            publish(&shared, &state);
+        }
+        let wait = if handled_request {
+            Duration::ZERO
+        } else {
+            Duration::from_millis(20)
+        };
         if let Some(c) = &mut audio {
-            if let Err(e) = c.wait(Duration::from_millis(20)) {
+            if let Err(e) = c.wait(wait) {
                 state.audio = None;
                 state.audio_status = e.to_string();
                 note(&mut state, e.to_string());
@@ -590,8 +653,14 @@ fn run<F>(
                 retry = Instant::now() + Duration::from_secs(3);
                 refresh = Instant::now();
             }
-        } else {
-            thread::sleep(Duration::from_millis(20));
+        } else if !handled_request {
+            thread::sleep(wait);
+        }
+        if handled_request {
+            // Dispatch native events above, then let a follow-up UI request wake
+            // the owner immediately instead of paying another native idle wait.
+            // Hardware still waits at most the existing 20 ms scheduling interval.
+            pending = rx.recv_timeout(Duration::from_millis(20)).ok();
         }
     }
 }
@@ -635,12 +704,178 @@ mod tests {
             identity: BTreeMap::from([("node.name".into(), "test-output".into())]),
         }
     }
+    #[test]
+    #[ignore = "synthetic release-mode performance probe; run alone with --nocapture"]
+    fn runtime_performance_probe() {
+        use std::sync::atomic::AtomicUsize;
+        struct Counted {
+            live: Mock,
+            others: Vec<Target>,
+            snapshots: Arc<AtomicUsize>,
+            writes: Arc<AtomicUsize>,
+        }
+        impl Backend for Counted {
+            fn name(&self) -> &'static str {
+                "synthetic performance backend"
+            }
+            fn snapshot(&mut self) -> veek_audio::Result<Vec<Target>> {
+                self.snapshots.fetch_add(1, Ordering::Relaxed);
+                let mut targets = self.others.clone();
+                targets.push(self.live.0.lock().unwrap().clone());
+                Ok(targets)
+            }
+            fn write(&mut self, id: &str, change: Change) -> veek_audio::Result<()> {
+                self.writes.fetch_add(1, Ordering::Relaxed);
+                self.live.write(id, change)
+            }
+            fn wait(&mut self, timeout: Duration) -> veek_audio::Result<()> {
+                self.live.wait(timeout)
+            }
+        }
+        let dir = tempfile::tempdir().unwrap();
+        let mut config = Config::default();
+        config.hardware.mode = HardwareMode::Mock;
+        config.profiles[0].mappings = (0..4)
+            .map(|index| veek_config::Mapping {
+                control: veek_config::Control {
+                    device: "primary".into(),
+                    kind: veek_config::ControlKind::Analog,
+                    index,
+                },
+                action: veek_config::Action::Volume {
+                    target: veek_config::Selector::DefaultOutput,
+                },
+            })
+            .collect();
+        for index in 1..8 {
+            let mut profile = config.profiles[0].clone();
+            profile.id = format!("stress-{index}");
+            profile.name = format!("Synthetic profile {index}");
+            config.profiles.push(profile);
+        }
+        let path = dir.path().join("config.json");
+        let (mut store, _) = Store::open(path.clone()).unwrap();
+        store.save(&config).unwrap();
+        drop(store);
+        let live = Arc::new(Mutex::new(target()));
+        let snapshots = Arc::new(AtomicUsize::new(0));
+        let writes = Arc::new(AtomicUsize::new(0));
+        let shared = live.clone();
+        let counted = snapshots.clone();
+        let written = writes.clone();
+        let runtime = start_with(path, move || {
+            let others = (1..100)
+                .map(|i| {
+                    let mut t = target();
+                    t.id = format!("synthetic-session-{i:03}");
+                    t.kind = Kind::Playback;
+                    t.default = false;
+                    t.identity = BTreeMap::from([
+                        ("application.id".into(), format!("synthetic.app.{i}")),
+                        (
+                            "application.process.binary".into(),
+                            format!("synthetic-{i}"),
+                        ),
+                    ]);
+                    t
+                })
+                .collect();
+            Ok(Box::new(Counted {
+                live: Mock(shared.clone()),
+                others,
+                snapshots: counted.clone(),
+                writes: written.clone(),
+            }))
+        })
+        .unwrap();
+        let h = &runtime.handle;
+        wait_for(h, |s| {
+            s.audio.is_some() && s.hardware_status.starts_with("Development")
+        });
+        let idle_before = snapshots.load(Ordering::Relaxed);
+        let idle_version = h.shared_state().version;
+        thread::sleep(Duration::from_secs(1));
+        let idle_snapshots = snapshots.load(Ordering::Relaxed) - idle_before;
+        let idle_publications = h.shared_state().version - idle_version;
+        let clone_start = Instant::now();
+        for _ in 0..1000 {
+            std::hint::black_box(h.state());
+        }
+        let clone_us = clone_start.elapsed().as_micros();
+        let shared_start = Instant::now();
+        for _ in 0..1000 {
+            std::hint::black_box(h.shared_state());
+        }
+        let shared_us = shared_start.elapsed().as_micros();
+        h.request(Command::MockAnalog { index: 0, raw: 0 }).unwrap();
+        h.request(Command::MockAnalog { index: 0, raw: 200 })
+            .unwrap();
+        let before = snapshots.load(Ordering::Relaxed);
+        let writes_before = writes.load(Ordering::Relaxed);
+        let mut latency = vec![];
+        for i in 0..100 {
+            let start = Instant::now();
+            h.request(Command::MockAnalog {
+                index: 0,
+                raw: if i % 2 == 0 { 180 } else { 200 },
+            })
+            .unwrap();
+            latency.push(start.elapsed().as_micros());
+        }
+        latency.sort_unstable();
+        println!(
+            "PERF {}",
+            serde_json::json!({
+                "fixture":"synthetic-100-targets-8-profiles",
+                "idle_snapshots_per_second":idle_snapshots,
+                "idle_publications_per_second":idle_publications,
+                "state_clone_1000_us":clone_us,
+                "shared_observation_1000_us":shared_us,
+                "full_state_json_bytes":serde_json::to_vec(&h.state()).unwrap().len(),
+                "commands":100,
+                "command_snapshots":snapshots.load(Ordering::Relaxed)-before,
+                "confirmed_writes":writes.load(Ordering::Relaxed)-writes_before,
+                "request_p50_us":latency[49],"request_p95_us":latency[94],"request_p99_us":latency[98]
+            })
+        );
+    }
     fn wait_for(handle: &Handle, condition: impl Fn(&State) -> bool) {
         let start = Instant::now();
         while !condition(&handle.state()) {
             assert!(start.elapsed() < Duration::from_secs(3));
             thread::sleep(Duration::from_millis(10));
         }
+    }
+    #[test]
+    fn unchanged_observations_keep_the_publication_and_external_audio_replaces_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let target = Arc::new(Mutex::new(target()));
+        let shared = target.clone();
+        let runtime = start_with(dir.path().join("config.json"), move || {
+            Ok(Box::new(Mock(shared.clone())))
+        })
+        .unwrap();
+        let handle = &runtime.handle;
+        wait_for(handle, |s| {
+            s.audio_status == "Connected" && s.hardware_status == "Hardware disabled"
+        });
+        let original = handle.shared_state();
+        thread::sleep(Duration::from_millis(600));
+        let idle = handle.shared_state();
+        assert_eq!(idle.version, original.version);
+        assert!(Arc::ptr_eq(&idle.state, &original.state));
+        target.lock().unwrap().volume = Some(0.25);
+        wait_for(handle, |s| {
+            s.audio.as_ref().unwrap().targets[0].volume == Some(0.25)
+        });
+        let updated = handle.shared_state();
+        assert!(updated.version > original.version);
+        assert_eq!(updated.state.revision, original.state.revision);
+        assert!(!Arc::ptr_eq(&updated.state, &original.state));
+        assert_eq!(
+            original.state.audio.as_ref().unwrap().targets[0].volume,
+            Some(0.5)
+        );
     }
     #[test]
     fn background_persists_mappings_and_rejects_stale_ui_and_unarmed_input() {

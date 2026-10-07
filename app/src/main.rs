@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod lifecycle;
+mod publication;
 mod startup;
 
 use std::sync::{
@@ -70,18 +71,16 @@ fn start_tray_watch(app: &tauri::App, state: Arc<Desktop>, minimized: bool) -> s
 }
 
 #[tauri::command]
-async fn snapshot(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+async fn snapshot(
+    app: tauri::AppHandle,
+    known_version: Option<u64>,
+) -> Result<serde_json::Value, String> {
     let handle = app
         .try_state::<veek_runtime::Handle>()
         .ok_or_else(|| app.state::<StartupFailure>().0.clone())?;
-    let state = handle.state();
+    let published = handle.shared_state();
     let desktop = app.state::<Arc<Desktop>>().inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let mappings = state
-            .audio
-            .as_ref()
-            .map(|audio| veek_core::statuses(&state.config, audio))
-            .unwrap_or_default();
         let registered = desktop
             .startup
             .lock()
@@ -96,13 +95,15 @@ async fn snapshot(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
             .lock()
             .map_err(|e| e.to_string())?
             .clone();
-        Ok(
-            serde_json::json!({"state":state,"mappings":mappings,"desktop":{
+        Ok(publication::payload(
+            &published,
+            known_version,
+            serde_json::json!({
                 "tray_ready":desktop.tray_ready.load(Ordering::SeqCst),
                 "tray_error":tray_error,"startup_supported":cfg!(any(windows, target_os="linux")),
                 "startup_registered":startup_registered,"startup_error":startup_error
-            }}),
-        )
+            }),
+        ))
     })
     .await
     .map_err(|e| e.to_string())?

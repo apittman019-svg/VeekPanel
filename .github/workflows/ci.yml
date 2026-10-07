@@ -133,6 +133,7 @@ jobs:
         run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
       - run: pnpm --dir ui install --frozen-lockfile
       - run: pnpm --dir ui check
+      - run: pnpm --dir ui test
       - run: pnpm --dir ui build
       - run: cargo fmt --manifest-path app/Cargo.toml --check
       - run: cargo clippy --manifest-path app/Cargo.toml --all-targets --locked -- -D warnings
