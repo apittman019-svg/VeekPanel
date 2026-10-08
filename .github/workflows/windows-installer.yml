@@ -9,6 +9,15 @@ on:
       - 'app/src/**'
       - 'app/Cargo.toml'
       - 'app/Cargo.lock'
+      - 'app/build.rs'
+      - 'app/capabilities/**'
+      - 'app/icons/**'
+      - 'ui/**'
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'tests/manual/license_inventory.py'
       - 'packaging/windows/**'
 permissions:
   contents: read

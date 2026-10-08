@@ -351,3 +351,18 @@ sequentially. No physical/Windows/reboot/soak or frame-pacing acceptance is impl
 This completes the scoped local native handoff. Return the source and evidence for
 Cloud Sol review/next-step selection. GitHub pushes, merges and releases remain
 deferred; do not publish the pending 0.1.1 installer as part of this pass.
+
+## Nightly publication authorized (2026-10-08)
+
+The user explicitly requested a nightly branch containing all updated work,
+including the installer and UI. This supersedes the earlier GitHub deferral for
+this integration/publication. `nightly` starts from native-polish commit 08ade89
+and retains the complete backend/profile/installer history. Main and older work
+branches remain preserved. Use the native Windows installer pipeline; the old
+Gemini Wine builder remains historical rather than replacing current-user setup,
+notices or startup cleanup. Qwen has no additional application changes.
+
+Installer triggers now include frontend and shared-crate changes as well as app
+and packaging changes. Publish only a Windows-verified prerelease; retain exact
+commit/checksum evidence and physical/platform limitations. A nightly branch does
+not establish physical acceptance or create a scheduled automation.

@@ -12,6 +12,14 @@ identification. Its four knobs also act as four independent push buttons. Use th
 Mini HID path; the friend's Windows 11 capture and checklist confirm all four
 knob ranges, button edges, physical order and direction.
 
+## Nightly development branch
+
+`nightly` brings together the latest UI, schema-2 profiles, pickup feedback,
+background/startup behavior and backend optimizations with the Windows installer.
+Installer builds run when application, frontend or packaging sources change;
+verified downloadable nightlies are published as prereleases. The older preview
+remains available below. See [nightly build status](https://github.com/apittman019-svg/VeekPanel/actions/workflows/windows-installer.yml?query=branch%3Anightly).
+
 ## Windows download
 
 [Download the Windows desktop installer](https://github.com/apittman019-svg/VeekPanel/releases/tag/v0.1.0-preview.1).
