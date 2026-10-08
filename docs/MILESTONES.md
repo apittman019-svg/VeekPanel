@@ -107,3 +107,12 @@ reduced motion/200% scaling, private PipeWire GUI/runtime integration and isolat
 startup/tray tests passed. See VERIFICATION.md and UI_POLISH.md for exact scope.
 This advances M4/M5/M7 evidence without closing Windows, physical, reboot/soak or
 measured-performance gates. GitHub publishing remains deferred.
+
+2026-10-08 release hardening supersedes that publication deferral only for focused
+`nightly` commits and CI. Current `94ed405` Windows core/desktop checks passed and
+NSIS built; installer smoke was blocked by an absent-registry-value read. The
+expanded installed WebView2/startup/background/migration/uninstall smoke is pending
+native execution. See the newest VERIFICATION.md entry. M5/M6 remain unaccepted;
+consumer Windows, actual login/tray/audio, physical and soak checks remain open.
+Next distribution priority after Windows evidence: AppImage, native Nobara package
+acceptance, then Flatpak. Local Astra owns real package build/run/GUI/HID loops.

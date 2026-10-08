@@ -366,3 +366,28 @@ Installer triggers now include frontend and shared-crate changes as well as app
 and packaging changes. Publish only a Windows-verified prerelease; retain exact
 commit/checksum evidence and physical/platform limitations. A nightly branch does
 not establish physical acceptance or create a scheduled automation.
+
+## Current-source Windows hardening (2026-10-08)
+
+User priority is release hardening on `nightly`, with no main merge or public
+release just because an artifact builds. Current-source `94ed40539e2a881ba11b628b6b47afa12826924b`
+passed Windows core and desktop CI, and built NSIS, but installer smoke stopped at
+its absent-startup registry guard. Older installer success does not close this gate.
+See the newest VERIFICATION.md entry for exact runs and subsequent results.
+
+The Windows smoke now handles absent opt-in normally and uses test-only loopback
+WebView2 CDP on a disposable hosted runner to inspect the bundled UI and call real
+native startup/config commands. It checks quiet duplicate autostart, manual recovery
+from start-minimized, available-tray close/reopen, config ownership and existing
+fresh/reinstall/update/migration/uninstall preservation cases. No production debug
+hook or dependency was added. New smoke execution is pending until recorded below.
+Do not claim consumer Windows, actual login, tray-shell, physical audio/HID or soak
+acceptance from hosted CI. Preserve accepted Nobara visuals and Mini input evidence.
+After current-source Windows validation, prefer AppImage -> native Nobara -> Flatpak;
+actual package/build/run, GUI, PipeWire/HID and login cycles belong to local Astra.
+
+Local Astra verified the supplied patch checksum and clean application against
+unchanged nightly 94ed405, then applied it in the clean nightly worktree. The
+original profile working tree remains dirty and untouched. The cloud HTTP 403 was
+specific to its integration; local publication uses the existing authorized CLI.
+Native execution is pending the focused commit's hosted CI results below.

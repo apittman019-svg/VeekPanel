@@ -652,3 +652,48 @@ locally; earlier Windows CI for `8e60df9` is not evidence for these newer commit
 Current-source Windows/WebView2/installer tests, real desktop login/tray recovery,
 physical Mini audio/lifecycle/Nobara, CPU/RSS/frame pacing and soak remain open.
 No new installer release, GitHub push or milestone acceptance is claimed.
+
+## Current nightly Windows gate review (2026-10-08)
+
+Inspected authoritative project/verification/background/UI requirements, desktop
+and startup implementation, NSIS hooks/config, both workflows and recent nightly
+history. For exact source `94ed40539e2a881ba11b628b6b47afa12826924b`:
+
+- [Core/desktop run 37727227802](https://github.com/apittman019-svg/VeekPanel/actions/runs/37727227802):
+  Windows core job `113148061875` and Windows desktop job `113148062173` passed.
+  This includes locked Rust tests/builds, formatting/strict Clippy, readonly native
+  Core Audio enumeration and frontend check/tests/production build. Linux core
+  job `113148062115` passed; Linux desktop job `113148062182` failed at native GUI
+  profile creation with driver connection reset after its build/tests passed.
+- [Installer run 37727227761](https://github.com/apittman019-svg/VeekPanel/actions/runs/37727227761),
+  job `113148061663`, built the current-source NSIS installer on Windows Server 2025.
+  Smoke failed immediately at `Get-ItemPropertyValue` for the absent opt-in HKCU
+  startup value. Fresh install/launch/migration/reinstall/uninstall assertions did
+  **not** execute; verified installer upload was correctly gated off.
+
+Hardening fixes absent-value reads without hiding registry access errors. A
+stdlib-only, loopback CDP helper observes the actual installed WebView2 Dashboard,
+invokes real native snapshot/startup/save commands, and checks enable/readback/remove
+idempotence without config changes. Native HWND visibility and the running owner
+validate start-minimized safeguards, quiet duplicate autostart, manual relaunch and
+available-tray close/reopen. Existing fresh/reinstall/update/legacy migration and
+scoped uninstall checks remain intact. No production code or mock backend changed.
+
+Cloud static checks: both PowerShell files parsed with tree-sitter-powershell
+0.26.4 without errors; workflow YAML parsed. These are **static syntax checks**,
+not PowerShell/native runtime acceptance. The workflow also runs the real Windows
+PowerShell parser and retains a source/run/OS/result manifest plus smoke transcript
+on success or failure. New native smoke results are pending execution.
+
+Hosted Server CI cannot establish consumer Windows 10/11, missing-WebView2 clean
+machine bootstrap, real tray-shell interactions, logout/login, interactive audio,
+physical PCPanel, sleep/resume or soak acceptance. No release is authorized merely
+by producing an installer. The prior Nobara native results and accepted Mini basic
+input evidence remain valid within their original scopes.
+
+Publication blocker: GitHub rejected creation of the hardening tree with HTTP 403,
+`Resource not accessible by integration`. The connection can read the repository,
+but this attempted write was denied. No commit was created, no ref changed and no
+new native CI was triggered. Changes are delivered as a reviewable patch for local
+Astra; native PowerShell, new installed WebView2/startup/background assertions and
+the complete current-source installer smoke remain **unexecuted** for this patch.

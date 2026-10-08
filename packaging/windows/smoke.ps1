@@ -11,10 +11,16 @@ $startupName = 'org.veekpanel.desktop'
 $ownedStartup = '"' + $exe + '" --autostart'
 $otherStartupName = 'VeekPanel-smoke-unrelated'
 $otherStartup = '"C:\Unrelated Test\other.exe" --stay'
+. "$PSScriptRoot/webview-smoke.ps1"
 
 function Read-StartupValue([string]$name = $startupName) {
-    if (!(Test-Path $runKey)) { return $null }
-    return Get-ItemPropertyValue -Path $runKey -Name $name -ErrorAction SilentlyContinue
+    # Get-ItemPropertyValue can throw a terminating error for an absent value,
+    # even with SilentlyContinue. Absence is normal for opt-in startup; genuine
+    # registry access/read errors must still fail the smoke test.
+    $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\Microsoft\Windows\CurrentVersion\Run')
+    if ($null -eq $key) { return $null }
+    try { return $key.GetValue($name, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames) }
+    finally { $key.Dispose() }
 }
 
 function Set-TestStartup([string]$command) {
@@ -35,9 +41,20 @@ function Install-Package([string]$path) {
     }
 }
 
-function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true) {
-    $app = Start-Process $exe -PassThru
+function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true, [bool]$Background = $false, [bool]$PrepareBackground = $false) {
+    $previousBrowserArguments = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
+    $cdp = $null
+    if ($Lifecycle) {
+        if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') { throw 'WebView smoke is for disposable hosted Windows CI only' }
+        $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
+        $listener.Start()
+        $port = $listener.LocalEndpoint.Port
+        $listener.Stop()
+        $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$port --remote-debugging-address=127.0.0.1"
+    }
+    $app = $null
     try {
+        $app = if ($Background) { Start-Process $exe -ArgumentList '--autostart' -PassThru } else { Start-Process $exe -PassThru }
         $ready = $false
         # Windows exposes a window before WebView2 and Tauri setup finish.
         # Wait for saved defaults/migration and the running configuration owner.
@@ -55,14 +72,26 @@ function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true) {
                     $lock.Dispose()
                 } catch [IO.IOException] { $owned = $true }
             }
-            if ($app.MainWindowHandle -ne 0 -and $app.Responding -and $savedSchema -eq $schema -and $owned) { $ready=$true; break }
+            if (($Background -or $app.MainWindowHandle -ne 0) -and $app.Responding -and $savedSchema -eq $schema -and $owned) { $ready=$true; break }
         }
         if (!$ready) { throw "Installed app did not open with schema $schema and an active configuration owner within 30 seconds" }
+        if ($Lifecycle) {
+            $cdp = Connect-InstalledWebView $port
+            Assert-InstalledFrontend $cdp
+            Assert-StartupCommands $cdp
+        }
+        $window = [VeekSmokeWindow]::Find($app.Id)
+        if ($window -eq [IntPtr]::Zero) { throw 'Cannot find installed native window' }
+        $initiallyVisible = [VeekSmokeWindow]::IsWindowVisible($window)
+        if ($Background) {
+            $tray = Invoke-InstalledScript $cdp "(async()=>{const s=await window.__TAURI_INTERNALS__.invoke('snapshot',{knownVersion:null});return {ready:s.desktop.tray_ready,minimized:s.state.config.settings.start_minimized};})()"
+            if (!$tray.minimized -or ($tray.ready -and $initiallyVisible) -or (!$tray.ready -and !$initiallyVisible)) { throw 'Start-minimized did not follow tray visibility safeguards' }
+        }
         # Native second processes must hand off without rewriting config or exiting
         # the responsive owner. Registration must also remain untouched on launch.
         $configHash = (Get-FileHash $config).Hash
         $registration = Read-StartupValue
-        $launches = if ($Lifecycle) { @('', '--autostart') } else { @() }
+        $launches = if ($Background) { @('--autostart', '') } elseif ($Lifecycle) { @('', '--autostart') } else { @() }
         foreach ($arguments in $launches) {
             if ($arguments) { $second = Start-Process $exe -ArgumentList $arguments -PassThru }
             else { $second = Start-Process $exe -PassThru }
@@ -73,12 +102,41 @@ function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true) {
                 if ($app.HasExited -or !$app.Responding) { throw 'Original owner stopped responding after handoff' }
                 if ((Get-FileHash $config).Hash -ne $configHash) { throw 'Second launch rewrote configuration' }
                 if ((Read-StartupValue) -cne $registration) { throw 'Launching changed startup registration' }
+                if ($Background -and $arguments -eq '--autostart' -and [VeekSmokeWindow]::IsWindowVisible($window) -ne $initiallyVisible) { throw 'Duplicate autostart unexpectedly revealed the owner' }
+                if ($Background -and !$arguments) {
+                    for ($j=0; $j -lt 20 -and ![VeekSmokeWindow]::IsWindowVisible($window); $j++) { Start-Sleep -Milliseconds 250 }
+                    if (![VeekSmokeWindow]::IsWindowVisible($window)) { throw 'Manual relaunch did not recover the background owner' }
+                }
             } finally {
                 if (!$second.HasExited) { Stop-Process -Id $second.Id -Force }
             }
         }
+        if ($Background) {
+            # Exercise actual native close/hide and manual recovery, then restore
+            # close-to-tray=false so the final close must shut down gracefully.
+            if ($tray.ready) {
+                Set-InstalledBackground $cdp $true $true
+                $app.Refresh()
+                $null = $app.CloseMainWindow()
+                for ($j=0; $j -lt 20 -and [VeekSmokeWindow]::IsWindowVisible($window); $j++) { Start-Sleep -Milliseconds 250 }
+                $app.Refresh()
+                if ($app.HasExited -or [VeekSmokeWindow]::IsWindowVisible($window)) { throw 'Close-to-tray did not retain the hidden owner' }
+                $second = Start-Process $exe -PassThru
+                try {
+                    if (!$second.WaitForExit(10000) -or $second.ExitCode -ne 0) { throw 'Close-to-tray relaunch failed' }
+                    for ($j=0; $j -lt 20 -and ![VeekSmokeWindow]::IsWindowVisible($window); $j++) { Start-Sleep -Milliseconds 250 }
+                    if (![VeekSmokeWindow]::IsWindowVisible($window)) { throw 'Close-to-tray owner could not be reopened' }
+                } finally { if (!$second.HasExited) { Stop-Process -Id $second.Id -Force } }
+            }
+            Set-InstalledBackground $cdp $false $false
+            Write-Output 'PASS: start-minimized safe policy, quiet duplicate autostart, manual background recovery and available-tray close/reopen.'
+        }
+        if ($PrepareBackground) { Set-InstalledBackground $cdp $true $false }
     } finally {
-        if (!$app.HasExited) {
+        if ($null -ne $cdp) { $cdp.Dispose() }
+        $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $previousBrowserArguments
+        if ($null -ne $app -and !$app.HasExited) {
+            $app.Refresh()
             $null = $app.CloseMainWindow()
             if (!$app.WaitForExit(5000)) {
                 Stop-Process -Id $app.Id -Force
@@ -114,7 +172,8 @@ if (Test-Path $config) { throw 'Smoke test requires a fresh Windows user configu
 if ($null -ne (Read-StartupValue) -or $null -ne (Read-StartupValue $otherStartupName)) { throw 'Smoke test refuses to replace existing startup entries' }
 Install-Package $installer.FullName
 if ($null -ne (Read-StartupValue)) { throw 'Install unexpectedly enabled startup' }
-Open-AndCloseApp 2
+Open-AndCloseApp 2 $true $false $true
+Open-AndCloseApp 2 $true $true
 Set-TestStartup $ownedStartup
 Assert-ReinstallAndUninstallPreserveSettings
 Write-Output 'PASS: install path with spaces, native handoff and clean shutdown, no implicit startup, reinstall preserving opt-in, uninstall removing only the owned entry and preserving settings.'

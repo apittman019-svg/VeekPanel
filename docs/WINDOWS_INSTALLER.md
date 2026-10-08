@@ -83,3 +83,32 @@ The actual hook passes an NSIS compile-only check with warnings as errors. Updat
 Windows smoke tests cover scoped registry cleanup, preservation and native
 single-instance/shutdown behavior. Those new Windows checks are pending CI;
 compiler success is not Windows installer acceptance.
+
+## Current nightly hosted validation (2026-10-08)
+
+The latest exact-source evidence and failures are in VERIFICATION.md. Current
+Windows core/desktop compilation and installer construction are separate from
+installed-app acceptance; neither older preview success nor a new EXE closes it.
+
+The installer workflow now parses smoke scripts with native PowerShell before
+building. On a disposable hosted Windows user, its installed-app smoke uses
+WebView2's documented process-local debugging environment variable and an ephemeral
+loopback CDP port. It requires the actual bundled Dashboard and native schema-2
+state, and invokes the existing startup/save commands rather than substituting a
+mock backend. It checks opt-in enable/detect/remove against HKCU, config ownership,
+quiet duplicate autostart, manual recovery from a background start, and close/reopen
+when the app reports a ready tray. It restores browser arguments afterward; no
+debugging capability is embedded in the release or persisted in the registry.
+
+Fresh install in a path with spaces, same-version reinstall, `/UPDATE` replacement,
+published 0.1.0 upgrade with a synthetic legacy config, exact migration backup,
+relaunch preservation and scoped uninstall remain required. These smoke scripts
+are CI-only and refuse existing configuration/startup entries; do not run against
+a personal install. Audio services are enabled only on the disposable runner, and
+hardware stays disabled throughout. No audio-write/physical claim follows.
+
+`VeekPanel-Windows-validation` retains the transcript and source/run/OS/result JSON
+for 30 days, including failures after smoke starts. Installer/hash upload still
+requires the entire smoke to pass. A timeout or pre-smoke build failure must be
+read from the job log; artifact presence alone is not acceptance. No release is
+automatically published. New installed-app assertions are pending native CI.

@@ -24,6 +24,7 @@ permissions:
 jobs:
   installer:
     runs-on: windows-latest
+    timeout-minutes: 45
     env:
       RUSTFLAGS: '-C target-feature=+crt-static'
       PYTHONUTF8: '1'
@@ -31,6 +32,14 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
+      - name: Parse native Windows smoke scripts
+        shell: pwsh
+        run: |
+          foreach ($file in Get-ChildItem packaging/windows/*.ps1) {
+            $tokens = $null; $errors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors.Count) { throw ($errors | Out-String) }
+          }
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '24'
@@ -62,7 +71,31 @@ jobs:
           if ((Get-FileHash $path -Algorithm SHA256).Hash.ToLower() -ne 'd4bb646af11e3646caaf696be9e91c9b3af9ca440546e1aa83ef84ab042f6c16') { throw 'Upgrade baseline checksum mismatch' }
       - name: Install, launch, upgrade, reinstall and uninstall on Windows
         shell: pwsh
-        run: ./packaging/windows/smoke.ps1 -PreviousInstaller (Join-Path $env:RUNNER_TEMP 'VeekPanel-0.1.0-setup.exe')
+        timeout-minutes: 10
+        run: |
+          $evidence = Join-Path $env:RUNNER_TEMP 'veek-windows-smoke'
+          $null = New-Item -ItemType Directory -Path $evidence -Force
+          $result = @{commit=$env:GITHUB_SHA;run=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;os=[Environment]::OSVersion.VersionString;status='running'}
+          Start-Transcript -Path (Join-Path $evidence 'transcript.txt')
+          try {
+            ./packaging/windows/smoke.ps1 -PreviousInstaller (Join-Path $env:RUNNER_TEMP 'VeekPanel-0.1.0-setup.exe')
+            $result.status = 'passed'
+          } catch {
+            $result.status = 'failed'
+            $result.error = $_.Exception.Message
+            throw
+          } finally {
+            $result | ConvertTo-Json | Set-Content (Join-Path $evidence 'result.json')
+            Stop-Transcript
+          }
+      - name: Retain Windows validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: VeekPanel-Windows-validation
+          path: ${{ runner.temp }}/veek-windows-smoke/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Hash verified installer
         shell: pwsh
         run: |

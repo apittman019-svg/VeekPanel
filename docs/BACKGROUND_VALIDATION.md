@@ -71,3 +71,21 @@ to the same owner. All registration lived in disposable config; personal login
 state and desktop services were untouched. These results do not establish real
 KDE shell recovery, actual logout/login delivery, physical background control or
 Windows uninstall cleanup. Those manual acceptance gates above remain open.
+
+## Current Windows CI hardening (2026-10-08)
+
+Current `94ed405` native Windows core/desktop jobs passed, but its installer smoke
+did not reach lifecycle cases because an absent startup value terminated the guard.
+The repaired smoke now exercises actual installed-app startup enable/readback/remove
+against HKCU through WebView2/native IPC. It starts with persisted start-minimized
+and `--autostart`, requires hidden only when the native tray is ready, checks quiet
+duplicate autostart, then manually relaunches to reveal the original owner. With
+a ready tray it also closes/hides and reopens that owner before a graceful shutdown
+and lock-release check. Existing reinstall/update/scoped cleanup tests remain.
+New cases are pending native execution; see VERIFICATION.md for exact results.
+
+This proves native window/ownership behavior on hosted Windows when it passes.
+It does not interact with Explorer's tray menu or prove login delivery, shell
+restart, consumer Windows, real background audio/USB, sleep/reboot or soak. Failure
+to create a tray is checked through the visible fallback if actually observed;
+this does not inject or establish every tray/config failure mode.
