@@ -136,3 +136,10 @@ as well. The historical intermittent driver failure remains unroot-caused.
 Windows installed-app hardening is substantially improved and this increment is
 complete. Review/triage precedes the next AppImage iteration; no packaging work or
 milestone-wide physical/consumer/lifecycle acceptance is claimed here.
+
+2026-10-08 cloud review selects one M6 AppImage packaging increment next. No
+specific Linux driver fix is supported by the available failure/pass evidence;
+keep the flake open and diagnose a retained failure if it recurs. A separate
+bundle overlay/portable guide is prepared; actual bundling, native-library
+inventory and ordinary-user Nobara package execution remain pending with local
+Astra. See APPIMAGE.md for bounded checks. No M6 acceptance or release is claimed.

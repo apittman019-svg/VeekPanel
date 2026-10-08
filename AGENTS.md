@@ -426,3 +426,18 @@ selection and intermittent Linux driver triage, then local Astra for AppImage,
 native Nobara package testing and later Flatpak. Preserve current Windows evidence,
 accepted UI/physical scopes, and all personal dirty work. No main merge or release
 was performed or is authorized by this hardening task.
+
+## AppImage preparation / next native boundary (2026-10-08)
+
+Cloud review of 0af5de9 confirms no production/Windows packaging changes after
+verified d341f80 and the full passing e76aaac Linux job log. Artifact bytes were
+unavailable here; Astra's recorded ZIP inspection remains attributed to Astra.
+The intermittent driver cause is open, but current evidence supports no specific
+product fix or broad rerun before a bounded AppImage packaging increment.
+
+A separate app/appimage.conf.json and portable guide prepare bundling without
+changing default/Windows builds or host permissions. Read docs/APPIMAGE.md for
+the exact native handoff, notices/build scope and stop conditions. Config/schema
+checks are preparation only; actual package build/run is pending with local Astra.
+Retain original failures without mutation replay. No main merge/public release,
+Flatpak work or physical/consumer/login/reboot/soak acceptance is implied.

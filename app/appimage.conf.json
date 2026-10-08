@@ -1,0 +1,21 @@
+{
+  "bundle": {
+    "active": true,
+    "targets": ["appimage"],
+    "publisher": "VeekPanel",
+    "shortDescription": "PCPanel audio controller for Linux",
+    "license": "MIT",
+    "homepage": "https://github.com/apittman019-svg/VeekPanel",
+    "resources": {
+      "../LICENSE": "LICENSE.txt",
+      "../packaging/linux/APPIMAGE-README.txt": "README.txt",
+      "../packaging/linux/70-veekpanel.rules": "70-veekpanel.rules",
+      "../appimage-notices/": "THIRD_PARTY/"
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  }
+}

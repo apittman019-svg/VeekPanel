@@ -817,3 +817,29 @@ intermittent Linux driver issue, then local Astra for AppImage/package execution
 when approved as the next increment. Order remains AppImage -> actual Nobara
 package validation -> Flatpak. No main merge or release; physical, consumer,
 real login/tray-shell, sleep/reboot, resource measurements and soak stay open.
+
+### Cloud review and AppImage preparation (2026-10-08)
+
+Reviewed nightly 0af5de925f0466009772c2b8a374c90be6b48482 and both intervening
+commits. A Git comparison confirms app/UI/crates/Windows packaging and locks are
+unchanged from Windows-verified d341f80. Independently fetched the latest four job
+results and the full Linux job 113414524577 log: complete native GUI smoke passed,
+and the log records artifact 11563438828 with the previously documented digest.
+Its signed artifact-byte download returned HTTP 403 here; ZIP/result/screenshot
+inspection remains Astra's attributed evidence, not this cloud review's work.
+
+No specific production fix follows from intermittent driver resets at differing
+requests. Portal/display warnings occur in the passing log too. The cause stays
+open; preserve failing native evidence instead of mutation retries or speculative
+workarounds. Selected next increment: separate AppImage bundle overlay, inert HID
+resource and portable guide, then one bounded native package build/run with local
+Astra. docs/APPIMAGE.md records the build recipe, license inventory, actual
+AppImage-path startup check, compatibility scope and failure stop conditions.
+
+Ubuntu 24.04 / Python 3.12.14 cloud preparation checks passed: base plus overlay
+validated with jsonschema 4.26.0 against the exact Tauri CLI 2.12.1 schema; declared
+checked-in resources exist; original app/build settings and production/default/
+Windows source remained unchanged; git diff whitespace check passed. Generated
+notices and their native-library inventory are not yet present. No Rust build,
+AppImage creation/launch, new GUI run or hosted CI execution is claimed for this
+patch. This adds packaging preparation, not M6 or physical/lifecycle acceptance.

@@ -20,5 +20,6 @@ __pycache__/
 /app/gen/
 
 /desktop-notices/
+/appimage-notices/
 /installer-download/
 /ui/bundled-modules.json
