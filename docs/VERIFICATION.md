@@ -716,3 +716,49 @@ switches starting with Runtime 150. The follow-up uses documented per-executable
 HKLM debug policy only for elevated disposable CI, refuses pre-existing values,
 and removes it in finally. No production hook or persistent product setting is
 added. Actual rerun results remain pending; the runner's elevation is recorded.
+
+### Completed hosted Windows smoke and recurring Linux driver loss
+
+Reviewed GitHub job steps and full logs for exact nightly source
+`d341f80b5372f0e2c601de1195f1c5eadecdf930` on 2026-10-08:
+
+- [Installer run 37732328374](https://github.com/apittman019-svg/VeekPanel/actions/runs/37732328374),
+  job `113164039343`, **passed the complete smoke** on Windows Server 2025.
+  Actual installed WebView2 rendered Dashboard and returned native schema-2 state;
+  startup enable/detect/remove was idempotent and did not rewrite config. Hidden
+  startup policy, quiet duplicate autostart, manual recovery and available-tray
+  close/reopen passed. Fresh install in a path with spaces, graceful shutdown,
+  reinstall, `/UPDATE`, foreign-startup preservation, published 0.1.0 upgrade,
+  both profiles' schema-1 migration, exact backup, relaunch and uninstall/settings
+  preservation all passed. The log confirms temporary WebView2 policy removal
+  after each elevated test session.
+- Validation artifact `11530203374` has archive SHA256
+  `0e4a77b7eabbd156aba7bd189f6356972dd9e4dbadc0d199d0103a512d6cce77`.
+  Installer artifact `11529983920` contains setup EXE and SHA256SUMS; its **ZIP archive**
+  digest is `05a39a35f4137dbc238fbbc97d7413a083924729622b61fe14f101a3ff6b9cb2`.
+  This is not the EXE checksum. Both expire 2026-11-07; no new release was published.
+- [Core/desktop run 37732328390](https://github.com/apittman019-svg/VeekPanel/actions/runs/37732328390):
+  Windows core `113164039799`, Windows desktop `113164039769` and Linux core
+  `113164039619` passed. Linux desktop `113164039793` passed frontend checks,
+  Rust lint/tests/build, private-D-Bus tray recovery and NSIS hook compilation,
+  then **failed** during native GUI integration. At native_smoke.py line 173,
+  reading the preferred-output select after a profile switch lost the driver
+  connection (`hyper` connection reset / Python `RemoteDisconnected`). This is
+  a transport failure, not a failed preference-value assertion. The retained log
+  does not establish whether the driver, WebKit, application or environment caused it.
+
+This pass adds test-only request/result/error tracing without retries, captures
+failure and owned helper exit status before diagnostic screenshot/session cleanup,
+and retains the full native log, result JSON and available captures as
+`VeekPanel-Linux-GUI-validation` for 30 days on success or failure. Pre-harness
+failures still require the job log; absence of result.json is not success.
+Failed HTTP mutations are never replayed. Product/backend code is unchanged.
+
+Cloud Ubuntu 24.04 / Python 3.12.14: four isolated evidence regressions passed,
+including lost mutation transport without replay and preservation of the original
+failed command after successful screenshot collection. Python compilation,
+workflow YAML parsing and git diff whitespace checks passed. Native Rust/WebKit,
+PipeWire and Windows execution of this harness change have not run here; their
+hosted/native follow-up remains required. The existing GUI transport failure is
+still open. No M5/M6 acceptance, consumer Windows, actual login/tray-shell,
+physical audio/HID, sleep/reboot or soak claim follows from hosted Windows success.

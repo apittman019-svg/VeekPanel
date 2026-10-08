@@ -391,3 +391,21 @@ unchanged nightly 94ed405, then applied it in the clean nightly worktree. The
 original profile working tree remains dirty and untouched. The cloud HTTP 403 was
 specific to its integration; local publication uses the existing authorized CLI.
 Native execution is pending the focused commit's hosted CI results below.
+
+## Hosted Windows result and Linux GUI evidence (2026-10-08)
+
+Exact nightly source `d341f80b5372f0e2c601de1195f1c5eadecdf930` passed the entire
+Windows installer smoke, including installed WebView2/native startup/background,
+reinstall/update, schema-1 upgrade and scoped uninstall. Windows core/desktop and
+Linux core also passed. Read the newest VERIFICATION.md entry for run/job/artifact
+IDs and the remaining consumer/physical/login/soak limits; no release was published.
+
+Linux desktop passed build/lint/tests and private tray recovery, then lost its
+WebKit driver connection while reading a preferred output after switching profiles.
+This resembles the earlier connection reset but its cause is not established.
+Do not weaken assertions, blindly replay mutations or claim a product fix from
+another successful rerun. The harness now retains command/error/process evidence
+before screenshot/cleanup, and CI uploads native logs/results/captures even on
+failure. Four isolated evidence regressions passed; native execution of this change
+is pending. Next: review retained Linux native evidence, resolve the cause, then
+continue AppImage -> native Nobara package validation -> Flatpak with local Astra.

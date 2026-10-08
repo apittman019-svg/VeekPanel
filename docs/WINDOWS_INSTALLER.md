@@ -92,13 +92,14 @@ installed-app acceptance; neither older preview success nor a new EXE closes it.
 
 The installer workflow now parses smoke scripts with native PowerShell before
 building. On a disposable hosted Windows user, its installed-app smoke uses
-WebView2's documented process-local debugging environment variable and an ephemeral
-loopback CDP port. It requires the actual bundled Dashboard and native schema-2
+WebView2's process-local debugging environment variable, or a guarded temporary
+per-executable HKLM debugging policy when the hosted runner is elevated, and an
+ephemeral loopback CDP port. It requires the actual bundled Dashboard and native schema-2
 state, and invokes the existing startup/save commands rather than substituting a
 mock backend. It checks opt-in enable/detect/remove against HKCU, config ownership,
 quiet duplicate autostart, manual recovery from a background start, and close/reopen
-when the app reports a ready tray. It restores browser arguments afterward; no
-debugging capability is embedded in the release or persisted in the registry.
+when the app reports a ready tray. It restores browser arguments and removes its
+owned temporary policy afterward; no debugging capability is embedded in the release.
 
 Fresh install in a path with spaces, same-version reinstall, `/UPDATE` replacement,
 published 0.1.0 upgrade with a synthetic legacy config, exact migration backup,
@@ -111,4 +112,12 @@ hardware stays disabled throughout. No audio-write/physical claim follows.
 for 30 days, including failures after smoke starts. Installer/hash upload still
 requires the entire smoke to pass. A timeout or pre-smoke build failure must be
 read from the job log; artifact presence alone is not acceptance. No release is
-automatically published. New installed-app assertions are pending native CI.
+automatically published.
+
+Exact source `d341f80` passed all installed-app assertions in
+[run 37732328374](https://github.com/apittman019-svg/VeekPanel/actions/runs/37732328374),
+job `113164039343`, including temporary policy removal, upgrade/migration and
+uninstall preservation. The verified 0.1.1 installer is available as a CI artifact;
+the public release remains 0.1.0. See VERIFICATION.md for artifact IDs/digests and
+scope. Consumer Windows, missing-WebView2 bootstrap, physical hardware/audio,
+actual login/Explorer tray and soak remain separate acceptance gates.

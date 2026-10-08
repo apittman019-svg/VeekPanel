@@ -3,9 +3,11 @@
 Requires Xvfb, tauri-driver, WebKitWebDriver. No desktop audio is modified.
 """
 import base64,json,os,pathlib,subprocess,sys,tempfile,time,urllib.request,urllib.error,shutil
+from evidence import Evidence
 binary=pathlib.Path(sys.argv[1]).resolve();root_repo=pathlib.Path(__file__).resolve().parents[2]
 artifacts=pathlib.Path(sys.argv[2]).resolve() if len(sys.argv)>2 else pathlib.Path(tempfile.mkdtemp(prefix='veek-gui-artifacts-'))
 artifacts.mkdir(parents=True,exist_ok=True)
+evidence=Evidence()
 # tauri-driver treats --native-driver as a filesystem path, not a PATH command.
 native_driver=shutil.which(os.environ.get('VEEK_WEBKIT_DRIVER','WebKitWebDriver'))
 if not native_driver:raise SystemExit('WebKitWebDriver not found; install it or set VEEK_WEBKIT_DRIVER to its full path')
@@ -33,13 +35,16 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
  display=next(n for n in range(110,180) if not pathlib.Path(f'/tmp/.X11-unix/X{n}').exists());env['DISPLAY']=f':{display}'
  xvfb=server=driver=None;session=None
  port=4454
- def http(method,path,body=None):
+ def send_http(method,path,body=None):
   request=urllib.request.Request(f'http://127.0.0.1:{port}'+path,data=None if body is None else json.dumps(body).encode(),method=method,headers={'Content-Type':'application/json'})
   try:
    with urllib.request.urlopen(request,timeout=25) as r:result=json.load(r)
   except urllib.error.HTTPError as e:raise AssertionError(e.read().decode()) from e
   value=result.get('value');assert not(isinstance(value,dict) and 'error'in value),result
   return value
+ def http(method,path,body=None):
+  # Record the exact command but never replay a possibly completed mutation.
+  return evidence.request(method,path,body,lambda:send_http(method,path,body))
  def js(script,*args):return http('POST',f'/session/{session}/execute/sync',{'script':script,'args':list(args)})
  def click(text):
   assert js('const b=[...document.querySelectorAll("button")].find(b=>b.textContent.trim().endsWith(arguments[0]));if(!b||b.disabled)return false;b.click();return true;',text),text
@@ -197,7 +202,9 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
      from visual_matrix import run
      run(js,http,session,click,until,idle,saved_config,artifacts,env,lambda:stop(server))
     print('PASS: native Tauri IPC, real private PipeWire discovery, GUI simulated Mini -> native volume/mic mute, assignment persistence, profile-owned groups/preferences with independent duplicates and cleared switch drafts, opt-in XDG login registration/readback/removal, start-minimized persistence, duplicate-launch handoff, dark/light rendering; artifacts:',artifacts)
-  except BaseException:
+   evidence.finish(artifacts/'result.json',processes={'driver':driver,'pipewire':server,'xvfb':xvfb})
+  except BaseException as error:
+   evidence.finish(artifacts/'result.json',error,{'driver':driver,'pipewire':server,'xvfb':xvfb})
    if session:
     try:(artifacts/'failure.png').write_bytes(base64.b64decode(http('GET',f'/session/{session}/screenshot')))
     except Exception:pass

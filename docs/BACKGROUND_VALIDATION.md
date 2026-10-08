@@ -89,3 +89,14 @@ It does not interact with Explorer's tray menu or prove login delivery, shell
 restart, consumer Windows, real background audio/USB, sleep/reboot or soak. Failure
 to create a tray is checked through the visible fallback if actually observed;
 this does not inject or establish every tray/config failure mode.
+
+### Hosted Windows result (2026-10-08)
+
+Source `d341f80` passed installer run `37732328374`, job `113164039343`, including
+real installed WebView2/native startup registration and background cases described
+above, plus reinstall/update, migration and scoped uninstall. Temporary debug
+policy removal passed. See VERIFICATION.md for exact evidence and artifact scope.
+Consumer Windows, actual login/Explorer tray, physical background controls and
+sleep/reboot/soak remain open. The same source's Linux native GUI job lost its
+driver connection after profile switching; isolated Nobara results remain valid
+within their scope but do not erase this recurring hosted failure.

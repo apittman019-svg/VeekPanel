@@ -116,3 +116,15 @@ native execution. See the newest VERIFICATION.md entry. M5/M6 remain unaccepted;
 consumer Windows, actual login/tray/audio, physical and soak checks remain open.
 Next distribution priority after Windows evidence: AppImage, native Nobara package
 acceptance, then Flatpak. Local Astra owns real package build/run/GUI/HID loops.
+
+
+2026-10-08 Windows release-hardening gate: source d341f80 passed native hosted
+installer run 37732328374/job 113164039343, covering bundled WebView2/backend
+initialization, startup opt-in/readback/removal, owner handoff/background recovery,
+fresh install, reinstall/update, schema migration/backup and scoped uninstall.
+This substantially improves M5/M6 evidence without closing consumer Windows,
+actual login/tray-shell, physical audio/HID, sleep/reboot or soak acceptance.
+The Linux GUI driver connection failed again in run 37732328390/job 113164039793;
+the cause is open. Retain original failure/process/log evidence before deciding a
+fix. No production/UI/audio changes, main merge or release belong to this pass.
+Next distribution order remains AppImage, actual Nobara package testing, Flatpak.
