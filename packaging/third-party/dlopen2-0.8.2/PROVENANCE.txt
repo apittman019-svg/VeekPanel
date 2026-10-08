@@ -1,0 +1,5 @@
+dlopen2-0.8.2: upstream license omitted from the published crate archive.
+Revision from the exact crate .cargo_vcs_info.json: cc80e4a0a90d499b677fdf7743699b4b3a43a989
+Retrieved 2026-10-08. Upstream bytes are unmodified.
+https://github.com/OpenByteDev/dlopen2/blob/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE
+SHA256 39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2  LICENSE
