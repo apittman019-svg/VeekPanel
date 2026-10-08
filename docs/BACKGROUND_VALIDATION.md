@@ -60,3 +60,14 @@ normal uninstall. Same-path reinstall and `/UPDATE` replacement preserve opt-in;
 normal uninstall-based upgrades remove it. The published 0.1.0 installer has no
 new hook. Disable startup in Settings before relocation or Linux removal. Native
 installer, real desktop tray-loss recovery and reboot acceptance remain open.
+
+
+## Nobara isolated native results (2026-10-08)
+
+The current handoff backend passed the private-D-Bus tray-host loss/recovery test
+and the native GUI startup checks: explicit XDG entry creation/readback/removal,
+start-minimized persistence and duplicate normal/`--autostart` launches returning
+to the same owner. All registration lived in disposable config; personal login
+state and desktop services were untouched. These results do not establish real
+KDE shell recovery, actual logout/login delivery, physical background control or
+Windows uninstall cleanup. Those manual acceptance gates above remain open.

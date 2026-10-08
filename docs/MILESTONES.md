@@ -94,3 +94,16 @@ The 2026-10-07 first M7 optimization pass reduces redundant audio reads and unch
 desktop traffic, shares immutable publications, and wakes follow-up UI requests.
 See PERFORMANCE.md for synthetic before/after measurements. Native Windows/Nobara
 CPU/memory, startup, physical latency and visual/accessibility acceptance remain open.
+
+The following visual foundation adds layered themes, original SVG icons, tactile
+physical-position dials, Pro faders and reduced-motion-aware transitions. Frontend
+checks/build passed; rendered/native acceptance remains pending. Local Astra takes
+over for visual iteration and native validation; Cloud Sol resumes for design,
+architecture and optimization review. See UI_POLISH.md. No M4/M7 gate is closed.
+
+
+2026-10-08 local handoff: native Nobara visual matrices, keyboard selection,
+reduced motion/200% scaling, private PipeWire GUI/runtime integration and isolated
+startup/tray tests passed. See VERIFICATION.md and UI_POLISH.md for exact scope.
+This advances M4/M5/M7 evidence without closing Windows, physical, reboot/soak or
+measured-performance gates. GitHub publishing remains deferred.

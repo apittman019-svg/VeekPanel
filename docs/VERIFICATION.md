@@ -588,3 +588,67 @@ restricted environment. Their existing integration checks remain required, along
 with Windows/Nobara CPU/RSS, startup, physical-input latency and multi-day soak.
 GitHub writes remain deferred. The refreshed handoff includes the combined patch
 and a scoped Git bundle preserving the local commits and performance baseline.
+
+## Visual foundation / Astra boundary (2026-10-07)
+
+The exact optimization source was restored from the published 8e60df9 base and
+saved combined patch, then a new UI foundation was built. The source recovery
+verified every restored UTF-8 blob against its Git SHA; four unchanged binary
+assets remain on GitHub and are not included in the incremental visual patch.
+This scratch checkout has synthetic history; the handoff patch targets the original
+ffc6c43 optimization source, not that synthetic commit.
+
+Frontend frozen-lockfile install, type check (0 errors / 0 warnings), production
+build, all four snapshot tests and git diff --check passed. No dependencies or
+backend code changed. Bundle sizes: CSS 18.44 kB / 4.88 kB gzip; JS 78.19 kB /
+28.94 kB gzip. These do not establish idle resources or physical/native latency.
+
+New original SVG icons, themed layered surfaces/sidebar, physical-position dial
+and Pro fader visuals, active profiles and page/selection/press transitions retain
+the native command contracts, unknown-value distinction, keyboard hooks and
+reduced-motion fallback. Native/WebView layout, animation tuning, scaling and
+Windows/Nobara GUI checks are unexecuted for this source; Cloud browser download
+failed. Local Astra will perform them according to the user's agent split.
+See UI_POLISH.md. No hardware, release, GitHub push or M4/M7 acceptance is claimed.
+
+## Home handoff: native visual and lifecycle checks (2026-10-08)
+
+Source: original backend history through `ffc6c43`, plus the imported visual patch
+and local fixes on `codex/native-visual-polish`. Nobara 44 KDE, pinned Rust 1.99.0;
+native GTK/WebKit under private Xvfb, D-Bus and PipeWire with disposable config.
+The original profile checkout, main, Gemini and Qwen branches remain unchanged.
+
+Passed:
+- 59 workspace Rust tests; one optional performance probe remained ignored.
+- 10 desktop tests; the one normally ignored private-D-Bus tray-host loss/recovery
+  test was then run explicitly and passed on its disposable bus.
+- Workspace and desktop strict Clippy and formatting; locked native desktop debug
+  build and release runtime build.
+- Private native PipeWire runtime integration: persistent mappings, simulated Mini
+  pickup/buttons, stale UI rejection, application relaunch, profile-local groups/
+  preferences, backups/relaunch, service recovery and no stale writes.
+- Full native GUI regression: actual private audio writes/readback, pickup, mic mute,
+  independent profiles/groups/preferences, cleared switch drafts, keyboard focus,
+  opt-in private XDG startup creation/readback/removal, start-minimized persistence
+  and duplicate normal/autostart launch handoff.
+- 30 native visual captures at 1× and 30 at 2× with reduced motion. Mini/Pro themes,
+  both window sizes, long names, absent targets and offline states had no horizontal
+  overflow. 2× metrics confirmed devicePixelRatio=2 and reduced-motion=true;
+  relevant computed animation/transition styles were disabled. See UI_POLISH.md.
+- Final frontend type check: zero errors/warnings; four snapshot tests; production
+  build; Python harness compilation and git diff whitespace check.
+  Final CSS 18.64 kB (4.92 gzip), JS 78.58 kB (29.06 gzip); not runtime benchmarks.
+
+Native review found and fixed profile-select overflow specific to WebKit. Technical
+tray errors were moved behind a friendly banner's Diagnostics link. Unsupported
+WebKit driver click/resize operations now fall back to X11 on the private test
+display. One attempted overlapping test run failed at driver session creation;
+sequential final runs passed. Private D-Bus emitted expected unavailable desktop
+portal/systemd messages; no host service restart or startup change was performed.
+
+Final local artifacts: `/tmp/veek-polish-final` (full functional + visual matrix),
+`/tmp/veek-polish-hidpi` (2× reduced-motion matrix). Current backend tests passed
+locally; earlier Windows CI for `8e60df9` is not evidence for these newer commits.
+Current-source Windows/WebView2/installer tests, real desktop login/tray recovery,
+physical Mini audio/lifecycle/Nobara, CPU/RSS/frame pacing and soak remain open.
+No new installer release, GitHub push or milestone acceptance is claimed.

@@ -318,3 +318,36 @@ performance probe ran explicitly against mock audio. Native GUI/PipeWire and
 Windows/Nobara CPU/memory/physical latency remain pending. Do not convert these
 software timings into physical claims or reopen the accepted basic Windows Mini
 input investigation. GitHub remains deferred; use the refreshed combined handoff.
+
+## Visual work and agent handoff (2026-10-07)
+
+The latest user instruction supersedes the previous Astra-only animation plan:
+Cloud 6.1 Sol handles architecture, optimization strategy, coordinated refactors,
+code review and deciding the next task. Hand off when work needs local execution,
+GUI/animation tuning, native hardware/platform behavior or home Git state.
+Local Astra with Full Access owns those execution-heavy passes. The user accepts
+some rendering cost for an awesome appearance. Preserve real backend wiring,
+pickup/button safety, accessibility/reduced motion and the plain brand.
+The new compiled visual foundation and its unexecuted native/visual checks are
+documented in docs/UI_POLISH.md. Continue locally from evidence rather than
+assuming compilation proves native layout or animation quality.
+
+## Local native handback (2026-10-08)
+
+The ZIP development bundle was verified/imported on `codex/native-visual-polish`
+in `/run/media/PSSD2/VeekPanel-native-polish`; original history is retained through
+`ffc6c43`. The visual patch is applied and native WebKit long-profile overflow is
+fixed. Friendly tray-error text links to local diagnostic details. Original main,
+Qwen/Gemini branches and dirty profile-checkout installer docs remain preserved.
+
+Nobara checks now passed: 59 workspace tests, 10 desktop tests plus explicit private
+D-Bus tray recovery, strict lint/format, native build, private PipeWire integration,
+full GUI functional/startup-registration/duplicate-launch regression, keyboard
+selection and 30 visual scenarios each at 100% and 200% (reduced motion verified).
+Frontend check/build and four tests passed. Read the newest VERIFICATION.md and
+UI_POLISH.md entries before rerunning. Native tests use fixed driver ports: run
+sequentially. No physical/Windows/reboot/soak or frame-pacing acceptance is implied.
+
+This completes the scoped local native handoff. Return the source and evidence for
+Cloud Sol review/next-step selection. GitHub pushes, merges and releases remain
+deferred; do not publish the pending 0.1.1 installer as part of this pass.
