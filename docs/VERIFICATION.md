@@ -843,3 +843,109 @@ Windows source remained unchanged; git diff whitespace check passed. Generated
 notices and their native-library inventory are not yet present. No Rust build,
 AppImage creation/launch, new GUI run or hosted CI execution is claimed for this
 patch. This adds packaging preparation, not M6 or physical/lifecycle acceptance.
+
+
+### First local AppImage package pass (2026-10-08)
+
+Preparation was applied on an isolated `codex/appimage-preparation` worktree at
+`/run/media/PSSD2/VeekPanel-appimage`, based on unchanged nightly 0af5de9.
+Source commits: 6f73b2d (preparation), c830725695fcdebf1e228a92a364827a49594a6e
+(exact upstream license supplements for dlopen2, dlopen2_derive and
+libappindicator-sys). Crate revisions and license hashes are in each supplement's
+PROVENANCE.txt. No production Rust/UI/default/Windows config or lock changed.
+
+Build host: Nobara 44 KDE x86_64, glibc 2.43, Rust 1.99.0, pinned Tauri CLI 2.12.1,
+GTK 3.24.52, WebKitGTK 2.52.5 and PipeWire 1.6.8. Frozen frontend install/build and
+fresh Rust/frontend notice generation passed after the omitted licenses were
+supplied. Locked release compilation passed. The initial bundle attempt failed
+because the old SDK pkg-config search override produced two library directories
+where the bundler expected one. Host development packages already existed; no
+system installation or permission change was needed. Removing PKG_CONFIG_PATH
+for the bundle-only invocation resolved the error without changing the bundler.
+
+Commands used the documented recipe plus local Node/Rust PATH and shared
+CARGO_TARGET_DIR=/run/media/PSSD2/VeekPanel/app/target. Compilation used the existing
+SDK pkg-config path; successful bundling used native host metadata:
+
+```sh
+cd app
+# Existing release binary, unchanged production source; no dependency upgrade.
+unset PKG_CONFIG_PATH
+node ../ui/node_modules/@tauri-apps/cli/tauri.js bundle --config appimage.conf.json --bundles appimage
+```
+
+The repeat bundle-only step warned that the bundle-type marker was already absent
+after the first attempt had patched the binary. It completed successfully; no
+updater behavior is claimed. The built file is local-only at
+`/run/media/PSSD2/VeekPanel/app/target/release/bundle/appimage/VeekPanel_0.1.1_amd64.AppImage`.
+Size: 115263992 bytes (109.92 MiB). SHA256:
+`1373bf5f20038027b200da6dd2ebac1bd087b16e9763a8bff7ac246896edde3c`.
+Its source stamp is c830725 with an empty build diff. Subsequent changes affect
+only audit/test/documentation; this exact artifact was tested and not repacked.
+
+### Actual package execution
+
+Copied the executable AppImage to `/tmp/VeekPanel AppImage trial/VeekPanel.AppImage`
+and launched it normally through its runtime/FUSE, not an extracted/debug binary.
+The existing native harness passed against that file with disposable configuration,
+private D-Bus/Xvfb/PipeWire and explicitly simulated Mini input: real Dashboard,
+private audio discovery/write/readback, pickup/mic mute, mapping/profile saves,
+profile isolation, duplicate owners, tray-unavailable visible fallback, startup
+opt-in/readback/removal and light/dark rendering. The startup Exec assertion used
+the launched AppImage path itself, not its transient .mount path. Registration was
+removed; this does not test login delivery or a user's permanent installation.
+
+Added an opt-in package relaunch check (`VEEK_APPIMAGE_RELAUNCH=1`): native
+WM_DELETE_WINDOW close, released config lock, then a new actual AppImage session
+with identical saved config bytes/profile and absent startup registration. The
+full targeted package run passed; no mutation retries or production hooks.
+Tauri's existing automation support was used without adding release features.
+
+```sh
+VEEK_APPIMAGE_RELAUNCH=1 dbus-run-session -- python3 tests/gui/native_smoke.py '/tmp/VeekPanel AppImage trial/VeekPanel.AppImage' /tmp/veek-appimage-relaunch
+```
+
+A separate KDE `kioclient exec` file-handler launch opened the real AppImage on
+the current Nobara desktop through Xwayland, with private D-Bus/config and no test
+automation flag. Captured the rendered Dashboard, observed PipeWire connected,
+verified hardware disabled/no mappings/no startup entry, then closed the owned
+window gracefully. Host audio was read-only. This validates the KDE file-handler
+route, not a manually observed Dolphin double-click, native Wayland, Explorer-like
+tray integration or login. Screenshot and launch result are in
+`/tmp/veek-appimage-desktop`; private package results/captures are in
+`/tmp/veek-appimage-relaunch` and `/tmp/veek-appimage-private`.
+
+### Audit and distribution stop
+
+AppDir inspection found desktop/icon/AppRun, embedded-UI executable, Rust/frontend
+notices, project guide/license and inert HID rule. The RPM/build-ID audit matched
+210 native ELF libraries/helpers to 139 installed packages; it records modified
+bundle hashes, preserved build IDs, source RPM identities, license expressions and
+available original license texts. AppRun.wrapped is an external bundler artifact,
+not RPM-owned; AppImage runtime reports type2-runtime commit 8f39b89. These require
+separate tool-origin/license/source review. Hyphen 2.8.8's local package has no
+license text available to this audit. Native non-ELF resources and source provision
+for bundled copyleft components also require review. The audit exits nonzero for
+known gaps instead of certifying completeness.
+
+`packaging/linux/native_inventory.py AppDir fresh-output-directory` reproduces the
+inventory; reviewed result is `/tmp/veek-appimage-native-audit-reviewed`. Native
+notices were generated AFTER the tested artifact and are NOT embedded in it.
+Do not redistribute this prototype. This bounded pass stops at that concrete
+packaging-review gate; no public AppImage/release asset or Flatpak was produced.
+
+The main executable requires GLIBC_2.39; bundled native libraries include
+GLIBC_2.43 requirements. Nobara-only evidence cannot support Ubuntu/older-glibc
+claims. libpipewire is host-resolved rather than bundled, so the tested host's
+PipeWire library/SPA installation remains a prerequisite. Full native dependency,
+source/license closure and choice of an older build baseline belong to the next
+packaging review before repacking/distributing. Do not disguise this as a portable
+or completed Linux installer.
+
+No broad unchanged Windows/core/visual matrix was rerun. Python compilation and
+whitespace checks passed. The audit's nonzero result is intentional evidence of
+incomplete distribution review. No observed GUI driver loss occurred in these
+package runs, but its historical cause remains open. Preserve physical Mini,
+consumer Windows, actual login/desktop-menu/USB setup, native Wayland, relocation,
+sleep/reboot, resource/soak gates. Original dirty work and native-polish checkout
+were preserved; main and releases remain untouched.

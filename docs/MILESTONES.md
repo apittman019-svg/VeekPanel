@@ -143,3 +143,11 @@ keep the flake open and diagnose a retained failure if it recurs. A separate
 bundle overlay/portable guide is prepared; actual bundling, native-library
 inventory and ordinary-user Nobara package execution remain pending with local
 Astra. See APPIMAGE.md for bounded checks. No M6 acceptance or release is claimed.
+
+
+First local AppImage increment: a c830725 package was built and passed actual
+Nobara private GUI/audio/startup/relaunch plus desktop file-handler launch checks.
+It remains a local prototype: native license/source closure and the glibc 2.43
+build baseline block redistribution/portability claims. Native audit and exact
+artifact evidence are in APPIMAGE.md. M6 stays open; review/repack precedes full
+Nobara package acceptance and Flatpak. No production UI/audio or Windows changes.

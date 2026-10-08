@@ -441,3 +441,23 @@ the exact native handoff, notices/build scope and stop conditions. Config/schema
 checks are preparation only; actual package build/run is pending with local Astra.
 Retain original failures without mutation replay. No main merge/public release,
 Flatpak work or physical/consumer/login/reboot/soak acceptance is implied.
+
+
+## Local AppImage result (2026-10-08)
+
+The isolated AppImage pass built and executed an actual 109.92 MiB package from
+c830725. Private native GUI/audio/startup/duplicate/relaunch checks passed, including
+AppImage-path startup and graceful lock release; a KDE file-handler launch rendered
+on the Nobara Xwayland desktop with isolated config and read-only host audio.
+See docs/APPIMAGE.md and the newest VERIFICATION.md entry for exact SHA256/paths,
+build environment correction and limits. No production/Windows/lock changes.
+
+The artifact is LOCAL-ONLY, not cleared for redistribution: native inventory covers
+210 ELF files/139 RPM packages, but hyphen license text, AppRun/runtime provenance,
+non-ELF resources and corresponding-source obligations remain unresolved. Generated
+native notices are not embedded in the tested artifact. Bundled libraries require
+glibc 2.43; only this Nobara host was tested and PipeWire libraries remain host-side.
+Stop this increment here. Next agent: Cloud Sol to review native distribution
+closure/build baseline and produce a bounded packaging plan; then local Astra to
+repack and perform fuller Nobara package validation. Flatpak stays later. Preserve
+all earlier physical/lifecycle limits; no main merge or public release.

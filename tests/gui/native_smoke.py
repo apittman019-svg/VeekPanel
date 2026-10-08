@@ -202,6 +202,25 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
      from visual_matrix import run
      run(js,http,session,click,until,idle,saved_config,artifacts,env,lambda:stop(server))
     print('PASS: native Tauri IPC, real private PipeWire discovery, GUI simulated Mini -> native volume/mic mute, assignment persistence, profile-owned groups/preferences with independent duplicates and cleared switch drafts, opt-in XDG login registration/readback/removal, start-minimized persistence, duplicate-launch handoff, dark/light rendering; artifacts:',artifacts)
+   if os.environ.get('VEEK_APPIMAGE_RELAUNCH')=='1':
+    assert binary.suffix=='.AppImage', 'Package check requires the actual AppImage'
+    import fcntl
+    before=(root/'config/org.veekpanel.desktop/config.json').read_bytes()
+    from private_x11 import perform
+    perform(env['DISPLAY'],'close')
+    def released():
+     with (root/'config/org.veekpanel.desktop/config.lock').open('r+') as lock:
+      fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+     return True
+    until(released)
+    http('DELETE',f'/session/{session}');session=None
+    session=http('POST','/session',{'capabilities':{'alwaysMatch':{'tauri:options':{'application':str(binary)}}}})['sessionId']
+    until(ready)
+    assert (root/'config/org.veekpanel.desktop/config.json').read_bytes()==before
+    assert not (root/'config/autostart/org.veekpanel.desktop.desktop').exists()
+    assert js('return document.querySelector("header select").selectedOptions[0].textContent==="Integration profile"')
+    (artifacts/'package-relaunch.png').write_bytes(base64.b64decode(http('GET',f'/session/{session}/screenshot')))
+    print('PASS: actual AppImage graceful close releases ownership; relaunch preserves saved profile/config bytes and removed startup.')
    evidence.finish(artifacts/'result.json',processes={'driver':driver,'pipewire':server,'xvfb':xvfb})
   except BaseException as error:
    evidence.finish(artifacts/'result.json',error,{'driver':driver,'pipewire':server,'xvfb':xvfb})
