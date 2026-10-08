@@ -380,7 +380,7 @@ WebView2 CDP on a disposable hosted runner to inspect the bundled UI and call re
 native startup/config commands. It checks quiet duplicate autostart, manual recovery
 from start-minimized, available-tray close/reopen, config ownership and existing
 fresh/reinstall/update/migration/uninstall preservation cases. No production debug
-hook or dependency was added. New smoke execution is pending until recorded below.
+hook or dependency was added. Native smoke results are recorded below.
 Do not claim consumer Windows, actual login, tray-shell, physical audio/HID or soak
 acceptance from hosted CI. Preserve accepted Nobara visuals and Mini input evidence.
 After current-source Windows validation, prefer AppImage -> native Nobara -> Flatpak;
@@ -390,7 +390,7 @@ Local Astra verified the supplied patch checksum and clean application against
 unchanged nightly 94ed405, then applied it in the clean nightly worktree. The
 original profile working tree remains dirty and untouched. The cloud HTTP 403 was
 specific to its integration; local publication uses the existing authorized CLI.
-Native execution is pending the focused commit's hosted CI results below.
+Native hosted results for the applied changes are recorded below.
 
 ## Hosted Windows result and Linux GUI evidence (2026-10-08)
 
@@ -406,6 +406,23 @@ This resembles the earlier connection reset but its cause is not established.
 Do not weaken assertions, blindly replay mutations or claim a product fix from
 another successful rerun. The harness now retains command/error/process evidence
 before screenshot/cleanup, and CI uploads native logs/results/captures even on
-failure. Four isolated evidence regressions passed; native execution of this change
-is pending. Next: review retained Linux native evidence, resolve the cause, then
+failure. Four isolated evidence regressions and subsequent native execution passed
+(see completion below). Next: review retained Linux native evidence, resolve the cause, then
 continue AppImage -> native Nobara package validation -> Flatpak with local Astra.
+
+
+## Release-hardening completion (2026-10-08)
+
+Windows hardening source d341f80 passed installer run 37732328374/job 113164039343.
+The later test/docs-only e76aaac passed all four jobs in run 37807217907; Linux
+native GUI job 113414524577 also passed and its retained result has no transport
+error. The same harness passed locally on Nobara. Read the newest VERIFICATION.md
+entry for exact hashes, artifact IDs and limits. No production code changed after
+the Windows-verified source. The earlier Linux connection failures remain
+unexplained; diagnostic retention must not be described as a fix.
+
+Stop this focused pass here. Recommended next agent: Cloud Sol for review/next-step
+selection and intermittent Linux driver triage, then local Astra for AppImage,
+native Nobara package testing and later Flatpak. Preserve current Windows evidence,
+accepted UI/physical scopes, and all personal dirty work. No main merge or release
+was performed or is authorized by this hardening task.

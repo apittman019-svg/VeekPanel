@@ -128,3 +128,11 @@ The Linux GUI driver connection failed again in run 37732328390/job 113164039793
 the cause is open. Retain original failure/process/log evidence before deciding a
 fix. No production/UI/audio changes, main merge or release belong to this pass.
 Next distribution order remains AppImage, actual Nobara package testing, Flatpak.
+
+
+The subsequent e76aaac evidence pass completed: run 37807217907 passed all four
+jobs, including Linux native GUI job 113414524577; private Nobara execution passed
+as well. The historical intermittent driver failure remains unroot-caused.
+Windows installed-app hardening is substantially improved and this increment is
+complete. Review/triage precedes the next AppImage iteration; no packaging work or
+milestone-wide physical/consumer/lifecycle acceptance is claimed here.

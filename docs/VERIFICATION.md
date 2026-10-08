@@ -762,3 +762,58 @@ PipeWire and Windows execution of this harness change have not run here; their
 hosted/native follow-up remains required. The existing GUI transport failure is
 still open. No M5/M6 acceptance, consumer Windows, actual login/tray-shell,
 physical audio/HID, sleep/reboot or soak claim follows from hosted Windows success.
+
+
+### Local completion and exact-source hosted evidence (2026-10-08)
+
+Local Astra independently downloaded and reviewed the d341f80 Windows validation
+transcript/result. WebView2 153 rendered the bundled Dashboard and returned native
+schema 2; startup enable/readback/remove, duplicate ownership/background recovery,
+graceful shutdown/lock release, fresh install, reinstall, update replacement,
+legacy upgrade/migration/backup and scoped uninstall all passed. The runner was
+elevated. Close/reopen is conditional on actual tray readiness; the transcript
+reports the combined case, not a separate tray-branch value. This is not consumer
+Explorer menu/login or standard-user/elevation-specific acceptance.
+
+Downloaded installer artifact 11529983920 and independently verified the actual
+`VeekPanel_0.1.1_x64-setup.exe` against SHA256SUMS:
+`5900b85783186bb6a39dde634ea59a2c4d4e5bfd17f8927d08bb011d0805f7db`.
+No release was published. The installer remains a CI artifact of d341f80.
+
+The Linux evidence handoff checksum matched and applied cleanly on unchanged
+d341f80. Local four-test regression suite, Python compilation, whitespace checks
+and actual Nobara private native GUI smoke passed. Existing native binary was
+reused because production app/UI/backend sources did not change. Local evidence
+is `/tmp/veek-hardening-linux-local/result.json`; helper processes were alive before
+normal cleanup, failure=null. Personal audio/startup and dirty profile docs stayed
+untouched.
+
+Committed/pushed evidence source `e76aaaceee1432e72932d5fcaed2d76bf419252c`.
+[Run 37807217907](https://github.com/apittman019-svg/VeekPanel/actions/runs/37807217907)
+**passed all four jobs**:
+
+| Job | ID | Result |
+| --- | --- | --- |
+| Windows desktop | 113414524270 | Passed build/lint/tests and four evidence regressions |
+| Linux core | 113414524553 | Passed, including private native audio/runtime integration |
+| Windows core | 113414524570 | Passed |
+| Linux desktop | 113414524577 | Passed, including four evidence regressions, private tray recovery and complete native GUI smoke |
+
+Linux GUI artifact `11563438828`, archive SHA256
+`7299d3beada1a0d3f354a56932349f4126e4b3afe65a9b0a97652a7f0e0c6878`,
+was downloaded and inspected. It contains native.log, screenshots and result.json;
+result identifies e76aaac/run 37807217907, status=passed, last_error=null,
+failure=null and all three owned helpers alive before cleanup. The GUI reached
+its final layout check after native audio, mappings, profile switching and startup
+checks. The recurring driver failure did not reproduce on this run. Its cause
+remains unknown; evidence capture is not a product or transport fix. There were
+no mutation retries or weakened assertions.
+
+No app/crates/UI/Windows packaging files changed between d341f80 and e76aaac, so
+the passing installed Windows result covers the same production and installer
+code; the final docs-only commit does not imply a separate installer execution.
+Recommended next owner: Cloud Sol for review of this completed gate and the open
+intermittent Linux driver issue, then local Astra for AppImage/package execution
+when approved as the next increment. Order remains AppImage -> actual Nobara
+package validation -> Flatpak. No main merge or release; physical, consumer,
+real login/tray-shell, sleep/reboot, resource measurements and soak stay open.

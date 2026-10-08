@@ -82,7 +82,7 @@ and `--autostart`, requires hidden only when the native tray is ready, checks qu
 duplicate autostart, then manually relaunches to reveal the original owner. With
 a ready tray it also closes/hides and reopens that owner before a graceful shutdown
 and lock-release check. Existing reinstall/update/scoped cleanup tests remain.
-New cases are pending native execution; see VERIFICATION.md for exact results.
+These cases subsequently passed at d341f80; see VERIFICATION.md for exact results.
 
 This proves native window/ownership behavior on hosted Windows when it passes.
 It does not interact with Explorer's tray menu or prove login delivery, shell
@@ -100,3 +100,10 @@ Consumer Windows, actual login/Explorer tray, physical background controls and
 sleep/reboot/soak remain open. The same source's Linux native GUI job lost its
 driver connection after profile switching; isolated Nobara results remain valid
 within their scope but do not erase this recurring hosted failure.
+
+
+The later e76aaac Linux evidence harness passed the full native GUI locally on
+Nobara and on hosted Ubuntu (run 37807217907/job 113414524577), including private
+startup registration/removal and duplicate launches. This successful run does not
+explain or eliminate the intermittent hosted driver failures. Windows production
+and installer code remain identical to the verified d341f80 source.

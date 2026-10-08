@@ -81,8 +81,8 @@ The published 0.1.0 installer remains unchanged.
 Hook integration was checked against pinned Tauri CLI 2.12.1 / bundler 2.10.1 source.
 The actual hook passes an NSIS compile-only check with warnings as errors. Updated
 Windows smoke tests cover scoped registry cleanup, preservation and native
-single-instance/shutdown behavior. Those new Windows checks are pending CI;
-compiler success is not Windows installer acceptance.
+single-instance/shutdown behavior. Those native Windows checks subsequently passed
+at d341f80, as recorded below; compilation alone was not installer acceptance.
 
 ## Current nightly hosted validation (2026-10-08)
 
