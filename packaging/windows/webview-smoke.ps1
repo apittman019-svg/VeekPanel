@@ -114,3 +114,39 @@ function Set-InstalledBackground($cdp, [bool]$minimized, [bool]$closeToTray) {
     $saved = Get-Content $config -Raw | ConvertFrom-Json
     if ($saved.settings.start_minimized -ne $minimized -or $saved.settings.close_to_tray -ne $closeToTray) { throw 'Native background settings did not persist' }
 }
+
+
+# WebView2 150+ ignores environment switches in elevated hosts. GitHub's Windows
+# runner is elevated, so use the documented per-executable HKLM override only in
+# that disposable CI case. Never overwrite pre-existing policy or ship this hook.
+# https://github.com/MicrosoftEdge/WebView2Feedback/issues/5645
+function Enable-InstalledDebugPolicy([string]$arguments) {
+    $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+    $elevated = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    Write-Host "Hosted smoke elevated: $elevated"
+    if (!$elevated) { return $null }
+    if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') { throw 'Debug policy is only allowed on disposable hosted Windows CI' }
+    $path = 'SOFTWARE\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments'
+    $name = [IO.Path]::GetFileName($exe)
+    $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($path)
+    $created = $null -eq $key
+    try {
+        if ($null -ne $key -and $key.GetValueNames() -contains $name) { throw 'Refusing to overwrite existing WebView2 policy' }
+    } finally { if ($null -ne $key) { $key.Dispose() } }
+    $key = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($path)
+    try { $key.SetValue($name, $arguments, [Microsoft.Win32.RegistryValueKind]::String) }
+    finally { $key.Dispose() }
+    return @{path=$path;name=$name;arguments=$arguments;created=$created}
+}
+
+function Remove-InstalledDebugPolicy($policy) {
+    $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($policy.path, $true)
+    if ($null -eq $key) { throw 'Temporary debug policy disappeared unexpectedly' }
+    try {
+        if ($key.GetValue($policy.name, $null) -cne $policy.arguments) { throw 'Temporary debug policy changed unexpectedly; refusing to delete it' }
+        $key.DeleteValue($policy.name)
+        $empty = $key.ValueCount -eq 0 -and $key.SubKeyCount -eq 0
+    } finally { $key.Dispose() }
+    if ($policy.created -and $empty) { [Microsoft.Win32.Registry]::LocalMachine.DeleteSubKey($policy.path) }
+    Write-Host 'PASS: temporary per-executable WebView2 debug policy removed.'
+}

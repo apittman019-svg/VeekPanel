@@ -697,3 +697,22 @@ but this attempted write was denied. No commit was created, no ref changed and n
 new native CI was triggered. Changes are delivered as a reviewable patch for local
 Astra; native PowerShell, new installed WebView2/startup/background assertions and
 the complete current-source installer smoke remain **unexecuted** for this patch.
+
+
+### First native hardening attempt
+
+Applied/pushed source `5cb896a532deb9e69e3f547801ad9b4e2d23197b`.
+Run 37731482289 passed all jobs: Windows core 113161349335, Linux core
+113161349488, Linux desktop 113161349595 and Windows desktop 113161349621.
+The Linux GUI driver-connection failure did not reproduce; its complete native
+smoke passed without a Linux code change. This does not establish flake elimination.
+
+Installer run 37731482529/job 113161350507 passed native parsing, UI build,
+NSIS construction and fresh native window/config ownership, then failed connecting
+to the test-only WebView2 debugging port. Result/transcript retained in the
+VeekPanel-Windows-validation artifact. The absent-startup-value guard is fixed.
+Microsoft's WebView2 issue 5645 documents that elevated hosts ignore environment
+switches starting with Runtime 150. The follow-up uses documented per-executable
+HKLM debug policy only for elevated disposable CI, refuses pre-existing values,
+and removes it in finally. No production hook or persistent product setting is
+added. Actual rerun results remain pending; the runner's elevation is recorded.

@@ -44,6 +44,7 @@ function Install-Package([string]$path) {
 function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true, [bool]$Background = $false, [bool]$PrepareBackground = $false) {
     $previousBrowserArguments = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
     $cdp = $null
+    $debugPolicy = $null
     if ($Lifecycle) {
         if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') { throw 'WebView smoke is for disposable hosted Windows CI only' }
         $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
@@ -54,6 +55,7 @@ function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true, [bool]$Backgro
     }
     $app = $null
     try {
+        if ($Lifecycle) { $debugPolicy = Enable-InstalledDebugPolicy $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS }
         $app = if ($Background) { Start-Process $exe -ArgumentList '--autostart' -PassThru } else { Start-Process $exe -PassThru }
         $ready = $false
         # Windows exposes a window before WebView2 and Tauri setup finish.
@@ -133,16 +135,20 @@ function Open-AndCloseApp([int]$schema, [bool]$Lifecycle = $true, [bool]$Backgro
         }
         if ($PrepareBackground) { Set-InstalledBackground $cdp $true $false }
     } finally {
-        if ($null -ne $cdp) { $cdp.Dispose() }
-        $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $previousBrowserArguments
-        if ($null -ne $app -and !$app.HasExited) {
-            $app.Refresh()
-            $null = $app.CloseMainWindow()
-            if (!$app.WaitForExit(5000)) {
-                Stop-Process -Id $app.Id -Force
-                $null = $app.WaitForExit(5000)
-                if ($Lifecycle) { throw 'Window close did not shut down the configuration owner cleanly' }
+        try {
+            if ($null -ne $cdp) { $cdp.Dispose() }
+            $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $previousBrowserArguments
+            if ($null -ne $app -and !$app.HasExited) {
+                $app.Refresh()
+                $null = $app.CloseMainWindow()
+                if (!$app.WaitForExit(5000)) {
+                    Stop-Process -Id $app.Id -Force
+                    $null = $app.WaitForExit(5000)
+                    if ($Lifecycle) { throw 'Window close did not shut down the configuration owner cleanly' }
+                }
             }
+        } finally {
+            if ($null -ne $debugPolicy) { Remove-InstalledDebugPolicy $debugPolicy }
         }
     }
     # Shutdown must release the config lock; a forced kill cannot count as success.
