@@ -14,6 +14,7 @@ def perform(display, operation, *args):
         'XFetchName': ([c.c_void_p,c.c_ulong,c.POINTER(c.c_char_p)],c.c_int),
         'XFree': ([c.c_void_p],c.c_int),
         'XSetInputFocus': ([c.c_void_p,c.c_ulong,c.c_int,c.c_ulong],c.c_int),
+        'XWarpPointer': ([c.c_void_p,c.c_ulong,c.c_ulong,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_int,c.c_int],c.c_int),
         'XResizeWindow': ([c.c_void_p,c.c_ulong,c.c_uint,c.c_uint],c.c_int),
         'XStringToKeysym': ([c.c_char_p],c.c_ulong),
         'XKeysymToKeycode': ([c.c_void_p,c.c_ulong],c.c_ubyte),
@@ -58,12 +59,18 @@ def perform(display, operation, *args):
             if not x.XSendEvent(d,window,0,0,c.byref(event)):raise RuntimeError('Native close was not sent')
         else:
             x.XSetInputFocus(d,window,1,0)
-            if operation=='key':
+            if operation in ('key','key_down','key_up','click'):
                 xt=c.CDLL('libXtst.so.6')
                 xt.XTestFakeKeyEvent.argtypes=[c.c_void_p,c.c_uint,c.c_int,c.c_ulong]
-                code=x.XKeysymToKeycode(d,x.XStringToKeysym(args[0].encode()))
-                if not code:raise RuntimeError('Unknown test key')
-                xt.XTestFakeKeyEvent(d,code,1,0);xt.XTestFakeKeyEvent(d,code,0,0)
+                if operation=='click':
+                    xt.XTestFakeButtonEvent.argtypes=[c.c_void_p,c.c_uint,c.c_int,c.c_ulong]
+                    x.XWarpPointer(d,0,window,0,0,0,0,int(args[0]),int(args[1]))
+                    xt.XTestFakeButtonEvent(d,1,1,0);xt.XTestFakeButtonEvent(d,1,0,0)
+                else:
+                    code=x.XKeysymToKeycode(d,x.XStringToKeysym(args[0].encode()))
+                    if not code:raise RuntimeError('Unknown test key')
+                    if operation!='key_up':xt.XTestFakeKeyEvent(d,code,1,0)
+                    if operation!='key_down':xt.XTestFakeKeyEvent(d,code,0,0)
             elif operation!='focus':raise RuntimeError('Unknown test operation')
         x.XSync(d,0)
     finally:x.XCloseDisplay(d)

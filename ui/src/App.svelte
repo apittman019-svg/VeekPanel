@@ -6,13 +6,14 @@
  import {mergeSnapshot} from './snapshot';
  import Icon from './Icon.svelte';
  import ControlVisual from './ControlVisual.svelte';
+ import Doom from './Doom.svelte';
  import type {Payload,SnapshotResponse,Config,Selector,Target,Action} from './types';
  let data=$state<Payload|null>(null),page=$state('Dashboard'),error=$state(''),notice=$state(''),busy=$state(false);
  let selected=$state(0),rotation=$state(''),press=$state(''),name=$state(''),groupMembers=$state<string[]>([]),relative=$state(true),importText=$state('');
  let editingGroup=$state<string|null>(null);let hardwareAddress=$state('');let deviceFilter=$state('all');let refreshing:Promise<void>|null=null;
- const pages=['Dashboard','Profiles','Groups','Settings','Diagnostics'];
- const pageIcons=['dashboard','profiles','groups','settings','diagnostics'] as const;
- const pageDescriptions:Record<string,string>={Dashboard:'Your sound. Within reach.',Profiles:'A different rhythm for every moment.',Groups:'Good things sound better together.',Settings:'Make every detail yours.',Diagnostics:'A clear view of what’s happening.'};
+ const pages=['Dashboard','Profiles','Groups','Settings','Diagnostics','Doom'];
+ const pageIcons=['dashboard','profiles','groups','settings','diagnostics','gamepad'] as const;
+ const pageDescriptions:Record<string,string>={Dashboard:'Your sound. Within reach.',Profiles:'A different rhythm for every moment.',Groups:'Good things sound better together.',Settings:'Make every detail yours.',Diagnostics:'A clear view of what’s happening.',Doom:'Yes, it runs Doom.'};
  const observed=$derived(data?.state),config=$derived(observed?.config),audio=$derived(observed?.audio);
  const profile=$derived(config?.profiles.find(p=>p.id===config.active_profile));
  const mock=$derived(config?.hardware.mode==='mock');
@@ -107,7 +108,8 @@
   {#if notice}<div class="banner" role="status">{notice}<button onclick={()=>notice=''} aria-label="Dismiss message">×</button></div>{/if}
   {#if data?.desktop.tray_error}<div class="banner tray-notice" role="status"><span>System tray unavailable. Keep this window open while using VeekPanel.</span><button class="tray-details" onclick={()=>page='Diagnostics'}>Details</button></div>{/if}
   {#key page}<div class="page-content">
-  {#if !observed}<section class="card empty"><h2>Connecting to VeekPanel</h2><p>The desktop backend supplies your audio devices and saved configuration.</p><button onclick={refresh}>Try again</button></section>
+  {#if page==='Doom'}<Doom/>
+  {:else if !observed}<section class="card empty"><h2>Connecting to VeekPanel</h2><p>The desktop backend supplies your audio devices and saved configuration.</p><button onclick={refresh}>Try again</button></section>
   {:else if page==='Dashboard'}
    <section class="card panel-card" class:pro-panel={analogCount===9}>
     <div class="section-heading"><div class="hardware-title"><span class="section-icon"><Icon name="panel" size={24}/></span><div><p class="eyebrow">{mock?'DEVELOPMENT PANEL':'YOUR HARDWARE'}</p><h2>PCPanel {config?.hardware.model==='mini'?'Mini':config?.hardware.model==='pro'?'Pro':config?.hardware.model==='rgb'?'RGB':'Original'}</h2></div></div><span class="pill" class:mock class:connected={observed.hardware_status.startsWith('Connected:')}>{observed.hardware_status}</span></div>

@@ -1042,3 +1042,38 @@ Flatpak remains subsequent. Physical Mini, host USB setup, consumer Windows/audi
 real login/tray, native Wayland, sleep/reboot, measured performance and soak gates
 remain open. No physical acceptance, full M5/M6 completion or new Windows installer
 is implied by this AppImage handoff.
+
+
+## Optional Doom tab preparation (2026-10-09)
+
+Based on nightly dfd3b166012e5a8d40fe1cca3279a3ae0bd414ab. User requested the
+actual game as an extra tab. Added lazy, sandboxed Internet Archive shareware
+player with Play/Stop, keyboard help, offline feedback and destruction on tab exit
+or document-hidden/offline events. Exact frame-src allowance only; no backend,
+config schema, hardware, native audio, lockfile or package dependency changed.
+
+Cloud checks passed: pnpm ui check (zero errors/warnings), four existing ui tests,
+production build (CSS 19.34 kB / 5.06 gzip; JS 81.57 kB / 30.25 gzip), Tauri JSON
+parse and whitespace check. The exact published shareware embed returned HTTP 200.
+Playwright browser installation failed with a truncated/non-ZIP download, so no
+rendering/gameplay/input/fullscreen, native WebView2/WebKit, tray-hidden event or
+remote-IPC-denial acceptance is claimed. No new native CI/build/installer/AppImage
+result is implied. See DOOM.md for bounded local acceptance. Existing accepted
+Windows/Nobara/physical evidence remains historical to its exact tested source.
+
+### Local Doom integration (2026-10-09)
+
+Verified bundle patch SHA256 b9e160d3cfe1b30e05bb6f83fc6e84a880a4362744b41ee814f038bf32578404
+against unchanged nightly dfd3b16; applied in codex/doom-tab, preserving existing
+worktrees and dirty personal docs. Frozen frontend install/check/four tests/build,
+locked native Nobara debug build, Python compilation and whitespace checks passed.
+Actual native Doom E1M1 gameplay/keyboard movement and non-silent private audio
+were observed; Stop removed the iframe. Evidence: /tmp/veek-doom-policy, including
+screenshots, result.json, audio-result.json and private game-audio.wav. Additional
+lifecycle results and exact source/CI identifiers follow after completion.
+
+No Rust/backend/config-schema/hardware/audio/lock/dependency changes. Remote native
+capabilities remain absent; direct adversarial remote IPC testing was limited by
+WebKit cross-frame automation timeouts. See DOOM.md for original failure evidence,
+private audio routing and pending Windows/fullscreen/scaling/real-shell checks.
+Old packages are unchanged and do not contain Doom. No release or main merge.

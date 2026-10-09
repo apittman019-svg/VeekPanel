@@ -28,12 +28,16 @@ def stop(p):
 with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
  root=pathlib.Path(folder);env=dict(os.environ,XDG_RUNTIME_DIR=folder,PIPEWIRE_RUNTIME_DIR=folder,PIPEWIRE_REMOTE='veek-test',XDG_CONFIG_HOME=str(root/'config'),GDK_BACKEND='x11')
  env.pop('PIPEWIRE_CONFIG_DIR',None);env.pop('PIPEWIRE_CONFIG_NAME',None)
+ if os.environ.get('VEEK_DOOM_ONLY')=='1':
+  (root/'pulse').mkdir()
+  env['PULSE_SERVER']='unix:'+str(root/'pulse/native')
+  env['PULSE_RUNTIME_PATH']=str(root/'pulse')
  if os.environ.get('VEEK_GUI_REDUCED_MOTION')=='1':
   gtk=root/'config/gtk-3.0';gtk.mkdir(parents=True)
   (gtk/'settings.ini').write_text('[Settings]\ngtk-enable-animations=false\ngtk-application-prefer-dark-theme=true\n')
  # Private display; never manipulate windows on the user's desktop.
  display=next(n for n in range(110,180) if not pathlib.Path(f'/tmp/.X11-unix/X{n}').exists());env['DISPLAY']=f':{display}'
- xvfb=server=driver=None;session=None
+ xvfb=server=driver=pulse=None;session=None
  port=4454
  def send_http(method,path,body=None):
   request=urllib.request.Request(f'http://127.0.0.1:{port}'+path,data=None if body is None else json.dumps(body).encode(),method=method,headers={'Content-Type':'application/json'})
@@ -67,11 +71,17 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    until(lambda:pathlib.Path(f'/tmp/.X11-unix/X{display}').exists())
    server=subprocess.Popen(['pipewire','-c',str(root_repo/'tests/audio/pipewire.conf')],env=env,stdout=log,stderr=log);until(lambda:(root/'veek-test').exists())
    for key,name in [('sink','output'),('source','input')]:subprocess.run(['pw-metadata','-n','default','0','default.audio.'+key,json.dumps({'name':'veek.'+name}),'Spa:String:JSON'],env=env,stdout=log,stderr=log,check=True)
+   if os.environ.get('VEEK_DOOM_ONLY')=='1':
+    pulse=subprocess.Popen(['pipewire-pulse'],env=env,stdout=log,stderr=log)
+    until(lambda:(root/'pulse/native').exists())
    driver=subprocess.Popen(['tauri-driver','--port',str(port),'--native-port','4455','--native-driver',native_driver],env=env,stdout=log,stderr=log)
    until(lambda:http('GET','/status'))
    session=http('POST','/session',{'capabilities':{'alwaysMatch':{'tauri:options':{'application':str(binary)}}}})['sessionId']
    until(ready)
-   if os.environ.get('VEEK_VISUAL_ONLY')=='1':
+   if os.environ.get('VEEK_DOOM_ONLY')=='1':
+    from doom_smoke import run
+    run(js,http,session,click,until,artifacts,env,saved_config,binary)
+   elif os.environ.get('VEEK_VISUAL_ONLY')=='1':
     from visual_matrix import run
     run(js,http,session,click,until,idle,saved_config,artifacts,env,lambda:stop(server))
    else:
@@ -232,4 +242,4 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    if session:
     try:http('DELETE',f'/session/{session}')
     except Exception:pass
-   stop(driver);stop(server);stop(xvfb)
+   stop(driver);stop(pulse);stop(server);stop(xvfb)

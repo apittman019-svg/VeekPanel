@@ -1,5 +1,5 @@
 <script lang="ts">
- type Name='dashboard'|'profiles'|'groups'|'settings'|'diagnostics'|'speaker'|'mic'|'app'|'check'|'chevron'|'close'|'panel';
+ type Name='dashboard'|'profiles'|'groups'|'settings'|'diagnostics'|'gamepad'|'speaker'|'mic'|'app'|'check'|'chevron'|'close'|'panel';
  let {name,size=20}:{name:Name,size?:number}=$props();
 </script>
 
@@ -15,6 +15,8 @@
   <path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="var(--icon-surface)"/><circle cx="16" cy="12" r="2" fill="var(--icon-surface)"/><circle cx="10" cy="18" r="2" fill="var(--icon-surface)"/>
  {:else if name==='diagnostics'}
   <path d="M3 12h4l3-7 4 14 3-7h4"/>
+ {:else if name==='gamepad'}
+  <path d="M8 7h8a4 4 0 0 1 4 3l1 7a2 2 0 0 1-3.4 1.7L15 16H9l-2.6 2.7A2 2 0 0 1 3 17l1-7a4 4 0 0 1 4-3Z"/><path d="M7 10v4M5 12h4M15 11h.01M18 13h.01"/>
  {:else if name==='speaker'}
   <path d="M4 9h4l5-4v14l-5-4H4zM17 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14"/>
  {:else if name==='mic'}

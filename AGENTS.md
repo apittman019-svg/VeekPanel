@@ -487,3 +487,23 @@ AppImage distribution. Local Astra owns native checks, Cloud Sol can review the
 focused packaging changes. Do not restart basic Mini or Windows smoke work.
 Preserve personal dirty work and all physical/consumer/login/soak limits. Linux
 GUI driver transport loss did not recur; its historical cause remains unknown.
+
+
+## Optional Doom tab (2026-10-09)
+
+The user explicitly requested the actual Doom game as a fun extra tab. A separate
+Doom.svelte embeds Internet Archive's original shareware episode only after Play;
+Stop/tab exit/document-hidden/offline removes it. No backend/config/hardware or
+package dependencies change. Only the exact embed URL is added to frame-src;
+remote native capabilities and parent message bridges are not enabled. See
+docs/DOOM.md for provider, lifetime behavior and native acceptance limits.
+Frontend checks/four tests/build pass; actual gameplay/native frames remain
+unverified in cloud. Do not replace accepted release evidence with a gameplay claim.
+
+Local continuation: checksum-verified Doom patch is applied in codex/doom-tab.
+Actual Nobara native E1M1 gameplay, keyboard movement, non-silent private audio and
+Stop were observed; frontend check/four tests/build and locked native build passed.
+The optional live-provider harness uses private PipeWire/Pulse and WirePlumber's
+policy-only profile, never physical hardware or personal audio settings. Read the
+newest DOOM.md/VERIFICATION.md for final lifecycle and CI results/limits. Older
+installers/AppImage do not contain this feature; no new release is authorized.
