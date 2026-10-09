@@ -949,3 +949,96 @@ package runs, but its historical cause remains open. Preserve physical Mini,
 consumer Windows, actual login/desktop-menu/USB setup, native Wayland, relocation,
 sleep/reboot, resource/soak gates. Original dirty work and native-polish checkout
 were preserved; main and releases remain untouched.
+### Nobara AppImage distribution contents and repack (2026-10-08)
+
+The user's "keep going" superseded the preceding bounded-pass stop. Reviewed
+unchanged origin/nightly 1fcb8df and preserved the original dirty README/Windows
+installer docs plus the clean native-polish checkout. Packaging source is
+`855d5531c12f10c1696b2c7b0673ae08648094cf`. No production/UI/audio/Windows/lock
+changes; no public release/main merge. This packaging-only pass ran local native
+checks instead of unchanged hosted Windows/core jobs; there is no new CI run/job.
+Earlier Windows run 37732328374/job 113164039343 and full passing run 37807217907
+remain the corresponding evidence for unchanged production source.
+
+The bundler had copied the host's entire GSettings/GI metadata directories,
+including unrelated applications. `stage_appdir.py` copies to a fresh staging
+location, verifies resource bytes/owners, retains data from the already included
+native source packages plus GTK's GNOME desktop schema dependency, and recompiles
+schemas strictly. It omitted 132 unrelated data files and retained 113. It does
+not prune native libraries, GTK input modules or accessibility code. All 212 ELF
+files (app, launcher and 210 native helpers/libraries) are byte-identical to the
+first tested c830725 package. Original AppDir/artifact remain intact.
+
+Expanded inventory matches 210 native ELF files and 113 data files to 150 RPM
+packages/127 source packages. Eight internal symlinks were checked. No unmatched
+files or missing license texts remain in the reviewed staging payload. Hyphen's
+original licenses/authors came from its exact source RPM with recorded hashes.
+The old AppRun asset matches Tauri's published SHA256; the generated GTK hook's
+input script matches pinned Tauri CLI 2.12.1 byte-for-byte. Original launcher,
+GTK-plugin, linuxdeploy, runtime and static-dependency notices are now embedded.
+The runtime Makefile also links mimalloc, so its notice is included despite the
+upstream top-level license list omitting it.
+
+Fetched and validated all 127 exact Fedora SRPM identities and payload digests,
+recorded download URLs/SHA256s, and collected runtime commit 8f39b89's source/build
+recipe/libfuse patch plus libfuse 3.15.0 and squashfuse 0.5.2 source archives. Both
+dependency archive hashes match that runtime's pinned build script. No host package,
+repository configuration, USB permission or service was changed. The source
+collector rejects malformed paths, wrong versions and truncated RPMs (checked).
+Source ZIP CRC verification passed. Engineering inventory/source provision is
+not a legal certification or byte-reproducible runtime build: the AppRun mirror
+has no exact source revision, and permissive static-library notice revisions are
+not measurements of every embedded library version. These limits are documented.
+
+Repacked the staged AppDir using the existing linuxdeploy AppImage output plugin,
+with explicit LDAI_RUNTIME_FILE extracted from the prior tested image. Runtime
+input: 944632 bytes, SHA256
+`502fea1d14b4582c3acad1d9c2d23a86987f8930a10f95d5a26d2adf9accbd85`;
+version 8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa. Embedded notices separately
+record application c830725 and packaging 855d553. The final image was extracted
+for inspection: every recorded library/resource/tool/project payload hash matched
+its embedded inventory. This inspection was not substituted for actual execution.
+
+Output directory: `/home/austinp/Downloads/gaem/VeekPanel-Nobara-Preview`.
+
+| File | Bytes | SHA256 |
+| --- | ---: | --- |
+| VeekPanel-Nobara-x86_64.AppImage | 113891832 | f6a35230d68710323158941ef7000ee986bf94dc5400d3eccdf3e505fb97cdce |
+| VeekPanel-corresponding-sources.zip | 884427727 | 0680aa8d3f8e64833896e44c4b69bc4310d358d84a8f02383df6a7176ca14efb |
+| VeekPanel-source-855d553.tar.gz | 513124 | 38931c9dc20e2582a7327ee10b0b430dc480792231006de6f142e1bdeb26c160 |
+
+The package and its source/notices companion are prepared for a Nobara 44 x86_64
+test handoff. Share them together. This supersedes the missing-notice/source gate
+for the new artifact only; the earlier 1373bf5 prototype remains superseded.
+The AppImage is a portable preview, not an RPM/system installer or cross-distro
+release. Required bundled-library glibc is still 2.43; PipeWire remains host-resolved.
+
+Final artifact verification passed:
+
+- Actual runtime/FUSE launch from `/tmp/VeekPanel Final AppImage/VeekPanel.AppImage`
+  through the private Xvfb/D-Bus/PipeWire harness with VEEK_APPIMAGE_RELAUNCH=1.
+  Real Dashboard/native IPC, private discovery/write/readback, simulated Mini
+  pickup/mic mute, mappings/profiles/groups/preferences, startup opt-in/readback/
+  removal using the AppImage path, duplicate owner, tray-unavailable fallback,
+  dark/light, native close/lock release and byte-preserving saved-config relaunch.
+- KDE file-handler launch of the final Downloads artifact on actual Nobara
+  Xwayland, disposable config/private D-Bus, hardware disabled and host audio
+  read-only. Screenshot inspected; native PipeWire connected, no mappings or
+  startup registration. Owned window closed gracefully. This is not native Wayland,
+  manual Dolphin double-click, actual desktop-shell tray or login acceptance.
+- Python compilation/whitespace, source rejection cases, source archive CRC,
+  original ELF byte comparison and extracted embedded inventory checks passed.
+
+Evidence is retained under the output directory's `verification/`; original logs
+are `/tmp/veek-appimage-855d553-smoke` and `/tmp/veek-appimage-855d553-desktop`.
+The passing GUI result retains an expected WebDriver unsupported-click error from
+the harness's existing supported fallback; it is not a connection loss. There
+was no driver transport failure in this run. Its historical intermittent cause
+remains open; do not claim that packaging changes fixed it.
+
+Next: native Nobara package/desktop integration and explicitly isolated login/
+tray testing; evaluate an older clean build baseline before broader Linux claims.
+Flatpak remains subsequent. Physical Mini, host USB setup, consumer Windows/audio,
+real login/tray, native Wayland, sleep/reboot, measured performance and soak gates
+remain open. No physical acceptance, full M5/M6 completion or new Windows installer
+is implied by this AppImage handoff.

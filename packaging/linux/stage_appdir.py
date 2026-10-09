@@ -17,8 +17,11 @@ def stage(source, destination, inventory):
     source, destination = source.resolve(), destination.absolute()
     if destination.exists() or source in destination.parents:
         raise ValueError("Use a fresh destination outside the input AppDir")
-    packages = json.loads(inventory.read_text())["packages"]
-    keep_sources = {p["source_rpm"] for p in packages.values()}
+    audited = json.loads(inventory.read_text())
+    # Older inventories contain only ELF records; expanded inventories also have
+    # data-only packages. Do not let those reintroduce unrelated host resources.
+    elf_owners = {f["package"] for f in audited["files"] if f.get("kind", "elf") == "elf"}
+    keep_sources = {audited["packages"][p]["source_rpm"] for p in elf_owners}
     decisions = []
     for relative, host in [
         ("usr/share/glib-2.0/schemas", Path("/usr/share/glib-2.0/schemas")),

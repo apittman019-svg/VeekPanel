@@ -151,3 +151,14 @@ It remains a local prototype: native license/source closure and the glibc 2.43
 build baseline block redistribution/portability claims. Native audit and exact
 artifact evidence are in APPIMAGE.md. M6 stays open; review/repack precedes full
 Nobara package acceptance and Flatpak. No production UI/audio or Windows changes.
+
+2026-10-08 continued M6 AppImage increment: packaging source 855d553 repacked a
+Nobara 44 preview with embedded native/tool notices, an inventory of 210 native
+ELFs/113 data files/150 RPMs, all 127 exact native source RPMs and runtime sources.
+Removed 132 unrelated host metadata files in a fresh staging copy; native code is
+unchanged. Actual package private GUI/audio/startup/duplicate/save/relaunch and KDE
+file-handler Xwayland launch passed. The new image plus source companion replaces
+the earlier incomplete-content handoff gate; see VERIFICATION.md for hashes and
+source/reproducibility limits. No public release or broad Linux support claim.
+M6 remains open: next native Nobara integration/login/tray and later Flatpak;
+physical USB, native Wayland, consumer Windows and lifecycle/soak remain pending.

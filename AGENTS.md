@@ -461,3 +461,29 @@ Stop this increment here. Next agent: Cloud Sol to review native distribution
 closure/build baseline and produce a bounded packaging plan; then local Astra to
 repack and perform fuller Nobara package validation. Flatpak stays later. Preserve
 all earlier physical/lifecycle limits; no main merge or public release.
+
+## AppImage continuation result (2026-10-08)
+
+The user explicitly said "keep going", superseding the earlier pass's stop/Cloud
+review requirement. Packaging source 855d553 has a repacked, tested Nobara 44 x86_64
+AppImage with embedded native notices and a collected companion of all 127 exact
+native SRPMs plus runtime/libfuse/squashfuse source. Its staged payload omits 132
+unrelated host schemas/typelibs; all 212 ELF files remain unchanged. Native audit
+now covers data, symlinks and pinned external artifacts; no missing origin/text
+remains for this payload. Read the newest VERIFICATION.md and docs/APPIMAGE.md
+for hashes, source/launcher reproducibility limits, commands and actual results.
+
+The new artifact/source companion is in
+/home/austinp/Downloads/gaem/VeekPanel-Nobara-Preview. Private packaged GUI/audio/
+startup/ownership/relaunch and actual KDE file-handler Xwayland launch passed.
+This replaces the earlier missing-notice/source stop for this artifact, not the
+older local-only prototype. Share the companion sources/notices with the AppImage.
+No public release, main merge, Windows rebuild or host installation was performed.
+Nobara 44/glibc 2.43 only; host PipeWire required. Older Linux is not validated.
+
+Next concrete task: native Nobara integration/packaging, isolated desktop/login/
+tray acceptance, then Flatpak; assess a clean older build baseline for broader
+AppImage distribution. Local Astra owns native checks, Cloud Sol can review the
+focused packaging changes. Do not restart basic Mini or Windows smoke work.
+Preserve personal dirty work and all physical/consumer/login/soak limits. Linux
+GUI driver transport loss did not recur; its historical cause remains unknown.

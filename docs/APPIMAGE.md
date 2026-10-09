@@ -1,6 +1,21 @@
-# AppImage packaging preparation and bounded native handoff
+# AppImage preview packaging and native verification
 
-## Review decision — 2026-10-08
+## Current result — 2026-10-08
+
+Packaging source `855d553` produced a tested Nobara 44 x86_64 AppImage with embedded
+native/tool notices and a complete collected native source companion. The earlier
+local-only missing-content stop is superseded for this new artifact. Keep its
+sources/notices with it when sharing; no public release was published. This is a
+portable preview requiring glibc 2.43 and host PipeWire, not a broadly compatible
+Linux installer. See the newest [verification record](VERIFICATION.md) for exact
+hashes, evidence and source/reproducibility limits.
+
+Output: `/home/austinp/Downloads/gaem/VeekPanel-Nobara-Preview`.
+All package-specific private GUI/audio/startup/ownership/relaunch checks and a
+KDE file-handler launch on the Nobara Xwayland desktop passed. Next: native Nobara
+integration/login/tray validation; Flatpak follows. Keep physical and soak gates open.
+
+## Historical preparation review — 2026-10-08
 
 Reviewed exact nightly `0af5de925f0466009772c2b8a374c90be6b48482` and intervening
 e76aaac/0af5de9 changes. Production app, UI, crates and Windows packaging are
@@ -223,3 +238,42 @@ package runs, but its historical cause remains open. Preserve physical Mini,
 consumer Windows, actual login/desktop-menu/USB setup, native Wayland, relocation,
 sleep/reboot, resource/soak gates. Original dirty work and native-polish checkout
 were preserved; main and releases remain untouched.
+
+
+## Reproduce the reviewed Nobara repack
+
+The commands below describe packaging, not normal end-user setup. First perform
+the locked Tauri build/notice generation above. Use fresh output directories and
+retain the original AppDir/image. The scripts are Nobara/RPM-specific. Runtime
+and launcher hashes are deliberately pinned; changed tools require review.
+
+1. Inventory the original AppDir with `packaging/linux/native_inventory.py`.
+   The staging helper selects only ELF-owning source packages from this inventory;
+   unrelated data-only packages cannot seed its keep list.
+2. Run `packaging/linux/stage_appdir.py ORIGINAL_APPDIR FRESH_APPDIR ELF_INVENTORY`.
+   It retains matching native-source-package metadata and GNOME desktop schemas,
+   recompiles schemas strictly, and records every selection with a hash. It copies
+   before pruning and never removes libraries or mutates the original AppDir.
+3. Run `packaging/linux/native_inventory.py FRESH_APPDIR FRESH_NATIVE_NOTICES`.
+   Require no unmatched origins, invalid symlinks or missing license texts. Copy
+   these notices into `usr/lib/VeekPanel/THIRD_PARTY/native` in the staging AppDir.
+4. Run `packaging/linux/fetch_native_sources.py INVENTORY_JSON SOURCE_DIRECTORY`.
+   Require all source packages and pinned runtime inputs to verify. Keep the source
+   directory as a companion; embed its JSON receipts with the native notices.
+5. Repack using the existing output plugin's documented `LDAI_RUNTIME_FILE`,
+   `LDAI_OUTPUT`, `LDAI_VERSION=0.1.1` and `--appdir=FRESH_APPDIR`. The reviewed
+   runtime prefix was the first 944632 bytes of the already tested 1373bf5 image,
+   SHA256 502fea1d14b4582c3acad1d9c2d23a86987f8930a10f95d5a26d2adf9accbd85.
+   Do not silently download a newer runtime. Preserve application BUILD_COMMIT
+   c830725 and separately record PACKAGING_COMMIT 855d553 for this repack.
+6. Extract the resulting image for inventory/hash inspection, then run the actual
+   AppImage through the private harness with VEEK_APPIMAGE_RELAUNCH=1 and an ordinary
+   isolated desktop launch. Extraction alone is not execution acceptance. Retain
+   original failures without mutation replay; no broad unchanged matrix is needed.
+
+All 127 source packages were acquired from Fedora Koji without enabling repositories
+or installing anything. The companion has the SRPM archives, patches/build recipes,
+exact runtime source and patched-libfuse inputs. Notice files have original source
+URLs/SHA256s. The mirrored MIT AppRun does not declare its exact source revision;
+static permissive-library versions and byte-reproducible runtime rebuilding were
+not established. This engineering inventory is not a legal certification.
