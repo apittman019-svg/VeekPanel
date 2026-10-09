@@ -1,0 +1,67 @@
+[
+  {
+    "file": "type2-runtime-LICENSE",
+    "url": "https://raw.githubusercontent.com/AppImage/type2-runtime/8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa/LICENSE",
+    "sha256": "aa154fc9070614bbe7921f89db11efd1dba7a1f3a41685958110e2230f9c0ca1"
+  },
+  {
+    "file": "AppImageKit-LICENSE",
+    "url": "https://raw.githubusercontent.com/AppImage/AppImageKit/1681fd84dbe09c7d9b22e13cdb16ea601aa0ec47/LICENSE",
+    "sha256": "9cb22a08334c3a108ec4da96c1d6aea7a17a732fa9f5ca3413a9b4ce651397d8"
+  },
+  {
+    "file": "AppRun.c",
+    "url": "https://raw.githubusercontent.com/AppImage/AppImageKit/1681fd84dbe09c7d9b22e13cdb16ea601aa0ec47/src/AppRun.c",
+    "sha256": "79c8a946886f7966f8b3a54bb7e8f81c46828625552db7b33a8d6d28a03e4268"
+  },
+  {
+    "file": "gtk-plugin-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/7a3fbc31a9e5075073ff8790f26effbac5f84453/LICENSE.txt",
+    "sha256": "0718f6cadf38d2662f397591b777884c5389e65b9919aae6aca2bea87a52eac4"
+  },
+  {
+    "file": "tauri-LICENSE-MIT",
+    "url": "https://raw.githubusercontent.com/tauri-apps/tauri/30da1fd6e17de6107ecc850c95dfb16b5729f2dd/LICENSE-MIT",
+    "sha256": "9dd42ea92cff2ede5cd477cbfcce051b2d0115c0ac7f368ee88cb545055dff1d"
+  },
+  {
+    "file": "tauri-LICENSE-APACHE",
+    "url": "https://raw.githubusercontent.com/tauri-apps/tauri/30da1fd6e17de6107ecc850c95dfb16b5729f2dd/LICENSE-APACHE-2.0",
+    "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+  },
+  {
+    "file": "musl-COPYRIGHT",
+    "url": "https://git.musl-libc.org/cgit/musl/plain/COPYRIGHT?h=v1.2.5",
+    "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+  },
+  {
+    "file": "fuse-LGPL2.txt",
+    "url": "https://raw.githubusercontent.com/libfuse/libfuse/fuse-3.15.0/LGPL2.txt",
+    "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551"
+  },
+  {
+    "file": "squashfuse-LICENSE",
+    "url": "https://raw.githubusercontent.com/vasi/squashfuse/0.5.2/LICENSE",
+    "sha256": "9e909cc8a8ba27b1a649c964cf9eda37de911f3138c2b64e6d2f01703904ac13"
+  },
+  {
+    "file": "zstd-LICENSE",
+    "url": "https://raw.githubusercontent.com/facebook/zstd/v1.5.6/LICENSE",
+    "sha256": "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8"
+  },
+  {
+    "file": "zlib-LICENSE",
+    "url": "https://raw.githubusercontent.com/madler/zlib/v1.3.1/LICENSE",
+    "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243"
+  },
+  {
+    "file": "mimalloc-LICENSE",
+    "url": "https://raw.githubusercontent.com/microsoft/mimalloc/v2.1.7/LICENSE",
+    "sha256": "19c99805e7a44a34b297a75d1edea9985e300066dfc024d5c99d4236d4573b5d"
+  },
+  {
+    "file": "linuxdeploy-LICENSE",
+    "url": "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy/07333c6/LICENSE.txt",
+    "sha256": "1edb41ae7601854ae15d113c3700beebd0ea3ed05b85e3786a94a72bb9916091"
+  }
+]

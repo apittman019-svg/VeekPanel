@@ -1,0 +1,8 @@
+Original unmodified license/author files from hyphen-2.8.8.tar.gz inside the exact Fedora source package.
+Source: https://kojipkgs.fedoraproject.org/packages/hyphen/2.8.8/28.fc44/src/hyphen-2.8.8-28.fc44.src.rpm
+SRPM SHA256: 3e2e7cb9f93318dc0f5971791ae6b2ee755f0da4e30848cc831a32e7bddce27d
+Source archive SHA256: 304636d4eccd81a14b6914d07b84c79ebb815288c76fe027b9ebff6ff24d5705
+AUTHORS SHA256: b8a243a1b62af15ffda0e3bbda75e057b92b25019e14ef625b739359a1a49bc1
+COPYING SHA256: 8674da7542da10dec11e50a0d3cdad219a79de80f405bc54894fb20207944d94
+COPYING.LGPL SHA256: 5bbcbb737e60fe9deba08ecbd00920cfcc3403ba2e534c64fdeea49d6bb87509
+COPYING.MPL SHA256: 53692a2ed6c6a2c6ec9b32dd0b820dfae91e0a1fcdf625ca9ed0bdf8705fcc4f
