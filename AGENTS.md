@@ -507,3 +507,15 @@ The optional live-provider harness uses private PipeWire/Pulse and WirePlumber's
 policy-only profile, never physical hardware or personal audio settings. Read the
 newest DOOM.md/VERIFICATION.md for final lifecycle and CI results/limits. Older
 installers/AppImage do not contain this feature; no new release is authorized.
+
+Doom lifecycle follow-up passed on unchanged production source 6bfeea7: tab exit,
+synthetic offline/online, minimum/light layout, fixture-backed hide/restore and
+configuration preservation. The optional harness now selects the close-to-tray
+setting explicitly and can skip accepted gameplay via VEEK_DOOM_LIFECYCLE_ONLY=1.
+Do not repeat the live game merely to verify docs/test changes. Native Windows
+gameplay and real shell/login acceptance remain open; see final CI evidence.
+
+Exact-source Windows installer CI 37996407012 passed for 6bfeea7, with a CI-only
+installer containing Doom. Core/desktop run 37996407009 passed Windows desktop and
+both core jobs, but the hosted Linux profile-edit GUI driver disconnected again.
+Read VERIFICATION.md before claiming green CI or resuming Linux packaging.

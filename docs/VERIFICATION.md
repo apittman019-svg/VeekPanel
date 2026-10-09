@@ -1069,11 +1069,55 @@ worktrees and dirty personal docs. Frozen frontend install/check/four tests/buil
 locked native Nobara debug build, Python compilation and whitespace checks passed.
 Actual native Doom E1M1 gameplay/keyboard movement and non-silent private audio
 were observed; Stop removed the iframe. Evidence: /tmp/veek-doom-policy, including
-screenshots, result.json, audio-result.json and private game-audio.wav. Additional
-lifecycle results and exact source/CI identifiers follow after completion.
+screenshots, result.json, audio-result.json and private game-audio.wav.
+
+Feature source: 6bfeea793a44edb5bab804aa3d75e709b882a8ff, pushed to nightly.
+The follow-up changes only the optional test and documentation. Lifecycle-only
+verification passed in /tmp/veek-doom-lifecycle-final: tab exit/reopen, synthetic
+offline/online events, minimum 850x650 layout without horizontal overflow, light
+theme, fixture-backed tray hide/duplicate-launch restore with the iframe removed,
+and exact configuration restoration with hardware disabled. The private D-Bus
+watcher is a fixture, not acceptance of a real tray shell or login. Earlier attempts
+failed because the test assumed close-to-tray was enabled, then selected the login
+checkbox instead of close-to-tray; corrected the test, not production behavior.
+Gameplay was not repeated for the lifecycle-only pass. Python compilation and
+whitespace checks passed. Original checkout dirty docs remain untouched.
 
 No Rust/backend/config-schema/hardware/audio/lock/dependency changes. Remote native
 capabilities remain absent; direct adversarial remote IPC testing was limited by
 WebKit cross-frame automation timeouts. See DOOM.md for original failure evidence,
 private audio routing and pending Windows/fullscreen/scaling/real-shell checks.
 Old packages are unchanged and do not contain Doom. No release or main merge.
+
+
+Current-source core/desktop CI run 37996407009 completed with a Linux GUI failure.
+Windows desktop job 114043506000, Windows core job 114043506030 and Ubuntu core
+job 114043506082 passed. Ubuntu desktop job 114043505764 passed compilation/tests
+but its existing profile-edit GUI smoke lost the WebDriver connection during the
+input mutation (RemoteDisconnected; native log connection reset by peer). The
+historical Linux driver-connection failure therefore recurred; this was not a
+Doom gameplay test. Evidence artifact 11647500491, SHA256
+e0d9c2a4d07252192438aa0cfad7607bff8295bdfcdc2b1e4a058b72540e7fa5.
+No mutation replay or safety weakening was used to hide the failure. Root cause
+remains unresolved and should be investigated separately from this bounded extra.
+Run: https://github.com/apittman019-svg/VeekPanel/actions/runs/37996407009
+
+
+Windows installer run 37996407012 / job 114043505654 passed on the same exact
+6bfeea793a44edb5bab804aa3d75e709b882a8ff source. Downloaded result.json confirms
+passed, attempt 1, Windows NT 10.0.26100.0. Transcript confirms installed WebView2
+Dashboard/native schema-2 IPC, startup registration enable/readback/remove, fresh
+install/reinstall/upgrade, schema-1 migration/backups and uninstall preservation.
+The existing background/ownership checks also passed in the installer smoke.
+Hosted smoke reports elevated execution; consumer unelevated acceptance remains
+open. Doom gameplay itself was not exercised on Windows.
+Run: https://github.com/apittman019-svg/VeekPanel/actions/runs/37996407012
+Installer artifact: 11647595989 (VeekPanel-Windows-installer), archive SHA256
+b211afbbcb265d17913b9b652054d4a366517ca412c16a222ad9039b2c0265d9.
+Evidence artifact: 11647965550 (VeekPanel-Windows-validation), archive SHA256
+c8d19cbd59ca9ceec61dc823e4a608af919c36b9a239fb7ed3037fd00b9b957b.
+This new CI installer contains Doom; older public releases and AppImage do not.
+No public release/main merge. Follow-up test/docs commit deliberately skips CI;
+production source is identical to the exact tested feature commit above. Next
+agent should investigate the recurring hosted Linux profile-edit driver disconnect
+as a bounded task before resuming Linux package iteration.

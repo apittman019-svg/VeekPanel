@@ -1,5 +1,5 @@
 """Opt-in live-provider check; private native test session only."""
-import json,time,subprocess,sys
+import json,time,subprocess,sys,os
 from Xlib import display,X
 from PIL import Image
 from private_x11 import perform
@@ -22,19 +22,20 @@ def exercise(js,http,session,click,until,artifacts,env,saved_config,binary):
  click('Doom');until(lambda:js('return !!document.querySelector(".doom-start")'))
  assert js('return !document.querySelector("iframe")')
  capture('doom-ready')
- click('Play Doom')
- rect=until(lambda:js('const f=document.querySelector("iframe");if(!f)return null;const r=f.getBoundingClientRect(),b=document.querySelector(".doom-card .section-heading button").getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,stopX:b.x+b.width/2,stopY:b.y+b.height/2}'))
- time.sleep(8)
- capture('doom-provider')
- perform(env['DISPLAY'],'click',rect['x'],rect['y'])
- for i in range(6):
-  time.sleep(5);capture(f'doom-start-{i}');print('Captured',i,flush=True)
- for key in ['Escape','Return','Return','Return']:
-  perform(env['DISPLAY'],'key',key);time.sleep(1)
- capture('doom-level')
- perform(env['DISPLAY'],'key_down','Up');time.sleep(1);perform(env['DISPLAY'],'key_up','Up')
- perform(env['DISPLAY'],'key_down','Control_L');time.sleep(.3);perform(env['DISPLAY'],'key_up','Control_L');time.sleep(1);capture('doom-moved')
- perform(env['DISPLAY'],'click',rect['stopX'],rect['stopY']);until(lambda:js('return !document.querySelector("iframe")'))
+ if os.environ.get('VEEK_DOOM_LIFECYCLE_ONLY')!='1':
+  click('Play Doom')
+  rect=until(lambda:js('const f=document.querySelector("iframe");if(!f)return null;const r=f.getBoundingClientRect(),b=document.querySelector(".doom-card .section-heading button").getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,stopX:b.x+b.width/2,stopY:b.y+b.height/2}'))
+  time.sleep(8)
+  capture('doom-provider')
+  perform(env['DISPLAY'],'click',rect['x'],rect['y'])
+  for i in range(6):
+   time.sleep(5);capture(f'doom-start-{i}');print('Captured',i,flush=True)
+  for key in ['Escape','Return','Return','Return']:
+   perform(env['DISPLAY'],'key',key);time.sleep(1)
+  capture('doom-level')
+  perform(env['DISPLAY'],'key_down','Up');time.sleep(1);perform(env['DISPLAY'],'key_up','Up')
+  perform(env['DISPLAY'],'key_down','Control_L');time.sleep(.3);perform(env['DISPLAY'],'key_up','Control_L');time.sleep(1);capture('doom-moved')
+  perform(env['DISPLAY'],'click',rect['stopX'],rect['stopY']);until(lambda:js('return !document.querySelector("iframe")'))
  click('Play Doom');until(lambda:js('return !!document.querySelector("iframe")'))
  click('Dashboard');until(lambda:js('return !document.querySelector("iframe")'))
  click('Doom');until(lambda:js('return !!document.querySelector(".doom-start")'))
@@ -51,8 +52,14 @@ def exercise(js,http,session,click,until,artifacts,env,saved_config,binary):
  until(lambda:saved_config()['settings']['theme']=='light')
  click('Doom');time.sleep(.3);capture('doom-light')
  click('Settings')
+ until(lambda:js('return !document.querySelector("header select").disabled'))
  js('const e=document.querySelector(".settings select");e.value=arguments[0];e.dispatchEvent(new Event("change",{bubbles:true}))',baseline['settings']['theme'])
  until(lambda:saved_config()==baseline)
+ click('Doom')
+ click('Settings')
+ until(lambda:js('return !document.querySelector("header select").disabled'))
+ js('const e=[...document.querySelectorAll(".settings label")].find(e=>e.textContent.includes("Keep running in the tray")).querySelector("input");e.checked=true;e.dispatchEvent(new Event("change",{bubbles:true}))')
+ until(lambda:saved_config()['settings']['close_to_tray'])
  click('Doom')
  with (artifacts/'tray-fixture.log').open('w') as log:
   tray=subprocess.Popen([sys.executable,str(__import__('pathlib').Path(__file__).with_name('doom_tray.py'))],env=dict(env,VEEK_PRIVATE_DBUS_TEST='1'),stdout=log,stderr=log)
@@ -62,9 +69,14 @@ def exercise(js,http,session,click,until,artifacts,env,saved_config,binary):
    click('Play Doom');until(lambda:js('return !!document.querySelector("iframe")'))
    perform(env['DISPLAY'],'close');time.sleep(1)
    subprocess.run([str(binary)],env=env,check=True,timeout=10,stdout=log,stderr=log)
-   until(lambda:js('return !document.querySelector("iframe")'),10)
+   until(lambda:js('return !document.querySelector("iframe") && !!document.querySelector(".doom-start")'),10)
+   time.sleep(.5)
    capture('doom-restored')
   finally:
    tray.terminate();tray.wait(timeout=5)
- assert saved_config()==baseline and baseline['hardware']['mode']=='disabled'
- print('PASS: native game/input captured; stop/tab exit/offline events, minimum/light layout, config preservation and fixture-backed hide/restore checked',flush=True)
+ click('Settings')
+ until(lambda:js('return !document.querySelector("header select").disabled'))
+ js('const e=[...document.querySelectorAll(".settings label")].find(e=>e.textContent.includes("Keep running in the tray")).querySelector("input");e.checked=arguments[0];e.dispatchEvent(new Event("change",{bubbles:true}))',baseline['settings']['close_to_tray'])
+ until(lambda:saved_config()==baseline)
+ assert baseline['hardware']['mode']=='disabled'
+ print('PASS: tab exit/offline events, minimum/light layout, config preservation and fixture-backed hide/restore checked; gameplay runs only without VEEK_DOOM_LIFECYCLE_ONLY',flush=True)

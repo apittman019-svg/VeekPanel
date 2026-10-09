@@ -68,3 +68,19 @@ the iframe remains sandboxed and cross-origin. Direct adversarial remote IPC
 execution was not verified by the stalled cross-frame driver. Native Windows
 gameplay, fullscreen, 200% scaling, reduced motion and real tray-shell/login
 acceptance remain pending. Existing installers/AppImage do not contain this tab.
+
+
+Lifecycle follow-up passed against the same production source (6bfeea7): tab
+exit/reopen, synthetic offline/online events, 850x650 layout, light theme, and
+hide/duplicate-launch recovery under a private D-Bus tray-watcher fixture. The
+player was removed on hide and configuration was restored exactly afterward.
+Evidence: /tmp/veek-doom-lifecycle-final. VEEK_DOOM_LIFECYCLE_ONLY=1 skips the
+already-observed gameplay when checking these paths; it does not certify gameplay.
+Initial failures were incorrect test assumptions/selectors, corrected in the
+harness. Real tray menus/shell/login remain untested. See VERIFICATION.md for CI.
+
+Windows installer CI 37996407012 passed for source 6bfeea7 and supplies a new
+installer artifact containing Doom. Older published releases and AppImage remain
+unchanged. Windows desktop/core and Ubuntu core CI passed; hosted Linux desktop
+GUI validation failed with the recurring profile-edit WebDriver disconnect.
+This is recorded separately from the passing local Doom checks.
