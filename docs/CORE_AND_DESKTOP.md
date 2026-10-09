@@ -133,7 +133,7 @@ cargo build --workspace --release --locked
 python3 tests/audio/runtime_integration.py target/release/veek-runtime
 cargo fmt --manifest-path app/Cargo.toml --check
 cargo clippy --manifest-path app/Cargo.toml --all-targets --locked -- -D warnings
-# Native Linux UI automation needs tauri-driver 2.1.0, WebKitWebDriver and Xvfb:
+# Native Linux UI automation needs WebKitWebDriver and Xvfb:
 cargo test --manifest-path app/Cargo.toml --locked
 dbus-run-session -- python3 tests/gui/native_smoke.py app/target/debug/veekpanel /tmp/veek-ui-evidence
 ```
@@ -205,3 +205,10 @@ Protocol references consulted 2026-10-07:
 [Windows Run keys](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys),
 [XDG Exec quoting](https://specifications.freedesktop.org/desktop-entry/latest/exec-variables.html),
 [KDE tray interface](https://github.com/KDE/plasma-workspace/blob/master/xembed-sni-proxy/org.kde.StatusNotifierWatcher.xml).
+
+
+Linux GUI automation now calls WebKitWebDriver directly with its native browser
+capability and Tauri's existing automation environment setting. This removes
+tauri-driver's failing HTTP forwarding hop; no production debug feature is added.
+The same native GUI/audio/profile/startup assertions and no-mutation-retry policy
+remain. A local full pass is not proof of the historical reset's root cause.

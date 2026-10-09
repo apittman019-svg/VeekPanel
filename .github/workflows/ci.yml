@@ -145,9 +145,6 @@ jobs:
         if: runner.os == 'Linux'
         run: makensis -WX -V2 -DVEEK_HOOK_OUTPUT=/tmp/veek-hook-syntax.exe tests/gui/installer_hook_compile.nsi
       - run: cargo build --manifest-path app/Cargo.toml --locked
-      - name: Install native UI test driver
-        if: runner.os == 'Linux'
-        run: cargo install tauri-driver --version 2.1.0 --locked
       - name: GUI failure evidence regressions
         run: python tests/gui/evidence_test.py
       - name: Native GUI with private PipeWire and synthetic panel

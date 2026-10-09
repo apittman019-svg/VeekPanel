@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Native Tauri/WebKit smoke against a private PipeWire daemon and config folder.
-Requires Xvfb, tauri-driver, WebKitWebDriver. No desktop audio is modified.
+Requires Xvfb and WebKitWebDriver. No desktop audio is modified.
 """
 import base64,json,os,pathlib,subprocess,sys,tempfile,time,urllib.request,urllib.error,shutil
 from evidence import Evidence
@@ -8,7 +8,8 @@ binary=pathlib.Path(sys.argv[1]).resolve();root_repo=pathlib.Path(__file__).reso
 artifacts=pathlib.Path(sys.argv[2]).resolve() if len(sys.argv)>2 else pathlib.Path(tempfile.mkdtemp(prefix='veek-gui-artifacts-'))
 artifacts.mkdir(parents=True,exist_ok=True)
 evidence=Evidence()
-# tauri-driver treats --native-driver as a filesystem path, not a PATH command.
+# Drive WebKit directly: this Linux harness does not need capability translation.
+# Keep the transport single-hop and never replay a possibly completed mutation.
 native_driver=shutil.which(os.environ.get('VEEK_WEBKIT_DRIVER','WebKitWebDriver'))
 if not native_driver:raise SystemExit('WebKitWebDriver not found; install it or set VEEK_WEBKIT_DRIVER to its full path')
 def until(fn,timeout=15):
@@ -74,9 +75,9 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
    if os.environ.get('VEEK_DOOM_ONLY')=='1':
     pulse=subprocess.Popen(['pipewire-pulse'],env=env,stdout=log,stderr=log)
     until(lambda:(root/'pulse/native').exists())
-   driver=subprocess.Popen(['tauri-driver','--port',str(port),'--native-port','4455','--native-driver',native_driver],env=env,stdout=log,stderr=log)
+   driver=subprocess.Popen([native_driver,f'--port={port}','--host=127.0.0.1'],env=dict(env,TAURI_WEBVIEW_AUTOMATION='true'),stdout=log,stderr=log)
    until(lambda:http('GET','/status'))
-   session=http('POST','/session',{'capabilities':{'alwaysMatch':{'tauri:options':{'application':str(binary)}}}})['sessionId']
+   session=http('POST','/session',{'capabilities':{'alwaysMatch':{'webkitgtk:browserOptions':{'binary':str(binary)}}}})['sessionId']
    until(ready)
    if os.environ.get('VEEK_DOOM_ONLY')=='1':
     from doom_smoke import run
@@ -224,7 +225,7 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
      return True
     until(released)
     http('DELETE',f'/session/{session}');session=None
-    session=http('POST','/session',{'capabilities':{'alwaysMatch':{'tauri:options':{'application':str(binary)}}}})['sessionId']
+    session=http('POST','/session',{'capabilities':{'alwaysMatch':{'webkitgtk:browserOptions':{'binary':str(binary)}}}})['sessionId']
     until(ready)
     assert (root/'config/org.veekpanel.desktop/config.json').read_bytes()==before
     assert not (root/'config/autostart/org.veekpanel.desktop.desktop').exists()
