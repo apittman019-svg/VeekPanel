@@ -4,6 +4,7 @@
  import {durable,key} from './types';
  import {feedbackText} from './feedback';
  import {mergeSnapshot} from './snapshot';
+ import {assignRotation} from './assignments';
  import Icon from './Icon.svelte';
  import ControlVisual from './ControlVisual.svelte';
  import Doom from './Doom.svelte';
@@ -11,6 +12,9 @@
  let data=$state<Payload|null>(null),page=$state('Dashboard'),error=$state(''),notice=$state(''),busy=$state(false);
  let selected=$state(0),rotation=$state(''),press=$state(''),name=$state(''),groupMembers=$state<string[]>([]),relative=$state(true),importText=$state('');
  let editingGroup=$state<string|null>(null);let hardwareAddress=$state('');let deviceFilter=$state('all');let refreshing:Promise<void>|null=null;
+ let dragging=$state<{id:string,selector:string,profile:string,generation:number}|null>(null);
+ let dropIndex=$state<number|null>(null);
+ const dragType='application/x-veekpanel-audio';
  const pages=['Dashboard','Profiles','Groups','Settings','Diagnostics','Doom'];
  const pageIcons=['dashboard','profiles','groups','settings','diagnostics','gamepad'] as const;
  const pageDescriptions:Record<string,string>={Dashboard:'Your sound. Within reach.',Profiles:'A different rhythm for every moment.',Groups:'Good things sound better together.',Settings:'Make every detail yours.',Diagnostics:'A clear view of what’s happening.',Doom:'Yes, it runs Doom.'};
@@ -92,6 +96,26 @@
   p.groups=p.groups.filter(g=>g.id!==id);if(await save(c)){if(editingGroup===id)clearProfileDrafts();}
  }
  async function preference(kind:'output'|'input',value:string){const c=clone();editableProfile(c).preferences[kind]=value?JSON.parse(value):null;await save(c);}
+ async function assignTarget(t:Target,index:number){
+  const target=durable(t);if(busy||!target||t.volume===null)return;
+  if(await save(assignRotation(clone(),index,target))){selectKnob(index);notice=`${t.name} assigned to ${controlLabel(index)}. Press action preserved. Move through the current volume to pick up control.`;}
+ }
+ function startDrag(event:DragEvent,t:Target){
+  const selector=durable(t);
+  if(busy||!selector||!config||!audio||t.volume===null){event.preventDefault();return;}
+  dragging={id:t.id,selector:key(selector),profile:config.active_profile,generation:audio.generation};
+  event.dataTransfer!.setData(dragType,t.id);event.dataTransfer!.effectAllowed='link';
+ }
+ function dragOver(event:DragEvent,index:number){
+  if(!busy&&dragging&&event.dataTransfer?.types.includes(dragType)){event.preventDefault();event.dataTransfer.dropEffect='link';dropIndex=index;}
+ }
+ async function dropTarget(event:DragEvent,index:number){
+  event.preventDefault();const source=dragging;dragging=null;dropIndex=null;
+  const target=targets.find(t=>t.id===source?.id);
+  if(busy||!source||event.dataTransfer?.getData(dragType)!==source.id)return;
+  if(!target||source.profile!==config?.active_profile||source.generation!==audio?.generation||key(durable(target))!==source.selector){error='Audio or profile changed while dragging. Try the assignment again.';return;}
+  await assignTarget(target,index);
+ }
  function exportConfig(){if(!config)return;const url=URL.createObjectURL(new Blob([key($state.snapshot(config),null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='veekpanel-config.json';a.click();URL.revokeObjectURL(url);notice='Configuration exported. It can include local application and hardware paths.';}
  async function report(){const value={app:'VeekPanel development',hardwareMode:config?.hardware.mode,model:config?.hardware.model,backend:audio?.backend,audioConnected:observed?.audio_status==='Connected',targetCounts:Object.fromEntries(['output','input','playback','recording'].map(k=>[k,targets.filter(t=>t.kind===k).length])),profileCount:config?.profiles.length,mappingCount:profile?.mappings.length,diagnosticCount:observed?.diagnostics.length};try{await navigator.clipboard.writeText(key(value,null,2));notice='Redacted report copied. Names, paths, serials and raw errors omitted.';}catch{error='Clipboard unavailable. The local diagnostics below remain available.';}}
 </script>
@@ -118,7 +142,7 @@
      {@const raw=observed.controls['analog_'+i]}
      {@const info=feedback(i)}
      <div class="knob-card" class:selected={selected===i} class:slider-card={i>=buttonCount}>
-      <button class="knob-select" data-control-index={i} aria-label={`Configure ${controlLabel(i)}`} aria-pressed={selected===i} aria-controls="assignment" aria-describedby={`control-status-${i}`} onkeydown={e=>controlKey(e,i)} onclick={()=>selectKnob(i)}><ControlVisual {raw} {maximum} slider={i>=buttonCount}/><strong><span class="control-number">{String(i<buttonCount?i+1:i-buttonCount+1).padStart(2,'0')}</span>{i<buttonCount?'Knob':'Slider'}</strong><small title={label(mapping(i,'analog')?.action)}>{label(mapping(i,'analog')?.action)}</small></button>
+      <button class="knob-select" class:drop-ready={dropIndex===i} ondragover={e=>dragOver(e,i)} ondragleave={()=>{if(dropIndex===i)dropIndex=null;}} ondrop={e=>dropTarget(e,i)} data-control-index={i} aria-label={`Configure ${controlLabel(i)}`} aria-pressed={selected===i} aria-controls="assignment" aria-describedby={`control-status-${i}`} onkeydown={e=>controlKey(e,i)} onclick={()=>selectKnob(i)}><ControlVisual {raw} {maximum} slider={i>=buttonCount}/><strong><span class="control-number">{String(i<buttonCount?i+1:i-buttonCount+1).padStart(2,'0')}</span>{i<buttonCount?'Knob':'Slider'}</strong><small title={label(mapping(i,'analog')?.action)}>{label(mapping(i,'analog')?.action)}</small></button>
       <div class="readout">{info.volume}<small>Target volume{info.mute?' · '+info.mute:''}</small></div>
       <div class="control-status" id={`control-status-${i}`} data-phase={liveFeedback(i,'analog')?.phase??'unassigned'}>{info.status}<small>{raw===undefined?'No hardware input':Math.round(raw/maximum*100)+'% '+(i<buttonCount?'knob':'slider')+' position'}</small>{#if info.warning}<small class="mapping-warning">{info.warning}</small>{/if}</div>
       {#if mock}<input aria-label={`Simulated ${controlLabel(i)}`} aria-describedby={`control-status-${i}`} aria-valuetext={`${Math.round((raw??0)/maximum*100)}% position`} type="range" min="0" max={maximum} value={raw??0} disabled={busy} onchange={e=>command({type:'mock_analog',index:i,raw:Number(e.currentTarget.value)})}/>{/if}
@@ -131,7 +155,7 @@
    </section>
    <section class="card mixer-card"><div class="section-heading"><div><p class="eyebrow">LIVE FROM YOUR SYSTEM</p><h2>Audio mixer <span class="count-badge">{visibleTargets.length}</span></h2></div><select aria-label="Filter audio targets" bind:value={deviceFilter}><option value="all">All audio</option><option value="output">Outputs</option><option value="input">Microphones</option><option value="playback">Applications</option><option value="recording">Recording apps</option></select></div>
    {#if observed.audio_status!=='Connected'}<p class="helper">{observed.audio_status}</p>{/if}
-   <div class="audio-list">{#each visibleTargets as t (t.id)}<div class="audio-row"><div class="audio-icon" aria-hidden="true"><Icon name={t.kind==='input'||t.kind==='recording'?'mic':t.kind==='playback'?'app':'speaker'} size={20}/></div><div class="audio-name"><strong title={t.name}>{t.name}</strong><small>{t.kind}{t.default?' · System default':''}</small></div><input aria-label={`${t.name} volume`} type="range" min="0" max="100" value={Math.min(100,(t.volume??0)*100)} disabled={busy||t.volume===null} onchange={e=>volume(t,Number(e.currentTarget.value)/100)}/><span class="volume">{t.volume===null?'—':Math.round(t.volume*100)+'%'}</span><button class:muted={t.muted} disabled={busy||t.muted===null} onclick={()=>mute(t)} aria-label={`${t.muted?'Unmute':'Mute'} ${t.name}`}>{t.muted?'Unmute':'Mute'}</button></div>{:else}<p class="empty">No matching audio targets. Applications appear when they create an audio stream.</p>{/each}</div></section>
+   <p class="helper">Drag an Assign button onto a knob, or select a knob and click Assign. Its press action stays unchanged.</p><div class="audio-list">{#each visibleTargets as t (t.id)}<div class="audio-row"><div class="audio-icon" aria-hidden="true"><Icon name={t.kind==='input'||t.kind==='recording'?'mic':t.kind==='playback'?'app':'speaker'} size={20}/></div><div class="audio-name"><strong title={t.name}>{t.name}</strong><small>{t.kind}{t.default?' · System default':''}</small><button class="assign-target" draggable={!busy&&durable(t)!==null&&t.volume!==null} disabled={busy||durable(t)===null||t.volume===null} aria-label={`Assign ${t.name} to ${controlLabel(selected)}`} title="Drag onto a knob or click to assign the selected control" ondragstart={e=>startDrag(e,t)} ondragend={()=>{dragging=null;dropIndex=null;}} onclick={()=>assignTarget(t,selected)}>Assign to {controlLabel(selected)}</button></div><input aria-label={`${t.name} volume`} type="range" min="0" max="100" value={Math.min(100,(t.volume??0)*100)} disabled={busy||t.volume===null} onchange={e=>volume(t,Number(e.currentTarget.value)/100)}/><span class="volume">{t.volume===null?'—':Math.round(t.volume*100)+'%'}</span><button class:muted={t.muted} disabled={busy||t.muted===null} onclick={()=>mute(t)} aria-label={`${t.muted?'Unmute':'Mute'} ${t.name}`}>{t.muted?'Unmute':'Mute'}</button></div>{:else}<p class="empty">No matching audio targets. Applications appear when they create an audio stream.</p>{/each}</div></section>
   {:else if page==='Profiles'}
    <section class="card"><h2>A setup for every moment</h2><p class="helper">Profiles save knob and button assignments, audio groups, and preferred devices. Switching rearms controls to avoid sudden volume changes.</p><div class="profile-grid">{#each config?.profiles??[] as p}<article class="profile-tile" class:chosen={p.id===config?.active_profile}><span class="profile-state">{p.id===config?.active_profile?'Active profile':'Saved profile'}</span><span class="tile-icon"><Icon name="profiles" size={27}/></span><h3>{p.name}</h3><p>{p.mappings.length} assignments · {p.groups.length} groups</p><button class="primary" disabled={busy||p.id===config?.active_profile} onclick={()=>command({type:'activate',id:p.id})}>{p.id===config?.active_profile?'Active':'Use profile'}</button><button disabled={busy||(config?.profiles.length??0)<=1} onclick={()=>deleteProfile(p.id)}>Delete</button></article>{/each}</div><div class="form-row"><label>Profile name<input bind:value={name} placeholder="Gaming, work, or your own" maxlength="160"/></label><button disabled={busy||!name.trim()} onclick={()=>newProfile()}>Create</button><button disabled={busy||!name.trim()} onclick={()=>newProfile(true)}>Duplicate active</button><button disabled={busy||!name.trim()} onclick={renameProfile}>Rename active</button></div></section>
   {:else if page==='Groups'}

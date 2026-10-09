@@ -273,3 +273,8 @@ footer { font-size: 10px; color: var(--muted); display: flex; justify-content: s
 }
 
 .banner .tray-details { font-size: 11px; padding: 6px 10px; border: 1px solid var(--accent-line); border-radius: 8px; white-space: nowrap; }
+
+/* Assignment remains a normal keyboard-accessible button when drag is unavailable. */
+.audio-name .assign-target { display: block; width: fit-content; margin-top: 5px; padding: 4px 8px; font-size: 11px; color: var(--accent); cursor: grab; }
+.audio-name .assign-target:active { cursor: grabbing; }
+.knob-select.drop-ready { outline: 2px solid var(--accent); outline-offset: -2px; background: var(--soft); }

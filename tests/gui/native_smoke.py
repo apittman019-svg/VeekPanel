@@ -126,11 +126,26 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
     until(lambda:js('return [...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("output")).querySelector(".volume").textContent==="78%"'))
     assert js('return document.querySelector(".selected-feedback").getAttribute("aria-live")=="polite" && document.querySelector(".assignment").tagName=="FORM"')
     js('document.querySelector(".knob-card .press").click();')
-    until(lambda:js('return [...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("input")).querySelector("button").textContent==="Unmute"'))
+    until(lambda:js('return [...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("input")).querySelector(":scope > button").textContent==="Unmute"'))
     dump=json.loads(subprocess.check_output(['pw-dump'],env=env,text=True))
     output=next(o for o in dump if o.get('info',{}).get('props',{}).get('node.name')=='veek.output')
     props=next(p for p in output['info']['params']['Props'] if 'channelVolumes'in p)
     assert abs(max(props['channelVolumes'])-(200/255)**3)<.001,props
+
+    # Drag handlers route through the real native config save; buttons stay independent.
+    before_assign=active_profile()
+    js('const source=[...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("input")).querySelector(".assign-target"),destination=document.querySelector(".knob-select"),transfer=new DataTransfer();source.dispatchEvent(new DragEvent("dragstart",{bubbles:true,dataTransfer:transfer}));destination.dispatchEvent(new DragEvent("drop",{bubbles:true,dataTransfer:transfer}));')
+    until(lambda:any(m['action'].get('target',{}).get('identities',{}).get('node.name')=='veek.input' for m in active_profile()['mappings'] if m['control']['kind']=='analog') and idle())
+    assert [m for m in active_profile()['mappings'] if m['control']['kind']=='button']==[m for m in before_assign['mappings'] if m['control']['kind']=='button']
+    js('[...document.querySelectorAll(".audio-row")].find(r=>r.querySelector("small").textContent.startsWith("output")).querySelector(".assign-target").click()')
+    until(lambda:any(m['action'].get('target',{}).get('identities',{}).get('node.name')=='veek.output' for m in active_profile()['mappings'] if m['control']['kind']=='analog') and idle())
+    js('document.querySelector(".mixer-card").scrollIntoView({block:"center"})')
+    time.sleep(.3)
+    (artifacts/'quick-assignment.png').write_bytes(base64.b64decode(http('GET',f'/session/{session}/screenshot')))
+    js('document.querySelector(".panel-card").scrollIntoView({block:"start"})')
+    # Return the original system-default selector through the regular assignment form.
+    js('const s=document.querySelector(".assignment select");s.value=JSON.stringify({type:"default_output"});s.dispatchEvent(new Event("change",{bubbles:true}));')
+    click('Save assignment');until(lambda:active_profile()==before_assign and idle())
 
     time.sleep(.3) # Let the native compositor present the updated page before capture.
     (artifacts/'dashboard-system.png').write_bytes(base64.b64decode(http('GET',f'/session/{session}/screenshot')))
