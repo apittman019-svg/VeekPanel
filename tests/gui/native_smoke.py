@@ -228,8 +228,9 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
      from visual_matrix import run
      run(js,http,session,click,until,idle,saved_config,artifacts,env,lambda:stop(server))
     print('PASS: native Tauri IPC, real private PipeWire discovery, GUI simulated Mini -> native volume/mic mute, assignment persistence, profile-owned groups/preferences with independent duplicates and cleared switch drafts, opt-in XDG login registration/readback/removal, start-minimized persistence, duplicate-launch handoff, dark/light rendering; artifacts:',artifacts)
-   if os.environ.get('VEEK_APPIMAGE_RELAUNCH')=='1':
-    assert binary.suffix=='.AppImage', 'Package check requires the actual AppImage'
+   if os.environ.get('VEEK_APPIMAGE_RELAUNCH')=='1' or os.environ.get('VEEK_PACKAGE_RELAUNCH')=='1':
+    if os.environ.get('VEEK_APPIMAGE_RELAUNCH')=='1':
+     assert binary.suffix=='.AppImage', 'AppImage check requires the actual AppImage'
     import fcntl
     before=(root/'config/org.veekpanel.desktop/config.json').read_bytes()
     from private_x11 import perform
@@ -246,7 +247,7 @@ with tempfile.TemporaryDirectory(prefix='veek-native-gui-') as folder:
     assert not (root/'config/autostart/org.veekpanel.desktop.desktop').exists()
     assert js('return document.querySelector("header select").selectedOptions[0].textContent==="Integration profile"')
     (artifacts/'package-relaunch.png').write_bytes(base64.b64decode(http('GET',f'/session/{session}/screenshot')))
-    print('PASS: actual AppImage graceful close releases ownership; relaunch preserves saved profile/config bytes and removed startup.')
+    print('PASS: packaged app graceful close releases ownership; relaunch preserves saved profile/config bytes and removed startup.')
    evidence.finish(artifacts/'result.json',processes={'driver':driver,'pipewire':server,'xvfb':xvfb})
   except BaseException as error:
    evidence.finish(artifacts/'result.json',error,{'driver':driver,'pipewire':server,'xvfb':xvfb})
