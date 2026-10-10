@@ -519,3 +519,20 @@ Exact-source Windows installer CI 37996407012 passed for 6bfeea7, with a CI-only
 installer containing Doom. Core/desktop run 37996407009 passed Windows desktop and
 both core jobs, but the hosted Linux profile-edit GUI driver disconnected again.
 Read VERIFICATION.md before claiming green CI or resuming Linux packaging.
+
+## App completion continuation (2026-10-09)
+
+The user now asks to finish the app. Continue the original functional scope and
+remaining distribution/quality work; see docs/COMPLETION.md for the consolidated
+implemented/missing/physical checklist. No public release or main merge yet.
+The current increment removes the Linux test-only HTTP proxy and adds accessible
+quick/drag audio assignment through normal config saves. Native backend safety,
+Mini evidence and accepted visual branding remain unchanged. Follow exact new CI
+results before proceeding past the recurring Linux driver gate.
+
+Completion pass results: source a4d0ab8 passed all four jobs in 38001562163 and
+Windows installer 38001562190. The Nobara RPM from 7b8ecbfe passed the corrected
+direct-root transaction/native-GUI harness. See NOBARA_RPM.md and VERIFICATION.md.
+User asked to conserve remaining usage and upload everything; source stays on
+nightly and installers/older AppImage companions go into a draft release. Keep the
+older AppImage clearly labeled. Next functional/distribution work is in COMPLETION.md.

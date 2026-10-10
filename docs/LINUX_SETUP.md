@@ -1,3 +1,8 @@
+> **Current desktop preview:** the newest Nobara 44 RPM includes the app, launcher
+> and scoped USB access rule. Open it in DNF App Center, install, then launch
+> VeekPanel from the application menu and replug the panel. See [NOBARA_RPM.md](NOBARA_RPM.md)
+> for exact validation and limitations. The developer utility notes below are historical.
+
 # Nobara and Linux setup — M1/M2 developer utilities
 
 Nobara is the first Linux target. The prototype has been built and run on Nobara

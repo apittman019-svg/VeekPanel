@@ -1121,3 +1121,49 @@ No public release/main merge. Follow-up test/docs commit deliberately skips CI;
 production source is identical to the exact tested feature commit above. Next
 agent should investigate the recurring hosted Linux profile-edit driver disconnect
 as a bounded task before resuming Linux package iteration.
+
+## Completion continuation — 2026-10-09/10
+
+Source 3d183da removes the tauri-driver forwarding hop from the Linux-only native
+harness, using WebKitWebDriver's native capability and existing automation env.
+No production debug hook or mutation retry added. Local full GUI integration
+passed (/tmp/veek-direct-webkit); CI 38001319629 passed all four jobs, including
+Linux desktop 114059809998. This avoids the observed failing hop but does not
+prove the historical reset's cause or that no future driver failures can occur.
+
+Application source a4d0ab86b86a507f993e3e7c6281877dd9e7f6a5 adds drag-to-assign
+and a keyboard-accessible Assign button. Only the selected primary analog mapping
+changes; buttons, other controls/profiles and the source config are preserved.
+Stale drag/profile/audio-generation changes are rejected. Six frontend tests,
+zero-error/warning type checks, frontend and native debug/release builds passed.
+Local full native GUI integration passed (/tmp/veek-quick-assign). Drag tests use
+DOM DragEvents in the actual native WebView with real backend saves; physical
+pointer drag remains distinct. Existing native audio/mute/profile checks passed.
+
+Exact a4d0ab8 CI 38001562163 passed all four jobs: Linux core 114060589001,
+Windows desktop 114060589160, Windows core 114060589254 and Linux desktop
+114060589269. Downloaded Linux result.json says passed. Installed Windows CI
+38001562190/job 114060588862 passed; downloaded result.json confirms source,
+attempt 1 and Windows NT 10.0.26100.0. Current installer checksum:
+a836aad0c4eb9a344f7bc98d7d603626fd6245e9f0338c4c56eb5e922a6cdf51
+(VeekPanel_0.1.1_x64-setup.exe), verified against downloaded CI SHA256SUMS.
+
+Nobara RPM source 7b8ecbfe (unchanged application a4d0ab8) built with embedded
+notices, scoped udev rule, desktop/icon and exact ELF requirements. SHA256
+a21289ba1ebd00ca8788590a7aa09c3e3bea6e748cbc93be059d78becf21d5e3.
+All requirements resolve locally. Full isolated RPM install/reinstall/uninstall,
+packaged native GUI/private PipeWire, quick assignments/button preservation,
+profiles/startup, owner handoff and close/relaunch passed in
+/home/austinp/Downloads/gaem/VeekPanel-Nobara-RPM-Verified/verification-direct-root.
+Settings and unrelated user rule survived uninstall; packaged files were removed.
+The first namespace fixture failed with RPM SQLite errors: changing the harness
+to execute RPM directly inside the disposable root resolved it without package
+or production changes. Retained failed result under verification/. See
+NOBARA_RPM.md for exact scope, reproduction and normal-install/physical limits.
+
+No consumer/physical/soak acceptance, public release or main merge. The user asked
+to conserve remaining usage and upload the work: source is on nightly; Windows
+and Nobara installers plus the older AppImage/source companion are preserved in
+a draft release. The AppImage remains historical 855d553, not the newest UI.
+Next: finish normal Nobara acceptance then Flatpak, followed by the missing
+functional items in COMPLETION.md. Do not repeat accepted Mini or Doom basics.

@@ -18,10 +18,13 @@ try:
  assert not run(['rpm','-qp','--scripts',package]).strip(),'Unexpected privileged package script'
  with tempfile.TemporaryDirectory(prefix='veek-rpm-root-') as folder:
   root=pathlib.Path(folder)
-  # The namespace's root UID maps to this ordinary user. Only this temporary
-  # install root is writable; CAP_SYS_CHROOT exists only in the private namespace.
-  rpm=['bwrap','--unshare-user','--uid','0','--gid','0','--cap-add','CAP_SYS_CHROOT','--ro-bind','/','/','--bind',root,root,'--dev','/dev','--proc','/proc','--','rpm','--root',root,'--dbpath','/var/lib/rpm','--noplugins']
-  run(rpm+['--initdb']);run(rpm+['--nodeps','-i',package])
+  # Run RPM inside the disposable filesystem directly. Nesting rpm --root
+  # inside a mount namespace produced SQLite WAL errors on reinstall here.
+  # Only native RPM/runtime tools are read-only mounts from the host; plugins
+  # are disabled. No host package DB, config, device ACL or system bus is exposed.
+  (root/'lib64').symlink_to('usr/lib64')
+  rpm=['bwrap','--unshare-user','--uid','0','--gid','0','--bind',root,'/','--ro-bind','/usr/lib64','/usr/lib64','--ro-bind','/usr/lib/rpm','/usr/lib/rpm','--ro-bind','/usr/bin/rpm','/usr/bin/rpm','--ro-bind','/usr/bin/rpmdb','/usr/bin/rpmdb','--ro-bind',package,'/package.rpm','--dev','/dev','--proc','/proc','--','/usr/bin/rpm','--dbpath','/var/lib/rpm','--noplugins']
+  run(rpm+['--initdb']);run(rpm+['--nodeps','-i','/package.rpm'])
   name=run(['rpm','-qp','--qf','%{NAME}',package]).strip()
   run(rpm+['--nodeps','-V',name])
   binary=root/'usr/bin/veekpanel'
@@ -37,7 +40,7 @@ try:
   sentinel=root/'home/test/.config/org.veekpanel.desktop/config.json';sentinel.parent.mkdir(parents=True)
   sentinel.write_text('{"user_data":"must survive package operations"}\n');before=sentinel.read_bytes()
   user_rule=root/'etc/udev/rules.d/99-user-panel.rules';user_rule.parent.mkdir(parents=True);user_rule.write_text('# unrelated user rule\n')
-  run(rpm+['--nodeps','--replacepkgs','-U',package]);run(rpm+['--nodeps','-V',name])
+  run(rpm+['--nodeps','--replacepkgs','-U','/package.rpm']);run(rpm+['--nodeps','-V',name])
   assert sentinel.read_bytes()==before and user_rule.is_file()
   with (artifacts/'native-harness.log').open('w') as log:
    subprocess.run(['dbus-run-session','--',sys.executable,str(repo/'tests/gui/native_smoke.py'),str(binary),str(artifacts/'native')],env=dict(os.environ,VEEK_PACKAGE_RELAUNCH='1'),stdout=log,stderr=log,check=True)

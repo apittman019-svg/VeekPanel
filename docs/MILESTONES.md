@@ -162,3 +162,12 @@ the earlier incomplete-content handoff gate; see VERIFICATION.md for hashes and
 source/reproducibility limits. No public release or broad Linux support claim.
 M6 remains open: next native Nobara integration/login/tray and later Flatpak;
 physical USB, native Wayland, consumer Windows and lifecycle/soak remain pending.
+
+
+2026-10-10 completion pass: quick/drag audio assignment preserves button actions
+and saves via the real backend. All four current-source CI jobs and the Windows
+installed-app workflow passed for a4d0ab8. The Nobara RPM passed isolated native
+package/GUI/audio/startup/relaunch/reinstall/uninstall checks after correcting the
+RPM namespace fixture. This advances M4/M6 but does not close physical, consumer,
+real shell/login, clean-machine solving or soak acceptance. COMPLETION.md lists
+remaining functionality; Flatpak follows native Nobara acceptance.
