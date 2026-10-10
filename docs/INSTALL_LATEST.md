@@ -32,7 +32,7 @@ by installation itself.
 
 ## Downloads
 
-[GitHub draft with both newest installers and installation files](https://github.com/apittman019-svg/VeekPanel/releases/tag/untagged-1423dee8b4c29eb74fe0) (owner access; not publicly published).
+[GitHub draft with both newest installers and installation files](https://github.com/apittman019-svg/VeekPanel/releases) (owner access; not publicly published).
 
 [Passing Windows installer CI and download artifact](https://github.com/apittman019-svg/VeekPanel/actions/runs/38001562190) (GitHub sign-in required to download the artifact).
 
